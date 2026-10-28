@@ -83,6 +83,7 @@ export async function readValid<T>(schema: z.ZodType<T>, event: H3Event): Promis
   const parsed = schema.safeParse(raw)
   if (!parsed.success) {
     const first = parsed.error.issues[0]
+    if (!first) badRequest('Corps de requête invalide.', 'VALIDATION')
     const field = first.path.join('.') || 'corps'
     badRequest(`${field} : ${first.message}`, 'VALIDATION')
   }
