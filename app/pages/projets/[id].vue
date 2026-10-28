@@ -198,10 +198,10 @@ async function onReorder(order: string[]): Promise<void> {
 
     <!-- Projet introuvable -->
     <div v-else-if="notFound">
-      <h1 class="sr-only">Projet introuvable</h1>
       <UiEmptyState
         icon="🔍"
         title="Projet introuvable"
+        title-level="h1"
         description="Ce projet n’existe pas (ou n’a pas été détecté par le pont local)."
       >
         <template #action>
@@ -214,10 +214,10 @@ async function onReorder(order: string[]): Promise<void> {
 
     <!-- Erreur de chargement -->
     <div v-else-if="loadError">
-      <h1 class="sr-only">Impossible de charger ce projet</h1>
       <UiEmptyState
         icon="⚠️"
         title="Impossible de charger ce projet"
+        title-level="h1"
         :description="loadError"
       >
         <template #action>
