@@ -541,8 +541,16 @@ export async function getRecords(): Promise<GamificationRecords> {
       })
       .from(tasks)
       .where(gte(tasks.scheduled_date, addDaysISO(today, -HISTORY_DAYS)))
-      .groupBy(sql`week_start`)
-      .orderBy(desc(dayPointsExpr), desc(dayDoneExpr), desc(sql`week_start`))
+      // GROUP BY / ORDER BY interdisent les alias de colonne côté PostgreSQL :
+      // on répète l'expression plutôt que d'utiliser `week_start`.
+      .groupBy(
+        sql`to_char(date_trunc('week', ${tasks.scheduled_date}::timestamp), 'YYYY-MM-DD')`,
+      )
+      .orderBy(
+        desc(dayPointsExpr),
+        desc(dayDoneExpr),
+        desc(sql`to_char(date_trunc('week', ${tasks.scheduled_date}::timestamp), 'YYYY-MM-DD')`),
+      )
       .limit(1),
     db
       .selectDistinct({ date: tasks.scheduled_date })
