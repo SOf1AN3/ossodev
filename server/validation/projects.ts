@@ -1,13 +1,32 @@
 /**
  * Validation Zod des projets et de leurs checklists.
- * Validation syntaxique uniquement : aucun accès disque, aucun process shell,
- * aucune résolution de chemin sur le système de fichiers.
+ *
+ * `folder_path` est validé par `assertSafeAbsolutePath` (mécanisme unique du
+ * pont local) : allowlist de caractères contre les métacaractères de shell,
+ * résolution puis confinement strict sous le dossier dev. C'est une
+ * contrainte d'intégrité des données — active même si le pont est désactivé
+ * (aucun appel à `assertBridgeAllowed()` ici), aucun accès disque, aucun
+ * process shell.
  */
 import { z } from 'zod'
 import { badRequest, uuidSchema } from '~~/server/utils/http'
+import { assertSafeAbsolutePath } from '~~/server/utils/localBridge'
 
 /** Dossier absolu : Windows (`C:\…` ou `C:/…`) ou Unix (`/…`). */
 const WINDOWS_ABSOLUTE = /^[a-zA-Z]:[\\/]/
+
+/** Message français par défaut si la cause de refus n'est pas exploitable. */
+const FALLBACK_PATH_MESSAGE =
+  'Le chemin du projet est refusé : il doit être absolu et se trouver à l’intérieur du dossier dev.'
+
+/** Extrait le message français d'une erreur levée par le pont local. */
+function bridgeRejectionMessage(e: unknown): string {
+  const err = e as { data?: { error?: { message?: unknown } } }
+  const message = err?.data?.error?.message
+  return typeof message === 'string' && message.trim().length > 0
+    ? message
+    : FALLBACK_PATH_MESSAGE
+}
 
 export const folderPathSchema = z
   .string()
@@ -22,6 +41,18 @@ export const folderPathSchema = z
     (value) => WINDOWS_ABSOLUTE.test(value) || value.startsWith('/'),
     'Le chemin du projet doit être absolu.',
   )
+  .superRefine((value, ctx) => {
+    // Réutilise le mécanisme du pont : allowlist de caractères + résolution
+    // + confinement sous `devRootPath`. Aucune logique dupliquée ici.
+    try {
+      assertSafeAbsolutePath(value)
+    } catch (e: unknown) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: bridgeRejectionMessage(e),
+      })
+    }
+  })
 
 export const projectCreateSchema = z.object({
   name: z

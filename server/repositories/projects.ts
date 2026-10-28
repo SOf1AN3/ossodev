@@ -27,19 +27,69 @@ const PROJECT_COLUMNS = {
   created_at: projects.created_at,
 } as const
 
-/** Agrégation en une seule requête (aucun N+1). */
+/**
+ * Agrégation en une seule requête (aucun N+1).
+ * Comparaisons explicites `= false` / `= true` : sur la ligne NULL produite
+ * par la `leftJoin` (projet sans tâche), les deux compteurs valent 0, et
+ * `coalesce` couvre le cas `sum` vide. `withCounts` force le type `number`.
+ */
 const COUNT_COLUMNS = {
   task_count: count(projectTasks.id),
-  open_tasks: sql<number>`coalesce(sum(case when ${projectTasks.is_done} then 1 else 0 end), 0)`,
-  done_tasks: sql<number>`coalesce(sum(case when ${projectTasks.is_done} then 0 else 1 end), 0)`,
+  open_tasks: sql<number>`coalesce(sum(case when ${projectTasks.is_done} = false then 1 else 0 end), 0)`,
+  done_tasks: sql<number>`coalesce(sum(case when ${projectTasks.is_done} = true then 1 else 0 end), 0)`,
 } as const
 
-/** Contrainte Postgres générée par `projects.folder_path`.unique(). */
-const FOLDER_PATH_UNIQUE = 'projects_folder_path_key'
+/**
+ * Contrainte d'unicité réelle de `projects.folder_path` en base.
+ * (`name` n'a aucune contrainte unique : son unicité est contrôlée en amont
+ * par une lecture explicite.)
+ */
+const FOLDER_PATH_UNIQUE = 'projects_folder_path_unique'
 
+/** Profondeur max de `error.cause` explorée (Drizzle enveloppe l'erreur PG). */
+const MAX_ERROR_CAUSE_DEPTH = 5
+
+/** Message PostgreSQL canonique : nom de contrainte toujours présent. */
+const UNIQUE_MESSAGE = /duplicate key value violates unique constraint "([^"]+)"/i
+
+interface SqlErrorShape {
+  code?: unknown
+  constraint?: unknown
+  /** postgres-js nomme la contrainte `constraint_name`. */
+  constraint_name?: unknown
+  message?: unknown
+  cause?: unknown
+}
+
+/**
+ * Détecte une violation de contrainte d'unicité PostgreSQL (SQLSTATE 23505).
+ * Drizzle enveloppe l'erreur driver dans une `DrizzleQueryError` (message
+ * « Failed query: … ») dont la cause porte le vrai `code`/`constraint_name` :
+ * on descend la chaîne `cause`, et on retombe sur le message (PostgreSQL y
+ * inclut toujours le nom de contrainte). Le message d'origine n'est jamais
+ * recraché tel quel dans la réponse.
+ */
 function isUniqueViolation(e: unknown, constraint: string): boolean {
-  const err = e as { code?: unknown; constraint?: unknown }
-  return err?.code === '23505' && err?.constraint === constraint
+  const seen = new Set<unknown>()
+  let current: unknown = e
+  for (let depth = 0; depth < MAX_ERROR_CAUSE_DEPTH && current != null; depth += 1) {
+    if (typeof current !== 'object' || seen.has(current)) return false
+    seen.add(current)
+    const err = current as SqlErrorShape
+    if (err.code === '23505') {
+      const named =
+        typeof err.constraint === 'string'
+          ? err.constraint
+          : typeof err.constraint_name === 'string'
+            ? err.constraint_name
+            : null
+      if (named === constraint) return true
+    }
+    const match = typeof err.message === 'string' ? UNIQUE_MESSAGE.exec(err.message) : null
+    if (match && match[1] === constraint) return true
+    current = err.cause
+  }
+  return false
 }
 
 function withCounts(
@@ -108,7 +158,7 @@ export async function createProject(input: ProjectCreateInput): Promise<ProjectR
     return row
   } catch (e: unknown) {
     if (isUniqueViolation(e, FOLDER_PATH_UNIQUE)) {
-      badRequest('Ce dossier est déjà référencé.')
+      badRequest('Ce dossier est déjà référencé.', 'DUPLICATE_FOLDER')
     }
     throw e
   }
@@ -152,7 +202,7 @@ export async function updateProject(
     return row
   } catch (e: unknown) {
     if (isUniqueViolation(e, FOLDER_PATH_UNIQUE)) {
-      badRequest('Ce dossier est déjà référencé.')
+      badRequest('Ce dossier est déjà référencé.', 'DUPLICATE_FOLDER')
     }
     throw e
   }
