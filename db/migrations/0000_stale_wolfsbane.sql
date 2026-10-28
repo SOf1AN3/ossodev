@@ -103,7 +103,7 @@ CREATE INDEX "idx_tasks_status" ON "tasks" USING btree ("status");--> statement-
 -- Seed : catalogue des 12 badges (idempotent)
 INSERT INTO "badges" ("code", "name", "description", "icon") VALUES
   ('first_step',  'Première pierre',   'Valide ta toute première tâche',            '🪨'),
-  ('streak_3',    'embardée',          '3 jours consécutifs sans rien rater',       '🔥'),
+  ('streak_3',    'Première série',    '3 jours consécutifs sans rien rater',       '🔥'),
   ('streak_7',    'Semaine de feu',    '7 jours consécutifs',                       '🔥'),
   ('streak_30',   'Régulier',          '30 jours consécutifs',                      '⚡'),
   ('streak_100',  'Mythe',             '100 jours consécutifs',                     '👑'),
