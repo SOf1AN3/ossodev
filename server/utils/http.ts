@@ -71,8 +71,15 @@ export async function runApi<T>(
   }
 }
 
-/** Corps de requête validé par un schéma Zod → erreur 400 normalisée. */
-export async function readValid<T>(schema: z.ZodType<T>, event: H3Event): Promise<T> {
+/**
+ * Corps de requête validé par un schéma Zod → erreur 400 normalisée.
+ * `TOut` = type de SORTIE du schéma (défauts appliqués, ce que retourne
+ * `safeParse`), `TIn` = type d'ENTRÉE (champs avec défaut encore optionnels).
+ */
+export async function readValid<TOut, TIn = unknown>(
+  schema: z.ZodType<TOut, z.ZodTypeDef, TIn>,
+  event: H3Event,
+): Promise<TOut> {
   let raw: unknown
   try {
     raw = await readBody(event)

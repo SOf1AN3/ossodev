@@ -20,6 +20,7 @@ export default defineEventHandler((event) =>
     })
     if (!parsed.success) {
       const issue = parsed.error.issues[0]
+      if (!issue) badRequest('Paramètres de requête invalides.', 'VALIDATION')
       badRequest(`${issue.path.join('.') || 'query'} : ${issue.message}`, 'VALIDATION')
     }
 

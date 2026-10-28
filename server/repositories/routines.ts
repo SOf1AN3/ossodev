@@ -2,7 +2,7 @@ import { and, asc, eq, gte, ne } from 'drizzle-orm'
 import { routines, tasks } from '~~/db/schema'
 import { db } from '~~/db'
 import type { Routine, RoutineFrequency } from '~~/shared/types'
-import { badRequest } from '~~/server/utils/http'
+import { apiError, badRequest } from '~~/server/utils/http'
 import { addDaysISO, todayISO, weekdayOf } from '~~/server/validation/tasks'
 import {
   ROUTINE_MIN_WEEKDAY_MESSAGE,
@@ -122,7 +122,9 @@ export async function createRoutine(input: RoutineCreateInput): Promise<RoutineW
     })
     .returning()
 
-  const created = mapRoutineRow(rows[0])
+  const row = rows[0]
+  if (row === undefined) apiError('INTERNAL', 'Création impossible.', 500)
+  const created = mapRoutineRow(row)
   const today = todayISO()
   if (created.is_active && created.start_date <= today && isRoutineDueOn(created, weekdayOf(today))) {
     await ensureRoutineInstances(today)
@@ -198,6 +200,9 @@ export async function updateRoutine(
     .where(eq(routines.id, id))
     .returning()
 
+  const updated = updatedRows[0]
+  if (updated === undefined) return null
+
   let purgedInstances = 0
   let regeneratedInstances = 0
   if (templateChanged) {
@@ -208,7 +213,7 @@ export async function updateRoutine(
   }
 
   return {
-    routine: withNextDates(mapRoutineRow(updatedRows[0]), today),
+    routine: withNextDates(mapRoutineRow(updated), today),
     purgedInstances,
     regeneratedInstances,
   }

@@ -3,7 +3,7 @@ import type { SQL } from 'drizzle-orm'
 import { routines, tasks } from '~~/db/schema'
 import { db } from '~~/db'
 import type { Task, TaskSource, TaskStatus, Weekday } from '~~/shared/types'
-import { badRequest } from '~~/server/utils/http'
+import { apiError, badRequest } from '~~/server/utils/http'
 import { addDaysISO, daysBetweenISO, todayISO, weekdayOf } from '~~/server/validation/tasks'
 import type { TaskCreateInput, TaskListQuery, TaskUpdateInput } from '~~/server/validation/tasks'
 
@@ -215,7 +215,9 @@ export async function createTask(input: TaskCreateInput): Promise<TaskWithOverdu
     })
     .returning()
 
-  return withOverdue(mapTaskRow(rows[0]), todayISO())
+  const created = rows[0]
+  if (created === undefined) apiError('INTERNAL', 'Création impossible.', 500)
+  return withOverdue(mapTaskRow(created), todayISO())
 }
 
 /**
@@ -254,8 +256,9 @@ export async function updateTask(id: string, input: TaskUpdateInput): Promise<Ta
     .where(eq(tasks.id, id))
     .returning()
 
-  if (rows.length === 0) return null
-  return withOverdue(mapTaskRow(rows[0]), todayISO())
+  const row = rows[0]
+  if (row === undefined) return null
+  return withOverdue(mapTaskRow(row), todayISO())
 }
 
 /** Re-planification manuelle (utile pour sortir un retard). Met à jour `updated_at`. */
@@ -266,8 +269,9 @@ export async function moveTask(id: string, scheduledDate: string): Promise<TaskW
     .where(eq(tasks.id, id))
     .returning()
 
-  if (rows.length === 0) return null
-  return withOverdue(mapTaskRow(rows[0]), todayISO())
+  const row = rows[0]
+  if (row === undefined) return null
+  return withOverdue(mapTaskRow(row), todayISO())
 }
 
 /** Suppression franche. Retourne l'id supprimé, ou `null` si la tâche n'existe pas. */
@@ -277,5 +281,6 @@ export async function deleteTask(id: string): Promise<string | null> {
     .where(eq(tasks.id, id))
     .returning({ id: tasks.id })
 
-  return rows.length > 0 ? rows[0].id : null
+  const row = rows[0]
+  return row === undefined ? null : row.id
 }
