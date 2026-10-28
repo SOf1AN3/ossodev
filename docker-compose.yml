@@ -1,0 +1,18 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: osso-postgres
+    restart: unless-stopped
+    ports:
+      - '5432:5432'
+    environment:
+      POSTGRES_USER: osso
+      POSTGRES_PASSWORD: osso
+      POSTGRES_DB: osso
+    volumes:
+      - ./data/pg:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U osso -d osso']
+      interval: 5s
+      timeout: 5s
+      retries: 10
