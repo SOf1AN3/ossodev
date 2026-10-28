@@ -35,6 +35,9 @@ const longDate = formatLongDate(now)
 const quickTitle = ref('')
 const editingTask = ref<TaskWithOverdue | null>(null)
 const editorOpen = ref(false)
+// `pending` est déjà réservé par useTasks() (chargement de la liste)
+const quickAddPending = ref(false)
+const editorSaving = ref(false)
 
 const todoTasks = computed<TaskWithOverdue[]>(() =>
   today.value.filter((task) => task.status !== 'done'),
@@ -53,20 +56,34 @@ function reportError(err: unknown, fallback: string): void {
 }
 
 async function onQuickAdd(): Promise<void> {
+  // Garde-fou contre les double-soumissions (clic + `enter` synchrones)
+  if (quickAddPending.value) return
   const title = quickTitle.value.trim()
   if (!title) return
+  quickAddPending.value = true
   try {
     await createTask({ title, scheduled_date: todayIso })
     quickTitle.value = ''
     toast.show({ title: 'Tâche ajoutée', tone: 'success' })
   } catch (err) {
     reportError(err, "Impossible d'ajouter la tâche.")
+  } finally {
+    quickAddPending.value = false
   }
 }
 
 async function onToggle(task: TaskWithOverdue): Promise<void> {
+  // État avant bascule : « done » → « todo » = dévalidation (réversible, sans toast)
+  const willValidate = task.status !== 'done'
   try {
     await toggleDone(task)
+    if (willValidate) {
+      toast.show({
+        title: 'Tâche validée',
+        message: `« ${task.title} »`,
+        tone: 'success',
+      })
+    }
   } catch (err) {
     reportError(err, 'Impossible de mettre à jour la tâche.')
   }
@@ -106,13 +123,18 @@ function closeEditor(): void {
 }
 
 async function onSaveEditor(patch: TaskPatch): Promise<void> {
+  // Garde-fou contre les double-soumissions de l'éditeur
+  if (editorSaving.value) return
   if (!editingTask.value) return
+  editorSaving.value = true
   try {
     await updateTask(editingTask.value.id, patch)
     toast.show({ title: 'Tâche mise à jour', tone: 'success' })
     closeEditor()
   } catch (err) {
     reportError(err, 'Impossible de enregistrer la tâche.')
+  } finally {
+    editorSaving.value = false
   }
 }
 </script>
@@ -138,6 +160,7 @@ async function onSaveEditor(patch: TaskPatch): Promise<void> {
     <!-- Création rapide -->
     <form
       class="flex flex-wrap items-end gap-2"
+      :aria-busy="quickAddPending"
       @submit.prevent="onQuickAdd"
     >
       <div class="min-w-56 flex-1">
@@ -145,11 +168,15 @@ async function onSaveEditor(patch: TaskPatch): Promise<void> {
           v-model="quickTitle"
           label="Ajout rapide"
           placeholder="Que veux-tu faire aujourd'hui ?"
+          :disabled="quickAddPending"
           @enter="onQuickAdd"
         />
       </div>
-      <UiButton type="submit" :disabled="quickTitle.trim().length === 0">
-        Ajouter
+      <UiButton
+        type="submit"
+        :disabled="quickAddPending || quickTitle.trim().length === 0"
+      >
+        {{ quickAddPending ? 'Ajout en cours…' : 'Ajouter' }}
       </UiButton>
     </form>
 

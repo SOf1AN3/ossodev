@@ -190,36 +190,41 @@ async function onReorder(order: string[]): Promise<void> {
   <div>
     <!-- Chargement -->
     <div v-if="loading" class="flex flex-col gap-4" aria-busy="true" aria-label="Chargement du projet">
+      <h1 class="sr-only">Chargement du projet…</h1>
       <UiSkeleton class="h-8 w-64" />
       <UiSkeleton class="h-4 w-96 max-w-full" />
       <UiSkeleton class="h-64 w-full" />
     </div>
 
     <!-- Projet introuvable -->
-    <UiEmptyState
-      v-else-if="notFound"
-      icon="🔍"
-      title="Projet introuvable"
-      description="Ce projet n’existe pas (ou n’a pas été détecté par le pont local)."
-    >
-      <template #action>
-        <NuxtLink to="/projets">
-          <UiButton variant="outline">Retour aux projets</UiButton>
-        </NuxtLink>
-      </template>
-    </UiEmptyState>
+    <div v-else-if="notFound">
+      <h1 class="sr-only">Projet introuvable</h1>
+      <UiEmptyState
+        icon="🔍"
+        title="Projet introuvable"
+        description="Ce projet n’existe pas (ou n’a pas été détecté par le pont local)."
+      >
+        <template #action>
+          <NuxtLink to="/projets">
+            <UiButton variant="outline">Retour aux projets</UiButton>
+          </NuxtLink>
+        </template>
+      </UiEmptyState>
+    </div>
 
     <!-- Erreur de chargement -->
-    <UiEmptyState
-      v-else-if="loadError"
-      icon="⚠️"
-      title="Impossible de charger ce projet"
-      :description="loadError"
-    >
-      <template #action>
-        <UiButton @click="load">Réessayer</UiButton>
-      </template>
-    </UiEmptyState>
+    <div v-else-if="loadError">
+      <h1 class="sr-only">Impossible de charger ce projet</h1>
+      <UiEmptyState
+        icon="⚠️"
+        title="Impossible de charger ce projet"
+        :description="loadError"
+      >
+        <template #action>
+          <UiButton @click="load">Réessayer</UiButton>
+        </template>
+      </UiEmptyState>
+    </div>
 
     <template v-else-if="project">
       <header class="mb-6 flex flex-wrap items-start justify-between gap-4">
