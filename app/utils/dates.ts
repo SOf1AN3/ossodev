@@ -73,8 +73,15 @@ export function toISODate(d: Date): string {
 
 /** Parse `YYYY-MM-DD` en Date locale. */
 export function fromISODate(s: string): Date {
-  const [year, month, day] = s.split('-').map((part) => Number.parseInt(part, 10))
-  return new Date(year, (month ?? 1) - 1, day ?? 1)
+  // `noUncheckedIndexedAccess` : on ne déstructure pas (cela produirait
+  // `number | undefined`) et on garde un comportement identique à l'ancienne
+  // version — mois/jour absents ⇒ 1 (janvier / 1er), année absente ou
+  // invalide ⇒ `NaN` ⇒ `Invalid Date`, comme `new Date(undefined, …)`.
+  const parts = s.split('-')
+  const year = Number.parseInt(parts[0] ?? '', 10)
+  const month = parts[1] === undefined ? 1 : Number.parseInt(parts[1], 10)
+  const day = parts[2] === undefined ? 1 : Number.parseInt(parts[2], 10)
+  return new Date(year, month - 1, day)
 }
 
 /** Copie de `d` décalée de `n` jours. */
