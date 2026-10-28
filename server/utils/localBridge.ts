@@ -41,11 +41,31 @@ interface BridgeConfig {
 
 function bridgeConfig(): BridgeConfig {
   const config = useRuntimeConfig()
+  // `.env` n'est pas toujours répercuté sur `runtimeConfig` en `nuxt dev`
+  // (les requêtes DB passent parce que `db/index.ts` lit `process.env` directement).
+  // On lit donc `process.env` en priorité : comportement identique en local et sur Vercel.
+  const fromEnv = (key: string, fallback: string): string => {
+    const value = process.env[key]
+    return typeof value === 'string' && value.length > 0 ? value : fallback
+  }
+
   return {
-    localBridge: typeof config.localBridge === 'string' ? config.localBridge : '',
-    devRootPath: typeof config.devRootPath === 'string' ? config.devRootPath : '',
-    brainCommand: typeof config.brainCommand === 'string' ? config.brainCommand : '',
-    terminalCommand: typeof config.terminalCommand === 'string' ? config.terminalCommand : '',
+    localBridge: fromEnv(
+      'NUXT_LOCAL_BRIDGE',
+      typeof config.localBridge === 'string' ? config.localBridge : '',
+    ),
+    devRootPath: fromEnv(
+      'NUXT_DEV_ROOT_PATH',
+      typeof config.devRootPath === 'string' ? config.devRootPath : '',
+    ),
+    brainCommand: fromEnv(
+      'NUXT_BRAIN_COMMAND',
+      typeof config.brainCommand === 'string' ? config.brainCommand : '',
+    ),
+    terminalCommand: fromEnv(
+      'NUXT_TERMINAL_COMMAND',
+      typeof config.terminalCommand === 'string' ? config.terminalCommand : '',
+    ),
   }
 }
 
