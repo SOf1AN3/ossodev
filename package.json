@@ -8,6 +8,7 @@
     "preview": "nuxt preview",
     "prepare": "nuxt prepare",
     "typecheck": "nuxt typecheck",
+    "typecheck:server": "tsc --noEmit -p .nuxt/tsconfig.server.json",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "db:studio": "drizzle-kit studio"
