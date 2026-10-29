@@ -99,7 +99,7 @@ function onSubmit(): void {
           class="rounded-xs border px-3 py-1.5 text-sm transition-colors focus-visible:outline-2 focus-visible:outline-accent-400"
           :class="
             frequency === 'daily'
-              ? 'border-accent-fill bg-accent-fill text-[color:var(--color-on-accent)]'
+              ? 'border-accent-fill bg-accent-400 text-[color:var(--color-on-accent)]'
               : 'border-line bg-surface-800 text-ink-500 hover:bg-surface-700 hover:text-ink-300'
           "
           @click="toggleFrequency('daily')"
@@ -112,7 +112,7 @@ function onSubmit(): void {
           class="rounded-xs border px-3 py-1.5 text-sm transition-colors focus-visible:outline-2 focus-visible:outline-accent-400"
           :class="
             frequency === 'weekly'
-              ? 'border-accent-fill bg-accent-fill text-[color:var(--color-on-accent)]'
+              ? 'border-accent-fill bg-accent-400 text-[color:var(--color-on-accent)]'
               : 'border-line bg-surface-800 text-ink-500 hover:bg-surface-700 hover:text-ink-300'
           "
           @click="toggleFrequency('weekly')"

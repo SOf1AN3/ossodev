@@ -193,7 +193,9 @@ function onGridKeydown(event: KeyboardEvent): void {
 /** Hiérarchie visuelle : sélection > jour courant > mois courant > hors mois. */
 function dayClasses(day: CalendarDay): string {
   if (day.isSelected) {
-    return 'bg-accent-fill font-medium text-[color:var(--color-on-accent)]'
+    // `accent-400` (et non `accent-fill`) : le texte posé dessu doit tenir
+    // ≥4,5:1 dans les DEUX thèmes — blanc sur #a8500f = 5,5:1 en clair.
+    return 'bg-accent-400 font-medium text-[color:var(--color-on-accent)]'
   }
   if (day.isToday) {
     return 'bg-surface-700 font-medium text-ink-100'

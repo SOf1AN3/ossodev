@@ -48,7 +48,7 @@ function toggle(day: number): void {
       class="flex h-10 w-10 items-center justify-center rounded-xs border text-xs transition-colors focus-visible:outline-2 focus-visible:outline-accent-400 disabled:opacity-40"
       :class="
         isChecked(day)
-          ? 'border-accent-fill bg-accent-fill text-[color:var(--color-on-accent)]'
+          ? 'border-accent-400 bg-accent-400 text-[color:var(--color-on-accent)]'
           : 'border-line bg-surface-800 text-ink-500 hover:bg-surface-700 hover:text-ink-300'
       "
       @click="toggle(day)"

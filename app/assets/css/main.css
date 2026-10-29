@@ -34,7 +34,8 @@
 
   /* — Sémantiques : décalés du pur, jamais Tailwind par défaut — */
   --color-ok-400: #86c06c;
-  --color-danger-400: #e05252;
+  /* #e05252 tombait à 4,30:1 sur --surface-700 (modales) → remonté à 4,72:1 */
+  --color-danger-400: #e55c5c;
   --color-info-400: #6fa8c7;
 
   /* — Échelle typographique : ratio 1,25 (tierce majeure) — */
