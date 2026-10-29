@@ -206,7 +206,7 @@ async function onReorder(order: string[]): Promise<void> {
       <UiEmptyState
         title="Projet introuvable"
         title-level="h1"
-        description="Ce projet n’existe pas (ou n’a pas été détecté par le pont local)."
+        description="Ce projet n’existe pas (ou n’a pas été détecté par le Companion)."
       >
         <template #action>
           <NuxtLink to="/projets">

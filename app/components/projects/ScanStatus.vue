@@ -1,82 +1,146 @@
 <script setup lang="ts">
-import { useBridge } from '~/composables/useBridge'
+import {
+  COMPANION_OFFLINE_REASON,
+  apiErrorMessage,
+  companionReasonDetail,
+  useCompanion,
+} from '~/composables/useCompanion'
+import { apiFetch } from '~/composables/useApi'
 import { useToast } from '~/composables/useToast'
 import UiButton from '~/components/ui/UiButton.vue'
 
+/** Réponse de `POST /api/brain/scan` : mise en file (le détail des erreurs reste optionnel). */
+interface ScanIssue {
+  errors?: string[]
+}
+
 const emit = defineEmits<{
-  /** Émis après un scan réussi pour que la page recharge la liste. */
+  /** Émis après une mise en file réussie pour que la page recharge la liste. */
   scanned: []
 }>()
 
-const { status, pending: bridgePending, error: bridgeError, canRunLocal, refresh, scan, scanning } = useBridge()
+const {
+  status,
+  pending: companionPending,
+  canRunLocal,
+  refresh,
+} = useCompanion()
 const toast = useToast()
 
 const confirmStep = ref(false)
+const scanning = ref(false)
+const queued = ref(false)
 const lastErrors = ref<string[]>([])
+let reloadTimer: ReturnType<typeof setTimeout> | null = null
+
+function clearReloadTimer(): void {
+  if (reloadTimer !== null) {
+    clearTimeout(reloadTimer)
+    reloadTimer = null
+  }
+}
 
 onMounted(() => {
+  // Garde anti-double-appel côté store : zéro requête si déjà chargé.
   void refresh()
 })
 
-/** Voyant : vert si le pont répond, rouge sinon. */
-const beaconClasses = computed<string>(() =>
-  canRunLocal.value
-    ? 'bg-ok-400 [box-shadow:0_0_8px_0_var(--color-ok-400)]'
-    : 'bg-danger-400',
-)
-
-/** Libellé d’instrument reflétant l’état courant du pont. */
-const stateLabel = computed<string>(() => {
-  if (scanning.value) return 'Scan en cours'
-  if (bridgePending.value && status.value === null) return 'Vérification du pont'
-  if (status.value === null) {
-    return bridgeError.value !== null ? 'Pont local injoignable' : 'Pont local inconnu'
-  }
-  return canRunLocal.value ? 'Pont local actif' : 'Rescan indisponible'
+onUnmounted(() => {
+  clearReloadTimer()
 })
 
-/** Explique visuellement pourquoi le rescanner est désactivé (null = ok). */
+/** Voyant : vert si le Companion répond, rouge sinon, gris pendant la vérification. */
+const beaconClasses = computed<string>(() => {
+  if (status.value === null) return 'bg-ink-700'
+  return canRunLocal.value
+    ? 'bg-ok-400 [box-shadow:0_0_8px_0_var(--color-ok-400)]'
+    : 'bg-danger-400'
+})
+
+/** Libellé d’instrument reflétant l’état courant du Companion. */
+const stateLabel = computed<string>(() => {
+  if (scanning.value) return 'Analyse en cours'
+  if (queued.value) return 'Analyse en file'
+  if (companionPending.value && status.value === null) {
+    return 'Vérification du Companion'
+  }
+  if (status.value === null) return 'Présence du Companion inconnue'
+  return canRunLocal.value ? 'Companion en ligne' : 'Companion hors ligne'
+})
+
+/** Explique visuellement pourquoi le rescanner est désactivé (null = dispo). */
 const disabledReason = computed<string | null>(() => {
   if (canRunLocal.value) return null
-  return status.value?.reason ?? 'Le pont local n’est pas disponible.'
+  return status.value?.reason ?? COMPANION_OFFLINE_REASON
 })
 
-function plural(count: number, word: string): string {
-  return `${count} ${word}${count > 1 ? 's' : ''}`
-}
+/**
+ * Raison technique affichée en rouge — uniquement quand elle apporte quelque
+ * chose au-delà de l'explication générique affichée sous le voyant.
+ */
+const detailReason = computed<string | null>(() => {
+  if (canRunLocal.value || status.value === null) return null
+  const detail = companionReasonDetail(status.value.reason)
+  if (detail === null || detail === COMPANION_OFFLINE_REASON) return null
+  // La ligne est autonome : on respecte la casse française.
+  return detail.charAt(0).toUpperCase() + detail.slice(1)
+})
 
-/** Jamais de requête envoyée si le pont est indisponible. */
+/** Tooltip du bouton : toujours porteur du motif de désactivation. */
+const rescanTitle = computed<string>(() =>
+  canRunLocal.value
+    ? 'Re-scanner le dossier dev pour détecter tes projets'
+    : `Rescan impossible : ${disabledReason.value ?? COMPANION_OFFLINE_REASON}`,
+)
+
+/** Jamais de requête envoyée si le Companion est hors ligne. */
 function startScan(): void {
-  if (!canRunLocal.value || scanning.value) return
+  if (!canRunLocal.value || scanning.value || queued.value) return
   confirmStep.value = true
 }
 
 async function confirmScan(): Promise<void> {
-  if (!canRunLocal.value) return
+  if (!canRunLocal.value || scanning.value) return
   confirmStep.value = false
   lastErrors.value = []
+  scanning.value = true
   try {
-    const report = await scan()
+    const report = await apiFetch<ScanIssue | undefined>('/api/brain/scan', {
+      method: 'POST',
+    })
+    if (report !== undefined && Array.isArray(report.errors)) {
+      lastErrors.value = report.errors
+    }
     toast.show({
       tone: 'success',
-      title: 'Scan terminé',
-      message: `${plural(report.scanned, 'dossier scanné')}, ${plural(report.detected, 'projet détecté')}, ${plural(report.added, 'ajouté')}.`,
+      title: 'Analyse en file',
+      message: 'Le Companion va scanner ton dossier dev.',
     })
-    lastErrors.value = report.errors
+    // La commande part sur le poste : on recharge tout de suite, puis à nouveau
+    // quand le Companion a renvoyé son résultat au serveur.
     emit('scanned')
+    queued.value = true
+    clearReloadTimer()
+    reloadTimer = setTimeout(() => {
+      reloadTimer = null
+      queued.value = false
+      emit('scanned')
+    }, 6000)
   } catch (err) {
     toast.show({
       tone: 'error',
-      title: 'Échec du scan',
-      message: err instanceof Error ? err.message : 'Erreur inconnue.',
+      title: 'Échec de l’analyse',
+      message: apiErrorMessage(err, 'Le scan du dossier dev a échoué.'),
     })
+  } finally {
+    scanning.value = false
   }
 }
 </script>
 
 <template>
   <section
-    aria-label="État du pont local"
+    aria-label="État du Companion"
     class="surface flex flex-wrap items-center justify-between gap-4 px-4 py-3"
   >
     <div class="flex min-w-0 items-center gap-3">
@@ -91,39 +155,31 @@ async function confirmScan(): Promise<void> {
         <p class="micro text-ink-500">{{ stateLabel }}</p>
 
         <p
-          v-if="bridgePending && !status"
+          v-if="companionPending && !status"
           class="mt-1 text-xs text-ink-500"
           role="status"
         >
-          Vérification du pont…
+          Vérification du Companion…
         </p>
 
-        <p
-          v-else-if="canRunLocal && status?.devRootPath"
-          class="mt-1 truncate font-mono text-[12px] text-ink-700"
-          :title="status.devRootPath"
-        >
-          {{ status.devRootPath }}
+        <p v-else-if="detailReason" class="mt-1 text-xs text-danger-400">
+          {{ detailReason }}
         </p>
 
-        <p v-else-if="!canRunLocal && disabledReason" class="mt-1 text-xs text-danger-400">
-          {{ disabledReason }}
-        </p>
-
-        <p v-else-if="bridgeError" class="mt-1 text-xs text-danger-400">
-          {{ bridgeError }}
+        <p v-else-if="canRunLocal" class="mt-1 text-xs text-ink-500">
+          Prêt à scanner ton dossier dev.
         </p>
       </div>
     </div>
 
     <div class="flex flex-wrap items-center gap-2">
-      <template v-if="scanning">
+      <template v-if="scanning || queued">
         <span
           class="inline-block h-4 w-4 animate-spin rounded-full border-2 border-accent-400 border-t-transparent"
           aria-hidden="true"
         />
         <span class="micro text-ink-500" role="status">
-          Analyse en cours
+          {{ scanning ? 'Analyse en cours' : 'Analyse en file — en attente du Companion' }}
         </span>
       </template>
 
@@ -142,16 +198,19 @@ async function confirmScan(): Promise<void> {
         size="sm"
         variant="outline"
         :disabled="!canRunLocal"
-        :title="
-          canRunLocal
-            ? 'Re-scanner le dossier dev pour détecter tes projets'
-            : `Rescan impossible : ${disabledReason ?? 'le pont local n’est pas accessible.'}.`
-        "
+        :aria-disabled="canRunLocal ? undefined : 'true'"
+        :title="rescanTitle"
         @click="startScan"
       >
         Rescanner
       </UiButton>
     </div>
+
+    <!-- Companion hors ligne : explication, pas seulement une couleur -->
+    <p v-if="!canRunLocal && status !== null" class="w-full text-sm text-ink-500">
+      Le Companion n’est pas en ligne sur ce poste. Démarre-le pour scanner ton
+      dossier dev.
+    </p>
 
     <ul
       v-if="lastErrors.length > 0"

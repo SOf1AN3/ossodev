@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { useProjects, type ProjectWithCounts } from '~/composables/useProjects'
+import { useCompanion } from '~/composables/useCompanion'
 import { useToast } from '~/composables/useToast'
 import ProjectsScanStatus from '~/components/projects/ScanStatus.vue'
 import UiBadge from '~/components/ui/UiBadge.vue'
@@ -14,6 +15,7 @@ import UiToggle from '~/components/ui/UiToggle.vue'
 useHead({ title: 'Projets — OSSO' })
 
 const { listProjects, createProject } = useProjects()
+const { status: companionStatus, canRunLocal } = useCompanion()
 const toast = useToast()
 
 const projects = ref<ProjectWithCounts[]>([])
@@ -91,6 +93,17 @@ function progressPercent(project: ProjectWithCounts): number {
   return Math.round((project.done_tasks / project.task_count) * 100)
 }
 
+/**
+ * État vide : on n'invite pas à rescanner si le Companion ne peut pas le faire.
+ * `status === null` (vérification en cours) → on reste sur l'explication neutre.
+ */
+const emptyDescription = computed<string>(() => {
+  if (companionStatus.value !== null && !canRunLocal.value) {
+    return 'Le Companion n’est pas en ligne sur ce poste. Démarre-le, puis clique sur « Rescanner ».'
+  }
+  return 'Clique sur « Rescanner » après avoir déplacé tes dossiers dans le dossier dev.'
+})
+
 /** « il y a 2 h » / « jamais » — Intl ne couvre pas le relatif dans dates.ts. */
 function formatRelative(iso: string | null): string {
   if (!iso) return 'jamais'
@@ -115,7 +128,7 @@ function formatRelative(iso: string | null): string {
       <div>
         <h1 class="text-2xl font-semibold text-ink-100">Projets</h1>
         <p class="mt-1 text-sm text-ink-300">
-          Les dossiers de ton espace dev, détectés par le pont local.
+          Les dossiers de ton espace dev, détectés par le Companion.
         </p>
       </div>
 
@@ -170,7 +183,7 @@ function formatRelative(iso: string | null): string {
     <UiEmptyState
       v-else-if="projects.length === 0"
       title="Aucun projet détecté"
-      description="Clique sur « Rescanner » après avoir déplacé tes dossiers dans le dossier dev."
+      :description="emptyDescription"
     />
 
     <!-- Grille -->

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, nextTick, onMounted, onUpdated, onUnmounted, ref } from 'vue'
 import type { CSSProperties } from 'vue'
+import { useCompanion, companionReasonDetail } from '~/composables/useCompanion'
 
 interface NavItem {
   label: string
@@ -14,7 +15,11 @@ interface NavGroup {
 
 const route = useRoute()
 const { summary, pending: gamificationPending, load } = useGamification()
-const { status, pending: bridgePending, refresh } = useBridge()
+const {
+  status: companionStatus,
+  pending: companionPending,
+  refresh: refreshCompanion,
+} = useCompanion()
 
 const groups: NavGroup[] = [
   {
@@ -37,6 +42,7 @@ const groups: NavGroup[] = [
     title: 'SYSTÈME',
     items: [
       { label: 'Progrès', to: '/progres' },
+      { label: 'Apprentissage', to: '/apprentissage' },
       { label: 'Réglages', to: '/reglages' },
     ],
   },
@@ -48,7 +54,7 @@ function isActive(to: string): boolean {
   return route.path === to
 }
 
-// ─── Pied de rail : compteur de série + voyant du pont local ───────────────
+// ─── Pied de rail : compteur de série + pastille du Companion ──────────────
 
 /** Affichage du compteur de série : chiffre + « j », ou « — » pendant le chargement. */
 const streakLabel = computed<string>(() => {
@@ -58,31 +64,43 @@ const streakLabel = computed<string>(() => {
   return `${summary.value.streak} j`
 })
 
-type BridgeTone = 'ok' | 'down' | 'pending'
+type CompanionTone = 'ok' | 'down' | 'pending'
 
-const bridge = computed<{
-  tone: BridgeTone
+const companion = computed<{
+  tone: CompanionTone
   label: string
   reason: string | null
 }>(() => {
-  const current = status.value
+  const current = companionStatus.value
   if (current === null) {
     return {
       tone: 'pending',
       label: 'Connexion',
-      reason: bridgePending.value
-        ? 'Vérification du pont local…'
-        : 'Statut du pont local inconnu.',
+      reason: companionPending.value
+        ? 'Vérification du Companion…'
+        : 'Présence du Companion inconnue.',
     }
   }
   if (current.available) {
-    return { tone: 'ok', label: 'Actif', reason: current.reason }
+    return { tone: 'ok', label: 'Companion en ligne', reason: current.reason }
   }
-  return { tone: 'down', label: 'Indisponible', reason: current.reason }
+  return { tone: 'down', label: 'Companion hors ligne', reason: current.reason }
 })
 
-const bridgeDotClass = computed<string>(() => {
-  switch (bridge.value.tone) {
+/**
+ * Raison affichée sous la pastille : on retire le préfixe « Companion hors
+ * ligne » que le libellé juste au-dessus porte déjà, puis on remet une
+ * majuscule puisque la ligne est autonome.
+ */
+const offlineDetail = computed<string | null>(() => {
+  if (companion.value.tone !== 'down') return null
+  const detail = companionReasonDetail(companion.value.reason)
+  if (detail === null) return null
+  return detail.charAt(0).toUpperCase() + detail.slice(1)
+})
+
+const companionDotClass = computed<string>(() => {
+  switch (companion.value.tone) {
     case 'ok':
       return 'bg-ok-400'
     case 'down':
@@ -92,10 +110,10 @@ const bridgeDotClass = computed<string>(() => {
   }
 })
 
-const bridgeDotStyle = computed<CSSProperties>(() => {
-  if (bridge.value.tone === 'pending') return {}
+const companionDotStyle = computed<CSSProperties>(() => {
+  if (companion.value.tone === 'pending') return {}
   const colorVar =
-    bridge.value.tone === 'ok' ? '--color-ok-400' : '--color-danger-400'
+    companion.value.tone === 'ok' ? '--color-ok-400' : '--color-danger-400'
   return { boxShadow: `0 0 8px 0 var(${colorVar})` }
 })
 
@@ -142,7 +160,8 @@ let resizeObserver: ResizeObserver | null = null
 onMounted(() => {
   // Les deux stores ont leur garde anti-double-chargement : aucun appel en double.
   void load()
-  void refresh()
+  // Présence Companion : déjà chargé ailleurs → zéro requête ici.
+  void refreshCompanion()
   void nextTick(updateIndicator)
   window.addEventListener('resize', onResize, { passive: true })
   // Recalcule aussi quand la hauteur du rail change (scroll, breakpoint…).
@@ -224,21 +243,20 @@ onUpdated(() => {
           {{ streakLabel }}
         </span>
       </div>
-      <div class="flex items-center justify-between gap-2">
-        <span class="micro text-ink-700">Pont local</span>
+      <div class="flex items-center gap-2" :title="companion.reason ?? undefined">
         <span
-          class="inline-flex min-w-0 items-center gap-2"
-          :title="bridge.reason ?? undefined"
-        >
-          <span
-            class="h-[7px] w-[7px] shrink-0 rounded-full"
-            :class="bridgeDotClass"
-            :style="bridgeDotStyle"
-            aria-hidden="true"
-          />
-          <span class="micro truncate text-ink-300">{{ bridge.label }}</span>
+          class="h-[7px] w-[7px] shrink-0 rounded-full"
+          :class="companionDotClass"
+          :style="companionDotStyle"
+          aria-hidden="true"
+        />
+        <span class="micro min-w-0 truncate text-ink-300">
+          {{ companion.label }}
         </span>
       </div>
+      <p v-if="offlineDetail" class="text-xs text-ink-700">
+        {{ offlineDetail }}
+      </p>
     </div>
   </aside>
 </template>
