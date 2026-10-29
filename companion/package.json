@@ -1,0 +1,20 @@
+{
+  "name": "osso-companion",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Companion OSSO — processus Windows en tray qui exécute les commandes du dashboard (LEAD, rescan brain).",
+  "engines": {
+    "node": ">=22.18"
+  },
+  "scripts": {
+    "dev": "node --watch src/index.ts",
+    "start": "node src/index.ts",
+    "register": "node scripts/register-task.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@types/node": "^24.10.1",
+    "typescript": "^5.9.3"
+  }
+}
