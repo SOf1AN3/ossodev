@@ -13,7 +13,10 @@
     "db:studio": "drizzle-kit studio"
   },
   "dependencies": {
+    "dompurify": "^3.2.4",
     "drizzle-orm": "^0.44.5",
+    "marked": "^15.0.7",
+    "mermaid": "^11.6.0",
     "postgres": "^3.4.7",
     "zod": "^3.25.76"
   },

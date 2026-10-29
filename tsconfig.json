@@ -1,3 +1,25 @@
 {
-  "extends": "./.nuxt/tsconfig.json"
+  "extends": "./.nuxt/tsconfig.json",
+  // Les chemins du fichier étendu sont relatifs à `.nuxt/` : on les restate
+  // en relatif à la racine, puis on ajoute nos exclusions propres.
+  // `companion/` est une app autonome avec son propre tsconfig — elle ne doit
+  // jamais entrer dans le typecheck Nuxt.
+  "exclude": [
+    "node_modules",
+    "node_modules/nuxt/node_modules",
+    "node_modules/@nuxt/devtools/node_modules",
+    "node_modules/@nuxt/telemetry/node_modules",
+    "dist",
+    ".data",
+    ".nuxt",
+    ".output",
+    "server/**/*",
+    "modules/*/runtime/server/**/*",
+    "layers/*/server/**/*",
+    "layers/*/modules/*/runtime/server/**/*",
+    "node_modules/runtime/server",
+    "node_modules/dist/runtime/server",
+    "companion/**/*",
+    "scripts/**/*"
+  ]
 }
