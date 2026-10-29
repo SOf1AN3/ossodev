@@ -96,9 +96,26 @@ function withHeadingIds(html: string): RenderedCourse {
   return { html: withIds, headings }
 }
 
-/** Pipeline complet : marked → Mermaid → DOMPurify → ancres `h2`. */
+/**
+ * Retire le titre `# …` de tête du Markdown.
+ *
+ * La page de cours affiche **déjà** le titre en `<h1>` : laisser `marked`
+ * rendre ce `# …` produisait **deux `h1`** (hiérarchie et titre de page
+ * ambiguë). La spec Teacher impose ce titre en première ligne, donc on le
+ * retire systématiquement — l'`h1` de la page reste le seul, quel que
+ * soit le contenu.
+ *
+ * Seule la **première** ligne est touchée, et uniquement si c'est un H1 :
+ * `# Titre` match, `## Section` et `#hashtag` non.
+ */
+function stripLeadingH1(md: string): string {
+  const m = /^[ \t]*#[ \t]+[^\n]*\n?/.exec(md)
+  return m === null ? md : md.slice(m[0].length).replace(/^[ \t*\n]+/, '')
+}
+
+/** Pipeline complet : titre de tête retiré → marked → Mermaid → DOMPurify → ancres `h2`. */
 function renderCourse(md: string): RenderedCourse {
-  const parsed = marked.parse(md, { async: false })
+  const parsed = marked.parse(stripLeadingH1(md), { async: false })
   const withMermaid = toMermaidBlocks(parsed)
   const clean = DOMPurify.sanitize(withMermaid, PURIFY_CONFIG)
   return withHeadingIds(clean)
