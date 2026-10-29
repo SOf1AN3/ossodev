@@ -1,25 +1,100 @@
 <script setup lang="ts">
-import UiBadge from '~/components/ui/UiBadge.vue'
+import { computed, onMounted, onUnmounted, ref } from 'vue'
+
+/** Mapping route → titre de page (fil d'Ariane). */
+const PAGE_TITLES: Readonly<Record<string, string>> = {
+  '/': 'Tableau de bord',
+  '/aujourdhui': "Aujourd'hui",
+  '/planifier': 'Planifier',
+  '/routines': 'Routines',
+  '/idees': 'Idées',
+  '/projets': 'Projets',
+  '/progres': 'Progrès',
+  '/reglages': 'Réglages',
+}
+
+const route = useRoute()
+const { summary, load } = useGamification()
+const { isLight, toggle, sync } = useTheme()
+
+/** Titre de la page courante, déduit du chemin de la route. */
+const pageTitle = computed<string>(() => PAGE_TITLES[route.path] ?? 'OSSO')
+
+/** Compteur de série : 0 tant que le résumé n'est pas chargé. */
+const streak = computed<number>(() => summary.value?.streak ?? 0)
+
+// ─── Horloge d'instrument : mise à jour toutes les 15 s, jamais annoncée ──
+// `null` au départ → rendu vide côté serveur ET au premier rendu client,
+// donc aucun mismatch d'hydratation ; la date réelle n'est calculée qu'après montage.
+const now = ref<Date | null>(null)
+let clockTimer: ReturnType<typeof setInterval> | null = null
+
+/** Format `JJ.MM · HH:MM` — chiffres tabulaires, pas de décalage au tick. */
+const clockLabel = computed<string>(() => {
+  const d = now.value
+  if (d === null) return ''
+  const day = String(d.getDate()).padStart(2, '0')
+  const month = String(d.getMonth() + 1).padStart(2, '0')
+  const hours = String(d.getHours()).padStart(2, '0')
+  const minutes = String(d.getMinutes()).padStart(2, '0')
+  return `${day}.${month} · ${hours}:${minutes}`
+})
+
+onMounted(() => {
+  // Synchronise l'état réactif avec le `data-theme` posé avant la première peinture.
+  sync()
+  // Garde anti-double-chargement côté store : aucun appel en double.
+  void load()
+  now.value = new Date()
+  clockTimer = setInterval(() => {
+    now.value = new Date()
+  }, 15_000)
+})
+
+onUnmounted(() => {
+  if (clockTimer !== null) {
+    clearInterval(clockTimer)
+    clockTimer = null
+  }
+})
 </script>
 
 <template>
   <header
-    class="flex items-center justify-between gap-4 border-b border-line bg-surface-950/60 px-8 py-4"
+    class="sticky top-0 z-40 flex h-14 items-center justify-between gap-4 border-b border-line bg-surface-950/85 px-8 backdrop-blur-xl"
   >
-    <!-- Titre de page injecté par les pages -->
-    <div class="min-w-0">
-      <slot />
-    </div>
+    <!-- Fil d'Ariane : titre de la page courante -->
+    <nav aria-label="Fil d'Ariane" class="min-w-0">
+      <p class="truncate text-[13px] text-ink-500" aria-current="page">
+        {{ pageTitle }}
+      </p>
+    </nav>
 
-    <!-- Statut local : affichage fixe, sans API pour l'instant -->
-    <UiBadge tone="ok">
-      <span class="inline-flex items-center gap-2">
-        <span
-          class="inline-block h-2 w-2 rounded-full bg-ok-400"
-          aria-hidden="true"
-        />
-        Statut local
+    <!-- Instruments -->
+    <div class="flex shrink-0 items-center gap-3">
+      <!-- Horloge + date (masquée aux lecteurs d'écran : elle change sans action) -->
+      <span
+        class="font-mono text-[12px] text-ink-700 tnum"
+        aria-hidden="true"
+      >{{ clockLabel }}</span>
+
+      <span class="h-3.5 w-px bg-line" aria-hidden="true" />
+
+      <!-- Compteur de série -->
+      <span class="flex items-center gap-1.5" title="Série en cours (jours consécutifs)">
+        <UiIcon name="flame" class="h-[15px] w-[15px] text-accent-400" />
+        <span class="font-mono text-sm font-bold text-ink-100 tnum">{{ streak }}</span>
       </span>
-    </UiBadge>
+
+      <!-- Bascule de thème -->
+      <button
+        type="button"
+        class="flex h-8 w-8 items-center justify-center rounded-sm border border-line text-ink-300 transition-colors hover:bg-surface-800 hover:text-ink-100"
+        :aria-label="isLight ? 'Basculer en thème sombre' : 'Basculer en thème clair'"
+        @click="toggle"
+      >
+        <UiIcon :name="isLight ? 'moon' : 'sun'" size="sm" />
+      </button>
+    </div>
   </header>
 </template>
