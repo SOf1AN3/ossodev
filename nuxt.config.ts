@@ -36,8 +36,9 @@ export default defineNuxtConfig({
       ],
       script: [
         {
-          /* Anti-flash : pose data-theme AVANT la première peinture. */
-          tagPosition: 'head-inline',
+          /* Anti-flash : pose data-theme AVANT la première peinture.
+             `tagPosition` reste implicite ('head') : toute valeur hors
+             ValidTagPositions fait taire le script sans erreur. */
           innerHTML:
             "(function(){try{var t=localStorage.getItem('osso-theme');" +
             "if(t!=='light'&&t!=='dark'){t=window.matchMedia('(prefers-color-scheme: light)').matches?'light':'dark';}" +
