@@ -15,3 +15,7 @@ data/pg
 .playwright-mcp
 .vite
 .playwright
+
+# Artefacts de conception du Directeur Artistique — jamais poussés
+DESIGN.md
+preview.html
