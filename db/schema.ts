@@ -143,6 +143,53 @@ export const leadSessions = pgTable('lead_sessions', {
   launched_at: timestamp('launched_at', { withTimezone: true }).defaultNow().notNull(),
 })
 
+// Cours d'apprentissage : UNE ligne par technologie (global, D5)
+export const learningCourses = pgTable('learning_courses', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  // slug : 'vuejs', 'tailwindcss', 'drizzle'
+  technology: text('technology').notNull(),
+  title: text('title').notNull(),
+  // Markdown sémantique + blocs mermaid
+  content_md: text('content_md').notNull(),
+  status: text('status').notNull().default('todo'),
+  created_at: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  updated_at: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+  // posé à la bascule 'done', vidé au retour 'todo'
+  completed_at: timestamp('completed_at', { withTimezone: true }),
+}, (t) => [
+  check('learning_courses_status_check', sql`${t.status} in ('todo', 'done')`),
+  uniqueIndex('uniq_learning_technology').on(t.technology),
+  index('idx_learning_status').on(t.status),
+])
+
+// File de commandes exécutées par le Companion
+export const companionCommands = pgTable('companion_commands', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  // identifiant liste blanche, JAMAIS une commande
+  command_key: text('command_key').notNull(),
+  payload: jsonb('payload').$type<unknown>().notNull().default(sql`'{}'::jsonb`),
+  // HMAC-SHA256 signé par Nitro
+  signature: text('signature').notNull(),
+  status: text('status').notNull().default('pending'),
+  result_text: text('result_text'),
+  claimed_at: timestamp('claimed_at', { withTimezone: true }),
+  executed_at: timestamp('executed_at', { withTimezone: true }),
+  // created_at + 120 s
+  expires_at: timestamp('expires_at', { withTimezone: true }).notNull(),
+  created_at: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+}, (t) => [
+  check('companion_commands_status_check', sql`${t.status} in ('pending', 'claimed', 'done', 'failed')`),
+  index('idx_companion_pending').on(t.status, t.created_at),
+  index('idx_companion_expiry').on(t.expires_at),
+])
+
+// Présence du Companion (la pastille)
+export const companionPresence = pgTable('companion_presence', {
+  id: text('id').primaryKey().default('local'),
+  last_seen_at: timestamp('last_seen_at', { withTimezone: true }).defaultNow().notNull(),
+  app_version: text('app_version'),
+})
+
 export const schema = {
   settings,
   projects,
@@ -154,6 +201,9 @@ export const schema = {
   badges,
   userBadges,
   leadSessions,
+  learningCourses,
+  companionCommands,
+  companionPresence,
 }
 
 export type Schema = typeof schema

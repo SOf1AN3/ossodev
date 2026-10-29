@@ -213,3 +213,60 @@ export interface GamificationSummary {
   /** 0 → 1 */
   completionRatio: number
 }
+
+// ---------------------------------------------------------------------------
+// Apprentissage & Companion (V2)
+// ---------------------------------------------------------------------------
+
+export type LearningStatus = 'todo' | 'done'
+
+export interface LearningCourseSummary {
+  technology: string
+  title: string
+  status: LearningStatus
+  /** ISO 8601 */
+  created_at: string
+  /** ISO 8601 */
+  updated_at: string
+  /** ISO 8601 — null tant que le statut est 'todo' */
+  completed_at: string | null
+}
+
+export interface LearningCourse extends LearningCourseSummary {
+  content_md: string
+}
+
+export type CompanionCommandKey = 'opencode:lead' | 'brain:scan' | 'brain:run'
+
+export interface CompanionCommandPayload {
+  folder_path?: string
+  prompt?: string
+  dev_root?: string
+}
+
+export interface CompanionCommand {
+  id: string
+  command_key: CompanionCommandKey
+  payload: CompanionCommandPayload
+  /** ISO 8601 */
+  created_at: string
+}
+
+export interface CompanionStatus {
+  available: boolean
+  /** ISO 8601 */
+  lastSeenAt: string | null
+  reason: string | null
+}
+
+export interface CompanionClaimResult {
+  commands: CompanionCommand[]
+}
+
+export interface BrainScanResult {
+  dev_root: string
+  added: number
+  updated: number
+  projects: string[]
+  errors: string[]
+}
