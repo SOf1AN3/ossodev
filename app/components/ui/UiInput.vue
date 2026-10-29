@@ -21,8 +21,10 @@ const emit = defineEmits<{
 const inputId = useId()
 
 function onInput(event: Event): void {
-  const target = event.target as HTMLInputElement
-  emit('update:modelValue', target.value)
+  const target = event.target
+  if (target instanceof HTMLInputElement) {
+    emit('update:modelValue', target.value)
+  }
 }
 
 function onKeydown(event: KeyboardEvent): void {
@@ -33,11 +35,11 @@ function onKeydown(event: KeyboardEvent): void {
 </script>
 
 <template>
-  <div class="w-full">
+  <div class="field w-full">
     <label
       v-if="label"
       :for="inputId"
-      class="mb-1.5 block text-sm text-ink-300"
+      class="micro mb-1.5 block text-ink-500"
     >
       {{ label }}
     </label>
@@ -46,7 +48,7 @@ function onKeydown(event: KeyboardEvent): void {
       :type="type"
       :value="modelValue"
       :placeholder="placeholder"
-      class="w-full rounded-lg border border-line bg-surface-800 px-3 py-2 text-ink-100 placeholder:text-ink-500"
+      class="w-full rounded-sm border border-line bg-surface-800 px-3 py-2 text-sm text-ink-100 placeholder:text-ink-700"
       @input="onInput"
       @keydown="onKeydown"
     >

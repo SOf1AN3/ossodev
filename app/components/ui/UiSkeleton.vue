@@ -9,8 +9,9 @@ withDefaults(defineProps<UiSkeletonProps>(), {
 </script>
 
 <template>
+  <!-- Balayage lumineux (.skel), jamais une pulsation d'opacité -->
   <div
-    class="animate-pulse rounded bg-surface-800"
+    class="skel rounded-xs"
     :class="class"
     aria-hidden="true"
   />

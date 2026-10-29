@@ -20,17 +20,19 @@ const emit = defineEmits<{
 const textareaId = useId()
 
 function onInput(event: Event): void {
-  const target = event.target as HTMLTextAreaElement
-  emit('update:modelValue', target.value)
+  const target = event.target
+  if (target instanceof HTMLTextAreaElement) {
+    emit('update:modelValue', target.value)
+  }
 }
 </script>
 
 <template>
-  <div class="w-full">
+  <div class="field w-full">
     <label
       v-if="label"
       :for="textareaId"
-      class="mb-1.5 block text-sm text-ink-300"
+      class="micro mb-1.5 block text-ink-500"
     >
       {{ label }}
     </label>
@@ -39,7 +41,7 @@ function onInput(event: Event): void {
       :value="modelValue"
       :placeholder="placeholder"
       :rows="rows"
-      class="w-full resize-y rounded-lg border border-line bg-surface-800 px-3 py-2 text-ink-100 placeholder:text-ink-500"
+      class="w-full resize-y rounded-sm border border-line bg-surface-800 px-3 py-2 text-sm text-ink-100 placeholder:text-ink-700"
       @input="onInput"
     />
   </div>

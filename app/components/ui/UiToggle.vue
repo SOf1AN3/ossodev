@@ -32,21 +32,21 @@ function onKeydown(event: KeyboardEvent): void {
       role="switch"
       :aria-checked="modelValue"
       :aria-label="label"
-      class="relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full border border-line transition-colors focus-visible:outline-2 focus-visible:outline-accent-400"
-      :class="modelValue ? 'bg-accent-400' : 'bg-surface-800'"
+      class="relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full border transition-colors duration-200 ease-[var(--ease-out-expo)]"
+      :class="modelValue ? 'border-accent-fill bg-accent-fill' : 'border-line bg-surface-600'"
       @click="toggle"
       @keydown="onKeydown"
     >
       <span
-        class="inline-block h-4 w-4 transform rounded-full bg-ink-100 transition-transform"
-        :class="modelValue ? 'translate-x-6' : 'translate-x-1'"
+        class="inline-block h-4 w-4 rounded-full bg-ink-100 transition-transform duration-200 ease-[var(--ease-out-expo)]"
+        :class="modelValue ? 'translate-x-[22px]' : 'translate-x-1'"
         aria-hidden="true"
       />
     </button>
     <label
       v-if="label"
       :for="toggleId"
-      class="text-sm text-ink-300 select-none"
+      class="select-none text-sm text-ink-300"
     >
       {{ label }}
     </label>

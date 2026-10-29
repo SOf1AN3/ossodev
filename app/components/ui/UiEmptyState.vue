@@ -2,6 +2,7 @@
 import { computed } from 'vue'
 
 interface UiEmptyStateProps {
+  /** Emoji de contenu (legacy). À défaut, une icône d'interface par défaut est rendue. */
   icon?: string
   title: string
   description?: string
@@ -24,9 +25,20 @@ const titleTag = computed(() => props.titleLevel)
 
 <template>
   <div
-    class="flex flex-col items-center justify-center gap-3 rounded-xl border border-line bg-surface-900 px-6 py-16 text-center"
+    class="surface flex flex-col items-center justify-center gap-3 px-6 py-16 text-center"
   >
-    <span v-if="icon" class="text-4xl" aria-hidden="true">{{ icon }}</span>
+    <span
+      v-if="icon"
+      class="text-4xl"
+      aria-hidden="true"
+    >{{ icon }}</span>
+    <span
+      v-else
+      class="mb-1 flex h-12 w-12 items-center justify-center rounded-full bg-surface-800 text-ink-500"
+      aria-hidden="true"
+    >
+      <UiIcon name="target" class="h-6 w-6" />
+    </span>
     <component
       :is="titleTag"
       class="text-lg font-medium text-ink-100"
