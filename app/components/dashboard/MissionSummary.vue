@@ -3,10 +3,8 @@ import type { Mission } from '~~/shared/types'
 import { missionCreateSchema } from '~~/server/validation/missions'
 import { useGamification } from '~/composables/useGamification'
 import { useToast } from '~/composables/useToast'
-import ProgressBar from '~/components/gamification/ProgressBar.vue'
 import UiBadge from '~/components/ui/UiBadge.vue'
 import UiButton from '~/components/ui/UiButton.vue'
-import UiCard from '~/components/ui/UiCard.vue'
 import UiInput from '~/components/ui/UiInput.vue'
 import UiModal from '~/components/ui/UiModal.vue'
 
@@ -35,6 +33,16 @@ const targetPreview = computed<number | null>(() => {
   if (raw === '') return null
   const parsed = Number(raw)
   return Number.isFinite(parsed) ? parsed : null
+})
+
+/** Avancement de la mission, 0 → 100. */
+const percent = computed<number>(() => {
+  const mission = props.mission
+  if (mission === null || mission.target <= 0) return 0
+  return Math.max(
+    0,
+    Math.min(100, Math.round((props.progress / mission.target) * 100)),
+  )
 })
 
 function openModal(): void {
@@ -106,47 +114,60 @@ async function submit(): Promise<void> {
 </script>
 
 <template>
-  <UiCard>
-    <template #header>
-      <div class="flex flex-wrap items-center justify-between gap-3">
-        <div class="min-w-0">
-          <p class="text-xs uppercase tracking-wide text-ink-500">
-            Mission de la semaine
-          </p>
-          <h2
-            v-if="props.mission"
-            class="mt-1 truncate text-base font-medium text-ink-100"
-          >
-            {{ props.mission.title }}
-          </h2>
-        </div>
-
-        <UiBadge v-if="props.mission && props.isCompleted" tone="ok">
-          ✅ Réussie
-        </UiBadge>
-      </div>
-    </template>
+  <section class="flex flex-col gap-4" aria-labelledby="mission-title">
+    <div class="flex flex-wrap items-center justify-between gap-3">
+      <h2
+        id="mission-title"
+        class="text-[19px] font-semibold tracking-[-0.01em] text-ink-100"
+      >
+        Mission de la semaine
+      </h2>
+      <UiBadge v-if="props.mission !== null && props.isCompleted" tone="ok">
+        Réussie
+      </UiBadge>
+    </div>
 
     <!-- Mission en cours -->
-    <template v-if="props.mission">
-      <ProgressBar
-        :value="props.progress"
-        :max="props.mission.target"
-        :label="`${props.progress} / ${props.mission.target} tâches`"
-        show-percent
-        :tone="props.isCompleted ? 'ok' : 'accent'"
-      />
-      <p class="mt-3 text-xs text-ink-500">
-        Objectif hebdomadaire de {{ props.mission.target }} tâches.
+    <div v-if="props.mission !== null" class="surface lift px-5 py-4">
+      <p class="truncate text-[15px] font-medium text-ink-100">
+        {{ props.mission.title }}
       </p>
-    </template>
+
+      <div
+        class="mt-3 h-[5px] w-full overflow-hidden rounded-full bg-surface-600"
+        role="progressbar"
+        :aria-valuenow="percent"
+        aria-valuemin="0"
+        aria-valuemax="100"
+        :aria-label="`Progression de la mission ${props.mission.title}`"
+      >
+        <div
+          class="h-full rounded-full"
+          :class="props.isCompleted ? 'bg-ok-400' : 'bg-accent-fill'"
+          :style="{
+            width: `${percent}%`,
+            transition: 'width 600ms var(--ease-in-out)',
+          }"
+        />
+      </div>
+
+      <div class="mt-2.5 flex items-baseline justify-between gap-3">
+        <p class="tnum font-mono text-[12px] text-ink-700">
+          {{ props.progress }} / {{ props.mission.target }} tâches
+        </p>
+        <p class="text-[12px] text-ink-700">Objectif hebdomadaire</p>
+      </div>
+    </div>
 
     <!-- Aucune mission : action de création -->
-    <div v-else class="flex flex-col items-start gap-3">
+    <div
+      v-else
+      class="surface lift flex flex-col items-start gap-3 px-5 py-4"
+    >
       <p class="text-sm text-ink-300">
         Donne un cap à ta semaine : choisis un objectif et un nombre de tâches.
       </p>
-      <UiButton @click="openModal">Définir la mission de la semaine</UiButton>
+      <UiButton @click="openModal">Définir la mission</UiButton>
     </div>
 
     <!-- Modale de création -->
@@ -194,5 +215,5 @@ async function submit(): Promise<void> {
         </UiButton>
       </template>
     </UiModal>
-  </UiCard>
+  </section>
 </template>

@@ -4,7 +4,6 @@ import { ideaCreateSchema } from '~~/server/validation/ideas'
 import { apiFetch } from '~/composables/useApi'
 import { useToast } from '~/composables/useToast'
 import UiButton from '~/components/ui/UiButton.vue'
-import UiCard from '~/components/ui/UiCard.vue'
 import UiInput from '~/components/ui/UiInput.vue'
 import UiSkeleton from '~/components/ui/UiSkeleton.vue'
 import { formatShortDate } from '~/utils/dates'
@@ -98,49 +97,58 @@ async function submit(): Promise<void> {
 </script>
 
 <template>
-  <UiCard>
-    <template #header>
-      <div class="flex items-center justify-between gap-3">
-        <h2 class="text-base font-medium text-ink-100">Une idée ?</h2>
-        <NuxtLink
-          to="/idees"
-          class="rounded text-xs font-medium text-accent-400 transition-colors hover:text-ink-100 focus-visible:outline-2 focus-visible:outline-accent-400"
-        >
-          Tout voir
-        </NuxtLink>
-      </div>
-    </template>
+  <section class="flex flex-col gap-4" aria-labelledby="idees-title">
+    <div class="flex items-center justify-between gap-3">
+      <h2
+        id="idees-title"
+        class="text-[19px] font-semibold tracking-[-0.01em] text-ink-100"
+      >
+        Une idée ?
+      </h2>
+      <NuxtLink
+        to="/idees"
+        class="text-[13px] text-accent-400 transition-colors hover:text-ink-100"
+      >
+        Tout voir
+      </NuxtLink>
+    </div>
 
-    <!-- Saisie -->
-    <form class="flex flex-col gap-3" @submit.prevent="submit">
-      <div class="flex flex-wrap items-start gap-2">
-        <div class="min-w-44 flex-1">
-          <UiInput
-            v-model="draft"
-            label="Nouvelle idée"
-            placeholder="Une idée de projet…"
-            @keydown.enter.prevent="submit"
-          />
-        </div>
-        <UiButton type="submit" :loading="saving">Noter</UiButton>
+    <!-- Saisie : `.field` sur le champ (UiInput) = trait ambre au focus -->
+    <form
+      class="surface lift flex flex-wrap items-end gap-2 px-4 py-3.5"
+      @submit.prevent="submit"
+    >
+      <div class="min-w-44 flex-1">
+        <UiInput
+          v-model="draft"
+          label="Nouvelle idée"
+          placeholder="Une idée de projet…"
+          @enter="submit"
+        />
       </div>
+      <UiButton type="submit" :loading="saving">Noter</UiButton>
 
-      <p v-if="fieldError" role="alert" class="text-xs text-danger-400">
+      <p v-if="fieldError" role="alert" class="w-full text-xs text-danger-400">
         {{ fieldError }}
       </p>
     </form>
 
     <!-- Dernières idées -->
-    <div class="mt-5 border-t border-line pt-4">
-      <div v-if="loading" class="flex flex-col gap-2" aria-busy="true">
-        <UiSkeleton class="h-6 w-full" />
-        <UiSkeleton class="h-6 w-5/6" />
-        <UiSkeleton class="h-6 w-2/3" />
+    <div class="surface px-2 py-2">
+      <div
+        v-if="loading"
+        class="flex flex-col gap-2 px-1 py-1"
+        aria-busy="true"
+        aria-label="Chargement des idées"
+      >
+        <UiSkeleton class="h-8 w-full" />
+        <UiSkeleton class="h-8 w-5/6" />
+        <UiSkeleton class="h-8 w-2/3" />
       </div>
 
       <div
         v-else-if="loadError"
-        class="flex flex-wrap items-center justify-between gap-3"
+        class="flex flex-wrap items-center justify-between gap-3 px-2 py-2"
         role="alert"
       >
         <p class="text-sm text-danger-400">{{ loadError }}</p>
@@ -149,27 +157,32 @@ async function submit(): Promise<void> {
         </UiButton>
       </div>
 
-      <p v-else-if="recentIdeas.length === 0" class="text-sm text-ink-500">
+      <p
+        v-else-if="recentIdeas.length === 0"
+        class="px-2.5 py-2.5 text-[13px] text-ink-500"
+      >
         Rien à noter pour l’instant.
       </p>
 
-      <ul v-else class="flex flex-col gap-2" aria-label="Trois dernières idées">
+      <ul v-else class="flex flex-col" aria-label="Trois dernières idées">
         <li
           v-for="idea in recentIdeas"
           :key="idea.id"
-          class="flex items-baseline justify-between gap-3"
+          class="rounded-xs px-2.5 py-2.5 transition-colors hover:bg-surface-800"
         >
-          <span class="min-w-0 truncate text-sm text-ink-300">
-            {{ idea.title }}
-          </span>
-          <time
-            class="shrink-0 text-xs text-ink-500"
-            :datetime="idea.created_at"
-          >
-            {{ ideaDate(idea.created_at) }}
-          </time>
+          <div class="flex items-baseline justify-between gap-3">
+            <span class="min-w-0 truncate text-sm text-ink-300">
+              {{ idea.title }}
+            </span>
+            <time
+              class="tnum shrink-0 font-mono text-[11px] text-ink-700"
+              :datetime="idea.created_at"
+            >
+              {{ ideaDate(idea.created_at) }}
+            </time>
+          </div>
         </li>
       </ul>
     </div>
-  </UiCard>
+  </section>
 </template>

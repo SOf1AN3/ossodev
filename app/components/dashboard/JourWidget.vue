@@ -1,71 +1,80 @@
 <script setup lang="ts">
 import type { GamificationSummary } from '~~/shared/types'
-import LevelMeter from '~/components/gamification/LevelMeter.vue'
-import ProgressBar from '~/components/gamification/ProgressBar.vue'
-import StreakBadge from '~/components/gamification/StreakBadge.vue'
-import UiButton from '~/components/ui/UiButton.vue'
-import UiCard from '~/components/ui/UiCard.vue'
 import { formatLongDate } from '~/utils/dates'
 
-// Pièce maîtresse du tableau de bord : date du jour, avancement quotidien,
-// série en cours, niveau, et accès rapide aux tâches du jour.
+// Blocs ① (métrique géante) + ② (arc d'instrument) de la bande héro cockpit.
+// Le composant ne rend que du markup « instrument » : pas de carte, pas de
+// bouton — la mise en page appartient à la page tableau de bord.
 interface JourWidgetProps {
   summary: GamificationSummary
 }
 
-defineProps<JourWidgetProps>()
+const props = defineProps<JourWidgetProps>()
 
 const longDate = formatLongDate(new Date())
 
-function goToToday(): void {
-  void navigateTo('/aujourdhui')
-}
+/** Avancement de la journée, 0 → 100 (0 si rien n'est planifié). */
+const percent = computed<number>(() => {
+  const { scheduledToday, doneToday } = props.summary
+  if (scheduledToday <= 0) return 0
+  return Math.max(0, Math.min(100, Math.round((doneToday / scheduledToday) * 100)))
+})
+
+/** `pathLength="100"` : l'arc se vide de la droite vers la gauche. */
+const dashOffset = computed<number>(() => 100 - percent.value)
 </script>
 
 <template>
-  <UiCard>
-    <template #header>
-      <div class="flex flex-wrap items-start justify-between gap-3">
-        <div class="min-w-0">
-          <p class="text-xs uppercase tracking-wide text-ink-500">
-            Aujourd’hui
-          </p>
-          <h2 class="mt-1 text-lg font-medium text-ink-100">{{ longDate }}</h2>
-        </div>
-
-        <StreakBadge :streak="summary.streak" />
-      </div>
-    </template>
-
-    <!-- Avancement de la journée -->
-    <ProgressBar
-      v-if="summary.scheduledToday > 0"
-      size="lg"
-      show-percent
-      :value="summary.doneToday"
-      :max="summary.scheduledToday"
-      :label="`${summary.doneToday} / ${summary.scheduledToday} tâches`"
-    />
-    <p
-      v-else
-      class="rounded-lg border border-line bg-surface-800 px-4 py-3 text-sm text-ink-300"
-    >
-      Rien de prévu aujourd’hui.
+  <!-- ① Métrique géante -->
+  <div class="min-w-[190px]">
+    <h1 class="micro text-ink-700">{{ longDate }}</h1>
+    <p class="tnum display display-xl mt-2 text-ink-100">
+      <span>{{ summary.doneToday }}</span
+      ><span class="text-ink-700">/{{ summary.scheduledToday }}</span>
     </p>
+    <p class="mt-2 text-[13px] text-ink-500">tâches validées</p>
+  </div>
 
-    <!-- Niveau & points -->
-    <div class="mt-5">
-      <LevelMeter
-        :level="summary.level"
-        :level-name="summary.levelName"
-        :points="summary.points"
-        :next-level-at="summary.nextLevelAt"
+  <span
+    class="hidden self-stretch bg-line lg:block"
+    style="width: 1px"
+    aria-hidden="true"
+  />
+
+  <!-- ② Arc d'instrument -->
+  <div class="relative h-[104px] w-[104px]">
+    <svg
+      viewBox="0 0 120 120"
+      class="h-[104px] w-[104px] -rotate-90"
+      role="img"
+      :aria-label="`${percent} % de la journée validée`"
+    >
+      <circle
+        cx="60"
+        cy="60"
+        r="52"
+        fill="none"
+        stroke="var(--color-surface-600)"
+        stroke-width="7"
       />
-    </div>
-
-    <!-- Action principale -->
-    <UiButton class="mt-5 w-full" @click="goToToday">
-      Voir mes tâches du jour
-    </UiButton>
-  </UiCard>
+      <circle
+        cx="60"
+        cy="60"
+        r="52"
+        fill="none"
+        stroke="var(--color-accent-fill)"
+        stroke-width="7"
+        stroke-linecap="round"
+        pathLength="100"
+        stroke-dasharray="100"
+        :stroke-dashoffset="dashOffset"
+        style="transition: stroke-dashoffset 600ms var(--ease-in-out)"
+      />
+    </svg>
+    <span
+      class="tnum absolute inset-0 flex items-center justify-center font-mono font-bold text-ink-100"
+    >
+      {{ percent }}<span class="text-ink-500">%</span>
+    </span>
+  </div>
 </template>
