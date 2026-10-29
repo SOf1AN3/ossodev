@@ -37,12 +37,16 @@ export default defineNuxtConfig({
       script: [
         {
           /* Anti-flash : pose data-theme AVANT la première peinture.
+             Décision utilisateur : « sombre PAR DÉFAUT » — on n'écoute JAMAIS
+             prefers-color-scheme au premier lancement, seule une bascule
+             explicite de l'utilisateur change le thème.
              `tagPosition` reste implicite ('head') : toute valeur hors
              ValidTagPositions fait taire le script sans erreur. */
           innerHTML:
             "(function(){try{var t=localStorage.getItem('osso-theme');" +
-            "if(t!=='light'&&t!=='dark'){t=window.matchMedia('(prefers-color-scheme: light)').matches?'light':'dark';}" +
-            "document.documentElement.setAttribute('data-theme',t);}catch(e){document.documentElement.setAttribute('data-theme','dark');}})();",
+            "if(t!=='light'&&t!=='dark'){t='dark';}" +
+            "document.documentElement.setAttribute('data-theme',t);}" +
+            "catch(e){document.documentElement.setAttribute('data-theme','dark');}})();",
         },
       ],
     },

@@ -381,7 +381,7 @@ const pointsToNextLevel = computed<number>(() => {
               />
             </div>
             <p class="mt-2 text-[12px] text-ink-700">
-              {{ formatPts(pointsToNextLevel) }} pts avant le prochain rang
+              {{ formatPts(pointsToNextLevel) }} pts avant {{ summary?.nextLevelName ?? 'le prochain rang' }}
             </p>
           </div>
         </div>
