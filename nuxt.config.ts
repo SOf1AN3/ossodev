@@ -26,6 +26,24 @@ export default defineNuxtConfig({
         { name: 'viewport', content: 'width=device-width, initial-scale=1' },
         { name: 'description', content: 'Tableau de bord personnel OSSO' },
       ],
+      link: [
+        { rel: 'preconnect', href: 'https://fonts.googleapis.com' },
+        { rel: 'preconnect', href: 'https://fonts.gstatic.com', crossorigin: 'anonymous' },
+        {
+          rel: 'stylesheet',
+          href: 'https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap',
+        },
+      ],
+      script: [
+        {
+          /* Anti-flash : pose data-theme AVANT la première peinture. */
+          tagPosition: 'head-inline',
+          innerHTML:
+            "(function(){try{var t=localStorage.getItem('osso-theme');" +
+            "if(t!=='light'&&t!=='dark'){t=window.matchMedia('(prefers-color-scheme: light)').matches?'light':'dark';}" +
+            "document.documentElement.setAttribute('data-theme',t);}catch(e){document.documentElement.setAttribute('data-theme','dark');}})();",
+        },
+      ],
     },
   },
 
