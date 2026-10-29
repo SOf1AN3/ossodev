@@ -13,11 +13,11 @@ import UiButton from '~/components/ui/UiButton.vue'
 import UiEmptyState from '~/components/ui/UiEmptyState.vue'
 import UiIcon from '~/components/ui/UiIcon.vue'
 import UiSkeleton from '~/components/ui/UiSkeleton.vue'
-import { toISODate } from '~/utils/dates'
+import { computed, nextTick, onMounted, ref, watch } from 'vue'
 
 useHead({ title: 'OSSO — Tableau de bord' })
 
-const { summary, badges, mission, error, load, refreshSummary } = useGamification()
+const { summary, badges, mission, error, load, refreshSummary, newlyEarned, clearNewlyEarned } = useGamification()
 const { listProjects } = useProjects()
 const {
   today,
@@ -104,36 +104,35 @@ watch(
 )
 
 /* ══════════════════════════════════════════════════════════════
-   MOMENT ② — ignition des badges gagnés aujourd'hui.
-   Le toast « badge débloqué » est émis par `useGamification` lui-même
-   (le payload `newlyEarned` est consommé au chargement du résumé) :
-   on n'en affiche jamais un second, on ne joue que l'embrasement.
+   MOMENT ② — ignition des badges **réellement** gagnés par cet appel.
+   On lit `newlyEarned` (exposé par `useGamification`) plutôt que
+   `earned_at === aujourd'hui` : sinon un badge gagné dans une session
+   précédente s'embraserait à chaque ouverture du tableau de bord.
+   Le toast reste porté par le composable — pas de doublon.
    ══════════════════════════════════════════════════════════════ */
 const badgesListEl = ref<HTMLElement | null>(null)
-const todayIso = toISODate(new Date())
-let badgesIgnited = false
 
-function igniteTodayBadges(): void {
+function igniteEarnedBadges(): void {
   const container = badgesListEl.value
   if (container === null) return
-  const items = container.querySelectorAll<HTMLElement>('[data-badge-code]')
-  for (const item of items) {
-    const code = item.dataset.badgeCode
-    if (code === undefined || code === '') continue
-    const badge = badges.value.find((candidate) => candidate.code === code)
-    if (badge === undefined || badge.earned_at === null) continue
-    if (toISODate(new Date(badge.earned_at)) !== todayIso) continue
-    igniteBadge(item)
+  const earned = newlyEarned.value
+  if (earned.length === 0) return
+
+  for (const badge of earned) {
+    const item = container.querySelector<HTMLElement>(
+      `[data-badge-code="${badge.code}"]`,
+    )
+    if (item !== null) igniteBadge(item)
   }
+  clearNewlyEarned()
 }
 
 watch(
-  () => summary.value !== null && badges.value.length > 0,
+  () => newlyEarned.value.length > 0 && badges.value.length > 0,
   async (ready) => {
-    if (!ready || badgesIgnited) return
-    badgesIgnited = true
+    if (!ready) return
     await nextTick()
-    igniteTodayBadges()
+    igniteEarnedBadges()
   },
   { immediate: true },
 )

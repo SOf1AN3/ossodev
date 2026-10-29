@@ -53,6 +53,15 @@ const summary: Ref<GamificationSummary | null> = ref(null)
 const badges: Ref<BadgeWithEarnedAt[]> = ref([])
 const records: Ref<Records | null> = ref(null)
 const mission: Ref<CurrentMission | null> = ref(null)
+/**
+ * Badges gagnés lors du dernier résumé.
+ *
+ * Exposé tel quel — les pages en ont besoin pour déclencher le moment ②
+ * (ignition de la carte). L'événement ne doit JAMAIS être consommé en silence
+ * dans `applySummary` : sinon l'animation ne peut jamais partir.
+ * Une page lève via `clearNewlyEarned()` une fois qu'elle a joué l'animation.
+ */
+const newlyEarned: Ref<Badge[]> = ref([])
 const pending = ref(false)
 const error = ref<string | null>(null)
 
@@ -74,19 +83,20 @@ function toErrorMessage(err: unknown, fallback: string): string {
   return fallback
 }
 
-/** Applique le résumé et toaste les badges gagnés par cet appel, s'il y en a. */
+/** Applique le résumé, expose les badges gagnés et les annonce par toast. */
 function applySummary(payload: GamificationSummaryPayload): void {
-  const { newlyEarned, ...stats } = payload
+  const { newlyEarned: earned, ...stats } = payload
   summary.value = stats
+  newlyEarned.value = earned
 
-  if (newlyEarned.length > 0) {
+  if (earned.length > 0) {
     const toast = useToast()
-    const list = newlyEarned.map((badge) => `${badge.icon} ${badge.name}`)
+    const list = earned.map((badge) => `${badge.icon} ${badge.name}`)
     toast.show({
       tone: 'success',
       title:
-        newlyEarned.length > 1
-          ? `${newlyEarned.length} nouveaux badges !`
+        earned.length > 1
+          ? `${earned.length} nouveaux badges !`
           : 'Nouveau badge débloqué !',
       message: list.join(' · '),
     })
@@ -196,6 +206,11 @@ async function createMission(
   return 'created'
 }
 
+/** Vide la liste des badges gagnés — à appeler après avoir joué l'animation (moment ②). */
+function clearNewlyEarned(): void {
+  newlyEarned.value = []
+}
+
 export function useGamification() {
   return {
     summary,
@@ -204,8 +219,10 @@ export function useGamification() {
     mission,
     pending,
     error,
+    newlyEarned,
     load,
     refreshSummary,
     createMission,
+    clearNewlyEarned,
   }
 }

@@ -11,7 +11,7 @@ import UiSkeleton from '~/components/ui/UiSkeleton.vue'
 
 useHead({ title: 'Progrès — OSSO' })
 
-const { summary, badges, records, mission, error, load } =
+const { summary, badges, records, mission, error, load, newlyEarned } =
   useGamification()
 const { countUp } = useMoments()
 
@@ -64,23 +64,13 @@ const nextPercent = computed<number>(() => {
   return Math.min(100, Math.round((stats.points / stats.nextLevelAt) * 100))
 })
 
-/* — Moment ② : le badge débloqué « à l'instant » s'embrase à l'ouverture.
-   `useGamification` toaste déjà les nouveaux badges (`applySummary`) —
-   on ne duplicate pas le toast, on pilote seulement l'animation. — */
-/** Fenêtre de détection d'un badge « fraîchement débloqué ». */
-const IGNITION_WINDOW_MS = 30 * 60 * 1000
-
+/* — Moment ② : on lit `newlyEarned`, exposé par `useGamification`.
+   Une heuristique sur `earned_at` (< 30 min) aurait embrasé un badge gagné
+   dans une session précédente à chaque ouverture — une fausse célébration.
+   `useGamification` toaste déjà : on ne pilote que l'animation. — */
 const ignitionCode = computed<string | null>(() => {
-  const now = Date.now()
-  let newest: { code: string; at: number } | null = null
-  for (const badge of badges.value) {
-    if (badge.earned_at === null) continue
-    const at = Date.parse(badge.earned_at)
-    if (Number.isNaN(at)) continue
-    if (now - at > IGNITION_WINDOW_MS) continue
-    if (newest === null || at > newest.at) newest = { code: badge.code, at }
-  }
-  return newest === null ? null : newest.code
+  const earned = newlyEarned.value
+  return earned.length > 0 ? (earned[0]?.code ?? null) : null
 })
 
 onMounted(() => {
