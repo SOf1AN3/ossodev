@@ -2,9 +2,10 @@
 import { useProjects, type ProjectWithCounts } from '~/composables/useProjects'
 import { useToast } from '~/composables/useToast'
 import ProjectsScanStatus from '~/components/projects/ScanStatus.vue'
+import UiBadge from '~/components/ui/UiBadge.vue'
 import UiButton from '~/components/ui/UiButton.vue'
-import UiCard from '~/components/ui/UiCard.vue'
 import UiEmptyState from '~/components/ui/UiEmptyState.vue'
+import UiIcon from '~/components/ui/UiIcon.vue'
 import UiInput from '~/components/ui/UiInput.vue'
 import UiModal from '~/components/ui/UiModal.vue'
 import UiSkeleton from '~/components/ui/UiSkeleton.vue'
@@ -109,7 +110,7 @@ function formatRelative(iso: string | null): string {
 </script>
 
 <template>
-  <div class="flex flex-col gap-6">
+  <div class="page-enter flex flex-col gap-6">
     <header class="flex flex-wrap items-end justify-between gap-4">
       <div>
         <h1 class="text-2xl font-semibold text-ink-100">Projets</h1>
@@ -117,12 +118,17 @@ function formatRelative(iso: string | null): string {
           Les dossiers de ton espace dev, détectés par le pont local.
         </p>
       </div>
-      <UiButton @click="openAddModal">+ Ajouter un projet</UiButton>
+
+      <div class="flex flex-wrap items-center gap-5">
+        <UiToggle v-model="includeArchived" label="Afficher les archivés" />
+        <UiButton @click="openAddModal">
+          <UiIcon name="plus" size="sm" />
+          Ajouter un projet
+        </UiButton>
+      </div>
     </header>
 
     <ProjectsScanStatus @scanned="load" />
-
-    <UiToggle v-model="includeArchived" label="Afficher les archivés" />
 
     <!-- Chargement -->
     <div
@@ -131,15 +137,27 @@ function formatRelative(iso: string | null): string {
       aria-busy="true"
       aria-label="Chargement des projets"
     >
-      <UiCard v-for="n in 3" :key="n">
-        <UiSkeleton class="h-24 w-full" />
-      </UiCard>
+      <div
+        v-for="n in 3"
+        :key="n"
+        class="surface flex flex-col gap-3 px-5 py-4"
+        aria-hidden="true"
+      >
+        <div class="flex items-center gap-3">
+          <UiSkeleton class="h-9 w-9 shrink-0" />
+          <div class="min-w-0 flex-1">
+            <UiSkeleton class="h-4 w-1/2" />
+            <UiSkeleton class="mt-2 h-3 w-3/4" />
+          </div>
+        </div>
+        <UiSkeleton class="h-1 w-full" />
+        <UiSkeleton class="h-3 w-1/3" />
+      </div>
     </div>
 
     <!-- Erreur -->
     <UiEmptyState
       v-else-if="loadError"
-      icon="⚠️"
       title="Impossible de charger les projets"
       :description="loadError"
     >
@@ -151,7 +169,6 @@ function formatRelative(iso: string | null): string {
     <!-- Vide -->
     <UiEmptyState
       v-else-if="projects.length === 0"
-      icon="📁"
       title="Aucun projet détecté"
       description="Clique sur « Rescanner » après avoir déplacé tes dossiers dans le dossier dev."
     />
@@ -165,56 +182,63 @@ function formatRelative(iso: string | null): string {
         v-for="project in projects"
         :key="project.id"
         :to="`/projets/${project.id}`"
-        class="group flex flex-col gap-3 rounded-xl border border-line bg-surface-900 p-5 transition-colors hover:bg-surface-800 focus-visible:outline-2 focus-visible:outline-accent-400"
+        class="surface lift group flex flex-col gap-3 px-5 py-4 focus-visible:outline-2 focus-visible:outline-accent-400"
       >
-        <div class="flex items-start justify-between gap-2">
-          <h2
-            class="min-w-0 truncate text-base font-medium text-ink-100 transition-colors group-hover:text-accent-400"
-            :title="project.name"
-          >
-            {{ project.name }}
-          </h2>
+        <div class="flex items-start gap-3">
           <span
-            v-if="project.is_archived"
-            class="shrink-0 rounded-full bg-surface-700 px-2 py-0.5 text-xs text-ink-300"
+            class="grid h-9 w-9 shrink-0 place-items-center rounded-sm border border-line bg-surface-800 text-ink-500 transition-colors group-hover:text-accent-400"
+            aria-hidden="true"
           >
-            archivé
+            <UiIcon name="folder" class="h-[19px] w-[19px]" />
+          </span>
+
+          <div class="min-w-0 flex-1">
+            <div class="flex items-center justify-between gap-2">
+              <h2
+                class="min-w-0 truncate font-semibold text-ink-100 transition-colors group-hover:text-accent-400"
+                :title="project.name"
+              >
+                {{ project.name }}
+              </h2>
+              <UiBadge v-if="project.is_archived" class="shrink-0">
+                archivé
+              </UiBadge>
+            </div>
+            <p
+              class="mt-1 truncate font-mono text-[12px] text-ink-700"
+              :title="project.folder_path"
+            >
+              {{ project.folder_path }}
+            </p>
+          </div>
+        </div>
+
+        <div class="flex items-center justify-between gap-3">
+          <UiBadge tone="accent">
+            <span class="tnum">{{ project.open_tasks }}</span>
+            ouverte{{ project.open_tasks > 1 ? 's' : '' }}
+          </UiBadge>
+          <span class="tnum font-mono text-[11px] text-ink-700">
+            {{ project.done_tasks }}/{{ project.task_count }}
           </span>
         </div>
 
-        <p
-          class="truncate text-xs text-ink-500"
-          :title="project.folder_path"
+        <div
+          class="h-[4px] w-full overflow-hidden rounded-full bg-surface-600"
+          role="progressbar"
+          :aria-valuenow="project.done_tasks"
+          aria-valuemin="0"
+          :aria-valuemax="project.task_count"
+          :aria-label="`Progression de ${project.name}`"
         >
-          {{ project.folder_path }}
-        </p>
-
-        <div>
-          <div class="flex items-center justify-between text-xs text-ink-300">
-            <span>{{ project.open_tasks }} à faire</span>
-            <span>
-              {{ project.done_tasks }}
-              terminée{{ project.done_tasks > 1 ? 's' : '' }}
-            </span>
-            <span>{{ project.task_count }} au total</span>
-          </div>
           <div
-            class="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-surface-700"
-            role="progressbar"
-            :aria-valuenow="project.done_tasks"
-            aria-valuemin="0"
-            :aria-valuemax="project.task_count"
-            :aria-label="`Progression de ${project.name}`"
-          >
-            <div
-              class="h-full rounded-full bg-accent-400 transition-all"
-              :style="{ width: `${progressPercent(project)}%` }"
-            />
-          </div>
+            class="h-full rounded-full bg-accent-fill transition-all"
+            :style="{ width: `${progressPercent(project)}%` }"
+          />
         </div>
 
-        <p class="text-xs text-ink-500">
-          Dernier scan : {{ formatRelative(project.last_scan_at) }}
+        <p class="micro text-ink-700">
+          Dernier scan · {{ formatRelative(project.last_scan_at) }}
         </p>
       </NuxtLink>
     </div>
@@ -238,7 +262,10 @@ function formatRelative(iso: string | null): string {
             placeholder="C:/Users/Sofiane/Desktop/dev/mon-projet"
           />
           <p class="mt-1.5 text-xs text-ink-500">
-            Chemin absolu, ex. C:/Users/Sofiane/Desktop/dev/mon-projet
+            Chemin absolu, ex.
+            <span class="font-mono text-[12px] text-ink-700">
+              C:/Users/Sofiane/Desktop/dev/mon-projet
+            </span>
           </p>
         </div>
       </form>

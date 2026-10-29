@@ -12,7 +12,7 @@ const TACHES_PLACEHOLDER = '{{TACHES}}'
     <div class="flex flex-wrap items-center gap-2">
       <UiBadge tone="accent">{{ preview.projectName }}</UiBadge>
       <UiBadge>
-        {{ preview.taskCount }}
+        <span class="tnum">{{ preview.taskCount }}</span>
         tâche{{ preview.taskCount > 1 ? 's' : '' }}
       </UiBadge>
       <UiBadge :tone="preview.placeholderFound ? 'ok' : 'neutral'">
@@ -22,30 +22,36 @@ const TACHES_PLACEHOLDER = '{{TACHES}}'
 
     <p class="text-sm text-ink-300">
       Dossier :
-      <code class="rounded bg-surface-800 px-1 text-xs text-ink-100">
+      <code
+        class="rounded-xs bg-surface-800 px-1.5 py-0.5 font-mono text-[12px] text-ink-700"
+      >
         {{ preview.folderPath }}
       </code>
     </p>
 
     <p
       v-if="preview.taskCount === 0"
-      class="rounded-lg border border-line bg-surface-800 px-3 py-2 text-sm text-ink-300"
+      class="rounded-sm border border-line bg-surface-800 px-3 py-2 text-sm text-ink-300"
     >
       Aucune tâche dans ce projet — le prompt partira sans liste.
     </p>
 
     <p
       v-if="!preview.placeholderFound"
-      class="rounded-lg border border-line bg-surface-800 px-3 py-2 text-xs text-ink-300"
+      class="rounded-sm border border-line bg-surface-800 px-3 py-2 text-xs text-ink-300"
     >
-      Marqueur {{ TACHES_PLACEHOLDER }} introuvable dans le modèle : la liste
-      des tâches sera ajoutée en fin de message.
+      Marqueur
+      <span class="font-mono text-[12px] text-ink-700">
+        {{ TACHES_PLACEHOLDER }}
+      </span>
+      introuvable dans le modèle : la liste des tâches sera ajoutée en fin de
+      message.
     </p>
 
     <div>
-      <p class="mb-1.5 text-sm text-ink-300">Aperçu du prompt</p>
+      <p class="micro mb-1.5 text-ink-500">Aperçu du prompt</p>
       <pre
-        class="max-h-96 overflow-auto rounded-lg border border-line bg-surface-800 p-3 text-xs whitespace-pre-wrap text-ink-100"
+        class="max-h-96 overflow-auto rounded-sm bg-surface-800 p-4 font-mono text-[12px] whitespace-pre-wrap text-ink-300"
       >{{ preview.prompt }}</pre>
     </div>
 

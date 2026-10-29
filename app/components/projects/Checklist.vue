@@ -83,7 +83,7 @@ function submitNew(): void {
 
 <template>
   <div class="flex flex-col gap-3">
-    <h2 class="text-base font-medium text-ink-100">Checklist</h2>
+    <h2 class="micro text-ink-500">Checklist</h2>
 
     <p v-if="pending" class="text-sm text-ink-300" role="status">
       Chargement des tâches…

@@ -4,8 +4,10 @@ import { useIdeas } from '~/composables/useIdeas'
 import { useToast } from '~/composables/useToast'
 import UiButton from '~/components/ui/UiButton.vue'
 import UiEmptyState from '~/components/ui/UiEmptyState.vue'
+import UiIcon from '~/components/ui/UiIcon.vue'
 import UiInput from '~/components/ui/UiInput.vue'
 import UiModal from '~/components/ui/UiModal.vue'
+import UiSkeleton from '~/components/ui/UiSkeleton.vue'
 import UiTextarea from '~/components/ui/UiTextarea.vue'
 
 useHead({ title: 'Idées — OSSO' })
@@ -171,7 +173,7 @@ function formatRelative(iso: string): string {
 </script>
 
 <template>
-  <div class="flex flex-col gap-6">
+  <div class="page-enter flex flex-col gap-6">
     <header>
       <h1 class="text-2xl font-semibold text-ink-100">Idées</h1>
       <p class="mt-1 text-sm text-ink-300">
@@ -183,15 +185,18 @@ function formatRelative(iso: string): string {
     <!-- Zone de création permanente -->
     <section
       aria-label="Ajouter une idée"
-      class="rounded-xl border border-line bg-surface-900 p-5"
+      class="surface lift px-4 py-3.5"
     >
       <form class="flex flex-col gap-4" @submit.prevent="submitCreate">
-        <UiInput
-          v-model="newTitle"
-          label="Nouvelle idée"
-          placeholder="Titre de l’idée, puis Entrée pour enregistrer…"
-          @enter="submitCreate"
-        />
+        <!-- .field : trait ambre qui se déploie au focus -->
+        <div class="field">
+          <UiInput
+            v-model="newTitle"
+            label="Nouvelle idée"
+            placeholder="Titre de l’idée, puis Entrée pour enregistrer…"
+            @enter="submitCreate"
+          />
+        </div>
 
         <div v-if="showDescription">
           <UiTextarea
@@ -202,15 +207,20 @@ function formatRelative(iso: string): string {
           />
         </div>
 
-        <div class="flex flex-wrap items-center justify-end gap-2">
+        <div class="flex flex-wrap items-center justify-between gap-3">
           <UiButton
             v-if="!showDescription"
             variant="ghost"
             size="sm"
             @click="showDescription = true"
           >
-            + Ajouter une description
+            <UiIcon name="plus" size="sm" />
+            Ajouter une description
           </UiButton>
+          <span v-else class="text-xs text-ink-500">
+            Entrée dans le titre pour enregistrer directement.
+          </span>
+
           <UiButton
             type="submit"
             :loading="creating"
@@ -225,22 +235,16 @@ function formatRelative(iso: string): string {
     <!-- Chargement -->
     <div
       v-if="loading"
-      class="flex flex-col gap-3"
+      class="surface flex flex-col gap-3 px-4 py-4"
       aria-busy="true"
       aria-label="Chargement des idées"
     >
-      <div
-        v-for="n in 3"
-        :key="n"
-        class="h-16 w-full animate-pulse rounded-lg bg-surface-800"
-        aria-hidden="true"
-      />
+      <UiSkeleton v-for="n in 3" :key="n" class="h-14 w-full" />
     </div>
 
     <!-- Erreur -->
     <UiEmptyState
       v-else-if="loadError"
-      icon="⚠️"
       title="Impossible de charger les idées"
       :description="loadError"
     >
@@ -252,27 +256,33 @@ function formatRelative(iso: string): string {
     <!-- Vide -->
     <UiEmptyState
       v-else-if="sortedIdeas.length === 0"
-      icon="💡"
       title="Aucune idée pour l’instant"
       description="Note-la avant de la perdre."
     />
 
     <!-- Liste -->
-    <ul v-else class="flex flex-col gap-3" aria-label="Idées enregistrées">
+    <ul v-else class="surface overflow-hidden" aria-label="Idées enregistrées">
       <li
         v-for="idea in sortedIdeas"
         :key="idea.id"
-        class="rounded-xl border border-line bg-surface-900 p-4"
+        class="rounded-xs border-b border-line px-3 py-3 transition-colors last:border-b-0 hover:bg-surface-800"
       >
         <div class="flex flex-wrap items-start justify-between gap-3">
           <div class="min-w-0 flex-1">
-            <h2 class="text-base font-medium text-ink-100">{{ idea.title }}</h2>
-            <p class="mt-0.5 text-xs text-ink-500">
+            <h2 class="font-medium text-ink-100">{{ idea.title }}</h2>
+            <p
+              v-if="idea.description"
+              class="mt-1 line-clamp-2 text-[13px] text-ink-500"
+              :title="idea.description"
+            >
+              {{ idea.description }}
+            </p>
+            <p class="micro mt-1.5 text-ink-700">
               Créée {{ formatRelative(idea.created_at) }}
             </p>
           </div>
 
-          <div class="flex shrink-0 items-center gap-2">
+          <div class="flex shrink-0 items-center gap-1">
             <template v-if="confirmingId === idea.id">
               <span class="text-xs text-danger-400">Supprimer ?</span>
               <UiButton
@@ -290,37 +300,46 @@ function formatRelative(iso: string): string {
                 Annuler
               </UiButton>
             </template>
+
             <template v-else>
-              <UiButton size="sm" variant="outline" @click="openEdit(idea)">
-                Éditer
-              </UiButton>
-              <UiButton
-                size="sm"
-                variant="danger"
+              <button
+                type="button"
+                class="rounded-xs p-1.5 text-ink-500 transition-colors hover:bg-surface-700 hover:text-ink-100"
+                aria-label="Éditer l’idée"
+                :title="`Éditer : ${idea.title}`"
+                @click="openEdit(idea)"
+              >
+                <UiIcon name="pencil" />
+              </button>
+              <button
+                type="button"
+                class="rounded-xs p-1.5 text-ink-500 transition-colors hover:bg-surface-700 hover:text-danger-400"
+                aria-label="Supprimer l’idée"
+                :title="`Supprimer : ${idea.title}`"
                 @click="confirmingId = idea.id"
               >
-                Supprimer
-              </UiButton>
+                <UiIcon name="trash" />
+              </button>
             </template>
           </div>
         </div>
 
-        <template v-if="idea.description">
-          <p
-            class="mt-2 text-sm whitespace-pre-wrap text-ink-300"
-            :class="expandedIds.includes(idea.id) ? '' : 'line-clamp-2'"
-          >
-            {{ idea.description }}
-          </p>
-          <button
-            type="button"
-            class="mt-1 rounded text-xs text-accent-400 transition-colors hover:text-ink-100 focus-visible:outline-2 focus-visible:outline-accent-400"
-            :aria-expanded="expandedIds.includes(idea.id)"
-            @click="toggleExpand(idea.id)"
-          >
-            {{ expandedIds.includes(idea.id) ? 'Réduire' : 'Afficher plus' }}
-          </button>
-        </template>
+        <button
+          v-if="idea.description"
+          type="button"
+          class="mt-1.5 rounded-xs text-xs text-accent-400 transition-colors hover:text-ink-100"
+          :aria-expanded="expandedIds.includes(idea.id)"
+          @click="toggleExpand(idea.id)"
+        >
+          {{ expandedIds.includes(idea.id) ? 'Réduire' : 'Afficher la description entière' }}
+        </button>
+
+        <p
+          v-if="idea.description && expandedIds.includes(idea.id)"
+          class="mt-1.5 text-sm whitespace-pre-wrap text-ink-300"
+        >
+          {{ idea.description }}
+        </p>
       </li>
     </ul>
 

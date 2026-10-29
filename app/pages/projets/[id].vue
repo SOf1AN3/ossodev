@@ -8,8 +8,8 @@ import type { ProjectTask } from '~~/shared/types'
 import ProjectsChecklist from '~/components/projects/Checklist.vue'
 import ProjectsLeadButton from '~/components/projects/LeadButton.vue'
 import UiButton from '~/components/ui/UiButton.vue'
-import UiCard from '~/components/ui/UiCard.vue'
 import UiEmptyState from '~/components/ui/UiEmptyState.vue'
+import UiIcon from '~/components/ui/UiIcon.vue'
 import UiSkeleton from '~/components/ui/UiSkeleton.vue'
 
 const route = useRoute()
@@ -187,9 +187,14 @@ async function onReorder(order: string[]): Promise<void> {
 </script>
 
 <template>
-  <div>
+  <div class="page-enter">
     <!-- Chargement -->
-    <div v-if="loading" class="flex flex-col gap-4" aria-busy="true" aria-label="Chargement du projet">
+    <div
+      v-if="loading"
+      class="flex flex-col gap-4"
+      aria-busy="true"
+      aria-label="Chargement du projet"
+    >
       <h1 class="sr-only">Chargement du projet…</h1>
       <UiSkeleton class="h-8 w-64" />
       <UiSkeleton class="h-4 w-96 max-w-full" />
@@ -199,7 +204,6 @@ async function onReorder(order: string[]): Promise<void> {
     <!-- Projet introuvable -->
     <div v-else-if="notFound">
       <UiEmptyState
-        icon="🔍"
         title="Projet introuvable"
         title-level="h1"
         description="Ce projet n’existe pas (ou n’a pas été détecté par le pont local)."
@@ -215,7 +219,6 @@ async function onReorder(order: string[]): Promise<void> {
     <!-- Erreur de chargement -->
     <div v-else-if="loadError">
       <UiEmptyState
-        icon="⚠️"
         title="Impossible de charger ce projet"
         title-level="h1"
         :description="loadError"
@@ -231,22 +234,24 @@ async function onReorder(order: string[]): Promise<void> {
         <div class="min-w-0">
           <NuxtLink
             to="/projets"
-            class="inline-block rounded text-sm text-ink-300 transition-colors hover:text-ink-100 focus-visible:outline-2 focus-visible:outline-accent-400"
+            class="inline-flex items-center gap-1 rounded-xs text-sm text-ink-300 transition-colors hover:text-ink-100"
           >
-            ← Retour aux projets
+            <UiIcon name="chevronLeft" size="sm" />
+            Retour aux projets
           </NuxtLink>
           <h1 class="mt-2 text-2xl font-semibold text-ink-100">
             {{ project.name }}
           </h1>
           <p
-            class="mt-1 truncate text-sm text-ink-500"
+            class="mt-1 truncate font-mono text-[12px] text-ink-700"
             :title="project.folder_path"
           >
             {{ project.folder_path }}
           </p>
-          <p class="mt-1 text-xs text-ink-300">
-            {{ project.open_tasks }} tâche{{ project.open_tasks > 1 ? 's' : '' }}
-            à faire · {{ project.done_tasks }}
+          <p class="mt-2 text-xs text-ink-300">
+            <span class="tnum">{{ project.open_tasks }}</span>
+            tâche{{ project.open_tasks > 1 ? 's' : '' }} à faire ·
+            <span class="tnum">{{ project.done_tasks }}</span>
             terminée{{ project.done_tasks > 1 ? 's' : '' }}
           </p>
         </div>
@@ -254,7 +259,19 @@ async function onReorder(order: string[]): Promise<void> {
         <ProjectsLeadButton :project-id="project.id" />
       </header>
 
-      <UiCard>
+      <!-- Avertissement : prompt sans liste de tâches -->
+      <div
+        v-if="tasks.length === 0"
+        class="surface mb-4 flex flex-col gap-1 px-4 py-3"
+        role="status"
+      >
+        <p class="micro text-ink-500">Prompt LEAD</p>
+        <p class="text-sm text-ink-300">
+          Aucune tâche dans ce projet — le prompt partira sans liste.
+        </p>
+      </div>
+
+      <div class="rounded-md border border-line bg-surface-800 px-4 py-3.5">
         <ProjectsChecklist
           :tasks="tasks"
           :pending="loading"
@@ -265,7 +282,7 @@ async function onReorder(order: string[]): Promise<void> {
           @add="onAdd"
           @reorder="onReorder"
         />
-      </UiCard>
+      </div>
     </template>
   </div>
 </template>

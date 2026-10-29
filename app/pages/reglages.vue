@@ -35,7 +35,7 @@ async function onSave(): Promise<void> {
 </script>
 
 <template>
-  <div class="flex flex-col gap-6">
+  <div class="page-enter flex flex-col gap-6">
     <header>
       <h1 class="text-2xl font-semibold text-ink-100">Réglages</h1>
       <p class="mt-1 text-sm text-ink-300">
@@ -44,11 +44,8 @@ async function onSave(): Promise<void> {
     </header>
 
     <!-- Bandeau d'information : portée locale des réglages -->
-    <div
-      class="flex items-start gap-3 rounded-xl border border-l-4 border-line border-l-accent-400 bg-surface-900 px-4 py-3"
-      role="note"
-    >
-      <span aria-hidden="true">ℹ️</span>
+    <div class="surface flex flex-col gap-1 px-4 py-3" role="note">
+      <p class="micro text-ink-500">Portée locale</p>
       <p class="text-sm text-ink-300">
         Ces réglages ne s’appliquent qu’en local. Sur Vercel, les fonctions
         d’exécution sont désactivées.
@@ -56,7 +53,12 @@ async function onSave(): Promise<void> {
     </div>
 
     <!-- Chargement -->
-    <div v-if="pending" class="flex flex-col gap-4" aria-busy="true" aria-label="Chargement des réglages">
+    <div
+      v-if="pending"
+      class="flex flex-col gap-4"
+      aria-busy="true"
+      aria-label="Chargement des réglages"
+    >
       <UiSkeleton class="h-72 w-full" />
       <UiSkeleton class="h-48 w-full" />
     </div>
@@ -64,7 +66,6 @@ async function onSave(): Promise<void> {
     <!-- Erreur -->
     <UiEmptyState
       v-else-if="error"
-      icon="⚠️"
       title="Impossible de charger les réglages"
       :description="error"
     >

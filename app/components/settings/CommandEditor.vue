@@ -22,7 +22,7 @@ const WINDOWS_EXAMPLE =
 </script>
 
 <template>
-  <section class="rounded-xl border border-line bg-surface-900 p-5">
+  <section class="surface px-5 py-4">
     <h2 class="text-base font-medium text-ink-100">Commandes du pont</h2>
 
     <div class="mt-4 flex flex-col gap-5">
@@ -31,6 +31,7 @@ const WINDOWS_EXAMPLE =
           :model-value="brainCommand"
           label="Commande cerveau (brain)"
           placeholder="npm run brain:scan"
+          class="[&_input]:font-mono [&_input]:text-[13px]"
           @update:model-value="emit('update:brainCommand', $event)"
         />
         <p class="mt-1.5 text-xs text-ink-500">
@@ -45,19 +46,20 @@ const WINDOWS_EXAMPLE =
           :model-value="terminalCommand"
           label="Commande terminal"
           :placeholder="WINDOWS_EXAMPLE"
+          class="[&_input]:font-mono [&_input]:text-[13px]"
           @update:model-value="emit('update:terminalCommand', $event)"
         />
         <p class="mt-1.5 text-xs text-ink-500">
           Commande ouverte dans un terminal, depuis le dossier du projet. Le
           placeholder
-          <code class="rounded bg-surface-800 px-1 text-ink-100">
+          <span class="font-mono text-[12px] text-ink-700">
             {{ DOSSIER_PLACEHOLDER }}
-          </code>
+          </span>
           est remplacé par le chemin absolu du projet. Exemple Windows par
           défaut :
-          <code class="mt-1 block rounded bg-surface-800 px-1 text-ink-100">
-            {{ WINDOWS_EXAMPLE }}
-          </code>
+        </p>
+        <p class="mt-1 font-mono text-[12px] text-ink-700">
+          {{ WINDOWS_EXAMPLE }}
         </p>
       </div>
     </div>

@@ -18,10 +18,34 @@ onMounted(() => {
   void refresh()
 })
 
+/** Voyant : vert si le pont répond, rouge sinon. */
+const beaconClasses = computed<string>(() =>
+  canRunLocal.value
+    ? 'bg-ok-400 [box-shadow:0_0_8px_0_var(--color-ok-400)]'
+    : 'bg-danger-400',
+)
+
+/** Libellé d’instrument reflétant l’état courant du pont. */
+const stateLabel = computed<string>(() => {
+  if (scanning.value) return 'Scan en cours'
+  if (bridgePending.value && status.value === null) return 'Vérification du pont'
+  if (status.value === null) {
+    return bridgeError.value !== null ? 'Pont local injoignable' : 'Pont local inconnu'
+  }
+  return canRunLocal.value ? 'Pont local actif' : 'Rescan indisponible'
+})
+
+/** Explique visuellement pourquoi le rescanner est désactivé (null = ok). */
+const disabledReason = computed<string | null>(() => {
+  if (canRunLocal.value) return null
+  return status.value?.reason ?? 'Le pont local n’est pas disponible.'
+})
+
 function plural(count: number, word: string): string {
   return `${count} ${word}${count > 1 ? 's' : ''}`
 }
 
+/** Jamais de requête envoyée si le pont est indisponible. */
 function startScan(): void {
   if (!canRunLocal.value || scanning.value) return
   confirmStep.value = true
@@ -53,84 +77,93 @@ async function confirmScan(): Promise<void> {
 <template>
   <section
     aria-label="État du pont local"
-    class="rounded-xl border border-line bg-surface-900 p-4"
+    class="surface flex flex-wrap items-center justify-between gap-4 px-4 py-3"
   >
-    <div class="flex flex-wrap items-center justify-between gap-4">
-      <div class="min-w-0">
-        <p class="text-sm font-medium text-ink-100">Pont local</p>
+    <div class="flex min-w-0 items-center gap-3">
+      <!-- Voyant -->
+      <span
+        class="h-2.5 w-2.5 shrink-0 rounded-full"
+        :class="beaconClasses"
+        aria-hidden="true"
+      />
 
-        <p v-if="bridgePending && !status" class="mt-0.5 text-sm text-ink-300">
+      <div class="min-w-0">
+        <p class="micro text-ink-500">{{ stateLabel }}</p>
+
+        <p
+          v-if="bridgePending && !status"
+          class="mt-1 text-xs text-ink-500"
+          role="status"
+        >
           Vérification du pont…
         </p>
 
-        <template v-else-if="status">
-          <p v-if="canRunLocal" class="mt-0.5 text-sm text-ink-300">
-            Pont local actif<template v-if="status.devRootPath">
-              — dossier dev :
-              <code class="rounded bg-surface-800 px-1 text-xs text-ink-100">
-                {{ status.devRootPath }}
-              </code>
-            </template>.
-          </p>
-          <p v-else class="mt-0.5 text-sm text-danger-400">
-            Rescan indisponible : {{ status.reason ?? 'raison inconnue' }}.
-          </p>
-        </template>
+        <p
+          v-else-if="canRunLocal && status?.devRootPath"
+          class="mt-1 truncate font-mono text-[12px] text-ink-700"
+          :title="status.devRootPath"
+        >
+          {{ status.devRootPath }}
+        </p>
 
-        <p v-else-if="bridgeError" class="mt-0.5 text-sm text-danger-400">
+        <p v-else-if="!canRunLocal && disabledReason" class="mt-1 text-xs text-danger-400">
+          {{ disabledReason }}
+        </p>
+
+        <p v-else-if="bridgeError" class="mt-1 text-xs text-danger-400">
           {{ bridgeError }}
         </p>
       </div>
+    </div>
 
-      <div class="flex flex-wrap items-center gap-2">
-        <template v-if="scanning">
-          <span
-            class="inline-block h-4 w-4 animate-spin rounded-full border-2 border-accent-400 border-t-transparent"
-            aria-hidden="true"
-          />
-          <span class="text-sm text-ink-300" role="status">
-            Analyse en cours…
-          </span>
-        </template>
+    <div class="flex flex-wrap items-center gap-2">
+      <template v-if="scanning">
+        <span
+          class="inline-block h-4 w-4 animate-spin rounded-full border-2 border-accent-400 border-t-transparent"
+          aria-hidden="true"
+        />
+        <span class="micro text-ink-500" role="status">
+          Analyse en cours
+        </span>
+      </template>
 
-        <template v-else-if="confirmStep">
-          <span class="text-sm text-ink-300">
-            Lancer le scan du dossier dev ?
-          </span>
-          <UiButton size="sm" @click="confirmScan">Confirmer</UiButton>
-          <UiButton size="sm" variant="ghost" @click="confirmStep = false">
-            Annuler
-          </UiButton>
-        </template>
-
-        <UiButton
-          v-else
-          size="sm"
-          variant="outline"
-          :disabled="!canRunLocal"
-          :title="
-            canRunLocal
-              ? 'Re-scanner le dossier dev pour détecter tes projets'
-              : `Rescan impossible : ${status?.reason ?? 'le pont local n’est pas accessible depuis cette version de l’application'}.`
-          "
-          @click="startScan"
-        >
-          Rescanner le dossier dev
+      <template v-else-if="confirmStep">
+        <span class="text-sm text-ink-300">
+          Lancer le scan du dossier dev ?
+        </span>
+        <UiButton size="sm" @click="confirmScan">Confirmer</UiButton>
+        <UiButton size="sm" variant="ghost" @click="confirmStep = false">
+          Annuler
         </UiButton>
-      </div>
+      </template>
+
+      <UiButton
+        v-else
+        size="sm"
+        variant="outline"
+        :disabled="!canRunLocal"
+        :title="
+          canRunLocal
+            ? 'Re-scanner le dossier dev pour détecter tes projets'
+            : `Rescan impossible : ${disabledReason ?? 'le pont local n’est pas accessible.'}.`
+        "
+        @click="startScan"
+      >
+        Rescanner
+      </UiButton>
     </div>
 
     <ul
       v-if="lastErrors.length > 0"
-      class="mt-3 flex flex-col gap-1 rounded-lg border border-line bg-surface-800 px-3 py-2"
+      class="w-full rounded-sm border border-line bg-surface-800 px-3 py-2"
     >
-      <li class="text-xs font-medium text-danger-400">
-        Erreurs rencontrées pendant le scan :
+      <li class="micro text-danger-400">
+        Erreurs rencontrées pendant le scan
       </li>
       <li
         v-for="(scanError, i) in lastErrors"
         :key="i"
-        class="text-xs text-ink-300"
+        class="mt-1 text-xs text-ink-300"
       >
         {{ scanError }}
       </li>

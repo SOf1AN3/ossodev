@@ -5,6 +5,7 @@ import { useBridge } from '~/composables/useBridge'
 import { useToast } from '~/composables/useToast'
 import ProjectsLeadPreview from '~/components/projects/LeadPreview.vue'
 import UiButton from '~/components/ui/UiButton.vue'
+import UiIcon from '~/components/ui/UiIcon.vue'
 import UiModal from '~/components/ui/UiModal.vue'
 
 interface LeadLaunchResult {
@@ -105,8 +106,8 @@ function closeModal(): void {
       "
       @click="openPreview"
     >
-      <span aria-hidden="true">🚀</span>
-      LEAD
+      <UiIcon name="terminal" />
+      Lancer la session LEAD
     </UiButton>
 
     <p v-if="disabledReason" class="max-w-xs text-right text-xs text-ink-500">

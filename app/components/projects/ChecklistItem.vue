@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { ProjectTask } from '~~/shared/types'
 import UiButton from '~/components/ui/UiButton.vue'
-import UiInput from '~/components/ui/UiInput.vue'
+import UiIcon from '~/components/ui/UiIcon.vue'
 
 interface ChecklistItemProps {
   task: ProjectTask
@@ -33,15 +33,16 @@ const emit = defineEmits<{
 const editing = ref(false)
 const draft = ref('')
 const confirmingDelete = ref(false)
-const editWrapRef = ref<HTMLDivElement | null>(null)
+const editInputRef = ref<HTMLInputElement | null>(null)
 
 function startEdit(): void {
   if (props.busy) return
   confirmingDelete.value = false
   draft.value = props.task.title
   editing.value = true
-  nextTick(() => {
-    editWrapRef.value?.querySelector('input')?.focus()
+  void nextTick(() => {
+    editInputRef.value?.focus()
+    editInputRef.value?.select()
   })
 }
 
@@ -62,6 +63,9 @@ function onEditKeydown(event: KeyboardEvent): void {
   if (event.key === 'Escape') {
     event.preventDefault()
     cancelEdit()
+  } else if (event.key === 'Enter') {
+    event.preventDefault()
+    commitEdit()
   }
 }
 
@@ -92,61 +96,76 @@ function checkboxLabel(): string {
 <template>
   <li
     :draggable="!editing && !busy"
-    class="group flex items-center gap-3 rounded-lg border border-line bg-surface-900 px-3 py-2 transition-colors hover:bg-surface-800"
-    :class="{
-      'opacity-40': dragState === 'source',
-      'border-accent-400 bg-surface-800': dragState === 'target',
-    }"
+    class="task group flex items-center gap-3 rounded-xs border border-transparent bg-surface-900 px-3 py-2.5"
+    :class="[
+      task.is_done ? 'done' : 'hover:bg-surface-700',
+      dragState === 'source' ? 'opacity-40' : '',
+      dragState === 'target' ? 'border-accent-400 bg-surface-700' : '',
+    ]"
     @dragstart="onDragStart"
     @dragenter.prevent="onDragEnter"
     @dragover.prevent
     @drop.prevent="onDrop"
     @dragend="emit('dragEnd')"
   >
-    <!-- Poignée de drag (visuelle) -->
+    <!-- Poignée de drag (visuelle, sans glyphe) -->
     <span
-      class="cursor-grab text-ink-500 select-none"
+      class="grid shrink-0 cursor-grab select-none grid-cols-2 gap-[2px] opacity-60"
       aria-hidden="true"
       title="Glisser pour réordonner"
     >
-      ⠿
+      <span
+        v-for="n in 6"
+        :key="n"
+        class="block h-[3px] w-[3px] rounded-full bg-ink-700"
+      />
     </span>
 
-    <input
-      type="checkbox"
-      :checked="task.is_done"
-      :disabled="busy"
+    <!-- Case qui se dessine (.box) -->
+    <!-- `.box` est hors-layer dans main.css : hover sur le fond (non conflictuel) -->
+    <button
+      type="button"
+      class="box cursor-pointer bg-transparent p-0 hover:bg-surface-600 disabled:opacity-40"
       :aria-label="checkboxLabel()"
-      class="h-4 w-4 shrink-0 cursor-pointer accent-accent-400 focus-visible:outline-2 focus-visible:outline-accent-400"
-      @change="emit('toggle')"
+      :disabled="busy"
+      @click="emit('toggle')"
     >
+      <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+        <path d="m5 12.6 4.6 4.6L19 7.4" />
+      </svg>
+    </button>
 
-    <!-- Édition inline -->
-    <div
-      v-if="editing"
-      ref="editWrapRef"
-      class="min-w-0 flex-1"
-      @keydown="onEditKeydown"
-    >
-      <UiInput
-        v-model="draft"
-        placeholder="Titre de la tâche"
-        aria-label="Nouveau titre de la tâche"
-        @enter="commitEdit"
-      />
+    <!-- Édition inline — le barré est conservé si la tâche est faite -->
+    <div v-if="editing" class="min-w-0 flex-1">
+      <div class="field">
+        <input
+          ref="editInputRef"
+          v-model="draft"
+          type="text"
+          aria-label="Nouveau titre de la tâche"
+          placeholder="Titre de la tâche"
+          class="w-full rounded-sm border border-line bg-surface-800 px-2.5 py-1.5 text-sm"
+          :class="task.is_done ? 'text-ink-500 line-through' : 'text-ink-100'"
+          @keydown="onEditKeydown"
+        >
+      </div>
     </div>
 
-    <!-- Titre (clic = édition) -->
+    <!-- Titre (clic = édition) — le barré se trace (.strike) -->
     <button
       v-else
       type="button"
-      class="min-w-0 flex-1 truncate rounded text-left text-sm focus-visible:outline-2 focus-visible:outline-accent-400"
-      :class="task.is_done ? 'text-ink-500 line-through' : 'text-ink-100'"
+      class="flex min-w-0 flex-1 items-center rounded-xs text-left text-sm"
       :title="`Cliquer pour modifier : ${task.title}`"
       :disabled="busy"
       @click="startEdit"
     >
-      {{ task.title }}
+      <span
+        class="strike min-w-0 flex-1 truncate"
+        :class="task.is_done ? 'text-ink-500' : 'text-ink-100'"
+      >
+        {{ task.title }}
+      </span>
     </button>
 
     <!-- Actions -->
@@ -179,31 +198,34 @@ function checkboxLabel(): string {
         >
           <button
             type="button"
-            class="rounded-md px-1.5 py-1 text-ink-500 transition-colors hover:bg-surface-700 hover:text-ink-100 focus-visible:outline-2 focus-visible:outline-accent-400 disabled:opacity-30"
+            class="rounded-xs p-1.5 text-ink-500 transition-colors hover:bg-surface-800 hover:text-ink-100 disabled:opacity-30"
             :disabled="index === 0 || busy"
             aria-label="Monter la tâche dans la liste"
+            title="Monter"
             @click="emit('move', -1)"
           >
-            <span aria-hidden="true">↑</span>
+            <UiIcon name="arrowUp" size="sm" />
           </button>
           <button
             type="button"
-            class="rounded-md px-1.5 py-1 text-ink-500 transition-colors hover:bg-surface-700 hover:text-ink-100 focus-visible:outline-2 focus-visible:outline-accent-400 disabled:opacity-30"
+            class="rounded-xs p-1.5 text-ink-500 transition-colors hover:bg-surface-800 hover:text-ink-100 disabled:opacity-30"
             :disabled="index === total - 1 || busy"
             aria-label="Descendre la tâche dans la liste"
+            title="Descendre"
             @click="emit('move', 1)"
           >
-            <span aria-hidden="true">↓</span>
+            <UiIcon name="arrowDown" size="sm" />
           </button>
         </div>
         <button
           type="button"
-          class="rounded-md px-1.5 py-1 text-ink-500 opacity-0 transition-opacity hover:bg-danger-400/15 hover:text-danger-400 focus-visible:opacity-100 focus-visible:outline-2 focus-visible:outline-danger-400 group-hover:opacity-100 disabled:opacity-30"
+          class="rounded-xs p-1.5 text-ink-500 opacity-0 transition-opacity hover:bg-surface-800 hover:text-danger-400 focus-visible:opacity-100 group-hover:opacity-100 disabled:opacity-30"
           :disabled="busy"
           aria-label="Supprimer la tâche"
+          title="Supprimer"
           @click="confirmingDelete = true"
         >
-          <span aria-hidden="true">🗑</span>
+          <UiIcon name="trash" size="sm" />
         </button>
       </template>
     </div>

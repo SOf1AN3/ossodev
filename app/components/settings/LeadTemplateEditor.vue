@@ -50,15 +50,15 @@ function insertPlaceholder(placeholder: string): void {
 </script>
 
 <template>
-  <section class="rounded-xl border border-line bg-surface-900 p-5">
+  <section class="surface px-5 py-4">
     <h2 class="text-base font-medium text-ink-100">
       Modèle d’introduction LEAD
     </h2>
     <p class="mt-1 text-sm text-ink-300">
       La liste des tâches du projet sera injectée à l’emplacement de
-      <code class="rounded bg-surface-800 px-1 text-xs text-ink-100">
+      <span class="font-mono text-[12px] text-ink-700">
         {{ TACHES_PLACEHOLDER }}
-      </code>.
+      </span>.
       Si tu retires ce marqueur, la liste sera ajoutée en fin de message.
     </p>
 
@@ -68,18 +68,18 @@ function insertPlaceholder(placeholder: string): void {
         label="Introduction du prompt"
         :rows="10"
         placeholder="Tu es LEAD, un assistant de développement…"
-        class="[&_textarea]:min-h-72 [&_textarea]:font-mono"
+        class="[&_textarea]:min-h-72 [&_textarea]:font-mono [&_textarea]:text-[13px]"
         @update:model-value="emit('update:modelValue', $event)"
       />
     </div>
 
     <div class="mt-3 flex flex-wrap items-center gap-2">
-      <span class="text-xs text-ink-500">Placeholders disponibles :</span>
+      <span class="micro text-ink-500">Placeholders disponibles</span>
       <button
         v-for="placeholder in PLACEHOLDERS"
         :key="placeholder"
         type="button"
-        class="rounded-full transition-opacity hover:opacity-80 focus-visible:outline-2 focus-visible:outline-accent-400"
+        class="rounded-full transition-opacity hover:opacity-80"
         :aria-label="`Insérer le placeholder ${placeholder} à la position du curseur`"
         @click="insertPlaceholder(placeholder)"
       >
