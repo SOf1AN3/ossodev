@@ -45,11 +45,11 @@ function toggle(day: number): void {
       :disabled="disabled"
       :aria-pressed="isChecked(day)"
       :aria-label="labelFor(day)"
-      class="rounded-lg border px-3 py-1.5 text-sm transition-colors focus-visible:outline-2 focus-visible:outline-accent-400 disabled:opacity-40"
+      class="flex h-10 w-10 items-center justify-center rounded-xs border text-xs transition-colors focus-visible:outline-2 focus-visible:outline-accent-400 disabled:opacity-40"
       :class="
         isChecked(day)
-          ? 'border-accent-400 bg-accent-400/15 text-accent-400'
-          : 'border-line bg-surface-800 text-ink-300 hover:bg-surface-700'
+          ? 'border-accent-fill bg-accent-fill text-[color:var(--color-on-accent)]'
+          : 'border-line bg-surface-800 text-ink-500 hover:bg-surface-700 hover:text-ink-300'
       "
       @click="toggle(day)"
     >

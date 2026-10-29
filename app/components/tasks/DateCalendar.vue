@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import UiCard from '~/components/ui/UiCard.vue'
+import UiIcon from '~/components/ui/UiIcon.vue'
 import {
   MONTHS_LONG,
   WEEKDAYS_SHORT,
@@ -129,7 +129,11 @@ function emitVisibleRange(): void {
     visibleMonth.value.getMonth() + 1,
     0,
   )
-  emit('rangeChange', toISODate(startOfWeek(firstOfMonth)), toISODate(addDays(startOfWeek(lastOfMonth), 6)))
+  emit(
+    'rangeChange',
+    toISODate(startOfWeek(firstOfMonth)),
+    toISODate(addDays(startOfWeek(lastOfMonth), 6)),
+  )
 }
 
 function startOfMonth(d: Date): Date {
@@ -153,8 +157,10 @@ function focusDay(iso: string): void {
   focusedDate.value = iso
   const target = fromISODate(iso)
   // Si on sort du mois affiché, on suit avec la navigation mensuelle.
-  if (target.getMonth() !== visibleMonth.value.getMonth() ||
-      target.getFullYear() !== visibleMonth.value.getFullYear()) {
+  if (
+    target.getMonth() !== visibleMonth.value.getMonth() ||
+    target.getFullYear() !== visibleMonth.value.getFullYear()
+  ) {
     visibleMonth.value = startOfMonth(target)
   }
   nextTick(() => {
@@ -183,44 +189,63 @@ function onGridKeydown(event: KeyboardEvent): void {
     selectDay(focusedDate.value)
   }
 }
+
+/** Hiérarchie visuelle : sélection > jour courant > mois courant > hors mois. */
+function dayClasses(day: CalendarDay): string {
+  if (day.isSelected) {
+    return 'bg-accent-fill font-medium text-[color:var(--color-on-accent)]'
+  }
+  if (day.isToday) {
+    return 'bg-surface-700 font-medium text-ink-100'
+  }
+  if (day.inMonth) {
+    return 'text-ink-300 hover:bg-surface-800 hover:text-ink-100'
+  }
+  return 'text-ink-700 hover:bg-surface-800'
+}
+
+/** Point « tâches prévues » : contraste inversé sur la case sélectionnée. */
+function dotClasses(day: CalendarDay): string {
+  return day.isSelected ? 'bg-[color:var(--color-on-accent)]' : 'bg-accent-fill'
+}
 </script>
 
 <template>
-  <UiCard class="p-4">
+  <section class="surface p-4" aria-label="Calendrier">
     <div class="mb-3 flex items-center justify-between">
       <button
         type="button"
         aria-label="Mois précédent"
-        class="rounded-md p-1.5 text-ink-300 transition-colors hover:bg-surface-800 hover:text-ink-100 focus-visible:outline-2 focus-visible:outline-accent-400"
+        class="rounded-xs p-1.5 text-ink-500 transition-colors hover:bg-surface-800 hover:text-ink-100 focus-visible:outline-2 focus-visible:outline-accent-400"
         @click="goToMonth(-1)"
       >
-        <span aria-hidden="true">‹</span>
+        <UiIcon name="chevronLeft" />
       </button>
-      <h2 class="text-sm font-medium text-ink-100">{{ monthLabel }}</h2>
+      <h2 class="micro text-ink-700">{{ monthLabel }}</h2>
       <button
         type="button"
         aria-label="Mois suivant"
-        class="rounded-md p-1.5 text-ink-300 transition-colors hover:bg-surface-800 hover:text-ink-100 focus-visible:outline-2 focus-visible:outline-accent-400"
+        class="rounded-xs p-1.5 text-ink-500 transition-colors hover:bg-surface-800 hover:text-ink-100 focus-visible:outline-2 focus-visible:outline-accent-400"
         @click="goToMonth(1)"
       >
-        <span aria-hidden="true">›</span>
+        <UiIcon name="chevronRight" />
       </button>
     </div>
 
     <div
       ref="gridRef"
       role="grid"
-      :aria-label="`Calendrier de ${monthLabel}`"
+      :aria-label="`Grille du mois de ${monthLabel}`"
       class="select-none"
       @keydown="onGridKeydown"
     >
-      <!-- En-tête des jours -->
+      <!-- En-tête des jours : semaine lundi → dimanche -->
       <div role="row" class="grid grid-cols-7 gap-1">
         <span
           v-for="label in weekdayLabels"
           :key="label"
           role="columnheader"
-          class="py-1 text-center text-xs uppercase text-ink-500"
+          class="micro py-1 text-center text-ink-700"
         >
           {{ label }}
         </span>
@@ -242,23 +267,20 @@ function onGridKeydown(event: KeyboardEvent): void {
           :aria-label="formatLongDate(day.date)"
           :aria-selected="day.isSelected"
           :aria-current="day.isToday ? 'date' : undefined"
-          class="relative flex h-9 items-center justify-center rounded-lg text-sm transition-colors focus-visible:outline-2 focus-visible:outline-accent-400"
-          :class="[
-            day.inMonth ? 'text-ink-100' : 'text-ink-500',
-            day.isSelected ? 'bg-surface-700 font-medium' : 'hover:bg-surface-800',
-            day.isToday ? 'text-accent-400 font-medium' : '',
-          ]"
+          class="tnum relative flex h-9 items-center justify-center rounded-xs text-sm transition-colors focus-visible:outline-2 focus-visible:outline-accent-400"
+          :class="dayClasses(day)"
           @click="selectDay(day.iso)"
           @focus="focusedDate = day.iso"
         >
           {{ day.date.getDate() }}
           <span
             v-if="day.hasTasks"
-            class="absolute bottom-1 h-1 w-1 rounded-full bg-accent-400"
+            class="absolute bottom-1 h-1 w-1 rounded-full"
+            :class="dotClasses(day)"
             aria-hidden="true"
           />
         </button>
       </div>
     </div>
-  </UiCard>
+  </section>
 </template>

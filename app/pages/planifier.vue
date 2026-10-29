@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import UiBadge from '~/components/ui/UiBadge.vue'
 import UiButton from '~/components/ui/UiButton.vue'
 import UiEmptyState from '~/components/ui/UiEmptyState.vue'
 import UiInput from '~/components/ui/UiInput.vue'
@@ -6,7 +7,11 @@ import UiSkeleton from '~/components/ui/UiSkeleton.vue'
 import DateCalendar from '~/components/tasks/DateCalendar.vue'
 import TaskEditor from '~/components/tasks/TaskEditor.vue'
 import TaskList from '~/components/tasks/TaskList.vue'
-import { useTasks, type TaskPatch, type TaskWithOverdue } from '~/composables/useTasks'
+import {
+  useTasks,
+  type TaskPatch,
+  type TaskWithOverdue,
+} from '~/composables/useTasks'
 import { useToast } from '~/composables/useToast'
 import {
   addDays,
@@ -43,9 +48,18 @@ const selectedDate = ref(todayIso)
 type RangeFilter = 'day' | 'tomorrow' | 'week' | 'later'
 const filter = ref<RangeFilter>('day')
 
+/** Raccourcis affichés en badges cliquables. */
+type ShortcutKey = Exclude<RangeFilter, 'day'>
+const shortcuts: ReadonlyArray<{ key: ShortcutKey; label: string }> = [
+  { key: 'tomorrow', label: 'Demain' },
+  { key: 'week', label: 'Cette semaine' },
+  { key: 'later', label: 'Plus tard' },
+]
+
 const quickTitle = ref('')
 const editingTask = ref<TaskWithOverdue | null>(null)
 const editorOpen = ref(false)
+const editorSaving = ref(false)
 
 /** Dernière fenêtre visible émise par le calendrier (pour « Réessayer »). */
 const lastVisibleRange = ref<{ from: string; to: string } | null>(null)
@@ -57,13 +71,17 @@ const dayTasks = computed<TaskWithOverdue[]>(() => {
   }
   if (filter.value === 'week') {
     return rangeTasks.value.filter(
-      (task) => task.scheduled_date >= weekStartIso && task.scheduled_date <= weekEndIso,
+      (task) =>
+        task.scheduled_date >= weekStartIso &&
+        task.scheduled_date <= weekEndIso,
     )
   }
   if (filter.value === 'later') {
     return rangeTasks.value.filter((task) => task.scheduled_date > weekEndIso)
   }
-  return rangeTasks.value.filter((task) => task.scheduled_date === selectedDate.value)
+  return rangeTasks.value.filter(
+    (task) => task.scheduled_date === selectedDate.value,
+  )
 })
 
 /** Toutes les dates distinctes portant des tâches (points sur le calendrier). */
@@ -152,13 +170,17 @@ function closeEditor(): void {
 }
 
 async function onSaveEditor(patch: TaskPatch): Promise<void> {
+  if (editorSaving.value) return
   if (!editingTask.value) return
+  editorSaving.value = true
   try {
     await updateTask(editingTask.value.id, patch)
     toast.show({ title: 'Tâche mise à jour', tone: 'success' })
     closeEditor()
   } catch (err) {
     reportError(err, "Impossible d'enregistrer la tâche.")
+  } finally {
+    editorSaving.value = false
   }
 }
 
@@ -172,46 +194,39 @@ function listHeading(): string {
 
 <template>
   <div class="flex flex-col gap-6">
-    <header>
-      <h1 class="text-2xl font-semibold text-ink-100">Planifier</h1>
-      <p class="mt-1 text-sm text-ink-300">
+    <header class="max-w-3xl">
+      <h1 class="text-[30px] font-bold tracking-[-0.03em] text-ink-100">
+        Planifier
+      </h1>
+      <p class="mt-2 text-sm text-ink-300">
         Organise tes tâches à l'avance.
       </p>
     </header>
 
-    <!-- Raccourcis -->
+    <!-- Raccourcis : badges cliquables, état actif en accent -->
     <div
       role="group"
-      aria-label="Filtres rapides"
-      class="flex flex-wrap gap-2"
+      aria-label="Raccourcis de planification"
+      class="flex flex-wrap gap-1.5"
     >
-      <UiButton
-        size="sm"
-        :variant="filter === 'tomorrow' ? 'primary' : 'outline'"
-        @click="applyFilter('tomorrow')"
+      <button
+        v-for="shortcut in shortcuts"
+        :key="shortcut.key"
+        type="button"
+        class="btn p-0.5 focus-visible:outline-2 focus-visible:outline-accent-400"
+        :aria-pressed="filter === shortcut.key"
+        @click="applyFilter(shortcut.key)"
       >
-        Demain
-      </UiButton>
-      <UiButton
-        size="sm"
-        :variant="filter === 'week' ? 'primary' : 'outline'"
-        @click="applyFilter('week')"
-      >
-        Cette semaine
-      </UiButton>
-      <UiButton
-        size="sm"
-        :variant="filter === 'later' ? 'primary' : 'outline'"
-        @click="applyFilter('later')"
-      >
-        Plus tard
-      </UiButton>
+        <UiBadge :tone="filter === shortcut.key ? 'accent' : 'neutral'">
+          {{ shortcut.label }}
+        </UiBadge>
+      </button>
     </div>
 
     <!-- Erreur de chargement -->
     <div
       v-if="rangeError"
-      class="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-danger-400/40 bg-danger-400/10 px-4 py-3"
+      class="flex max-w-3xl flex-wrap items-center justify-between gap-3 rounded-md border border-danger-400/40 bg-danger-400/10 px-4 py-3"
       role="alert"
     >
       <p class="text-sm text-danger-400">{{ rangeError }}</p>
@@ -230,7 +245,7 @@ function listHeading(): string {
     </div>
 
     <div class="grid grid-cols-1 gap-6 lg:grid-cols-[320px_minmax(0,1fr)]">
-      <!-- Calendrier -->
+      <!-- Calendrier : semaine lundi → dimanche, surface unique -->
       <DateCalendar
         :model-value="selectedDate"
         :task-dates="taskDates"
@@ -239,7 +254,7 @@ function listHeading(): string {
       />
 
       <!-- Liste du jour sélectionné -->
-      <div class="flex flex-col gap-4">
+      <div class="flex max-w-3xl flex-col gap-4">
         <div class="flex flex-wrap items-end gap-2">
           <div class="min-w-56 flex-1">
             <UiInput
@@ -265,7 +280,6 @@ function listHeading(): string {
 
         <UiEmptyState
           v-else-if="dayTasks.length === 0"
-          icon="🗓️"
           :title="emptyTitle"
           description="Ajoute une tâche pour l'organiser à l'avance."
         />
@@ -284,6 +298,7 @@ function listHeading(): string {
     <TaskEditor
       :open="editorOpen"
       :task="editingTask"
+      :saving="editorSaving"
       @close="closeEditor"
       @save="onSaveEditor"
     />

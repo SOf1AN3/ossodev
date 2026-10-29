@@ -16,11 +16,15 @@ const nextOccurrence = computed<string | null>(() => {
 </script>
 
 <template>
-  <p class="text-xs text-ink-500">
+  <p class="micro text-ink-700">
     <template v-if="!isActive">Routine inactive</template>
     <template v-else-if="nextOccurrence">
       Prochaine occurrence :
-      <span class="text-accent-400">{{ nextOccurrence }}</span>
+      <span
+        class="font-mono text-xs font-normal normal-case tracking-normal text-ink-100"
+      >
+        {{ nextOccurrence }}
+      </span>
     </template>
     <template v-else>Aucune occurrence prévue</template>
   </p>

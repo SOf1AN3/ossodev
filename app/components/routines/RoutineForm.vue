@@ -82,7 +82,10 @@ function onSubmit(): void {
     <UiInput v-model="title" label="Titre" placeholder="Titre de la routine" />
 
     <div class="flex flex-col gap-1.5">
-      <span class="text-sm text-ink-300" id="routine-frequency-label">
+      <span
+        id="routine-frequency-label"
+        class="micro text-ink-500"
+      >
         Fréquence
       </span>
       <div
@@ -93,11 +96,11 @@ function onSubmit(): void {
         <button
           type="button"
           :aria-pressed="frequency === 'daily'"
-          class="rounded-lg border px-3 py-1.5 text-sm transition-colors focus-visible:outline-2 focus-visible:outline-accent-400"
+          class="rounded-xs border px-3 py-1.5 text-sm transition-colors focus-visible:outline-2 focus-visible:outline-accent-400"
           :class="
             frequency === 'daily'
-              ? 'border-accent-400 bg-accent-400/15 text-accent-400'
-              : 'border-line bg-surface-800 text-ink-300 hover:bg-surface-700'
+              ? 'border-accent-fill bg-accent-fill text-[color:var(--color-on-accent)]'
+              : 'border-line bg-surface-800 text-ink-500 hover:bg-surface-700 hover:text-ink-300'
           "
           @click="toggleFrequency('daily')"
         >
@@ -106,11 +109,11 @@ function onSubmit(): void {
         <button
           type="button"
           :aria-pressed="frequency === 'weekly'"
-          class="rounded-lg border px-3 py-1.5 text-sm transition-colors focus-visible:outline-2 focus-visible:outline-accent-400"
+          class="rounded-xs border px-3 py-1.5 text-sm transition-colors focus-visible:outline-2 focus-visible:outline-accent-400"
           :class="
             frequency === 'weekly'
-              ? 'border-accent-400 bg-accent-400/15 text-accent-400'
-              : 'border-line bg-surface-800 text-ink-300 hover:bg-surface-700'
+              ? 'border-accent-fill bg-accent-fill text-[color:var(--color-on-accent)]'
+              : 'border-line bg-surface-800 text-ink-500 hover:bg-surface-700 hover:text-ink-300'
           "
           @click="toggleFrequency('weekly')"
         >
@@ -120,6 +123,7 @@ function onSubmit(): void {
     </div>
 
     <div v-if="frequency === 'weekly'" class="flex flex-col gap-2">
+      <span class="micro text-ink-500">Jours actifs</span>
       <WeekdayPicker v-model="weekdays" :disabled="saving" />
       <p v-if="weekdayError" class="text-xs text-danger-400" role="alert">
         {{ weekdayError }}

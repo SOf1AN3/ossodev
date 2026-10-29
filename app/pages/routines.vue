@@ -2,15 +2,13 @@
 import UiBadge from '~/components/ui/UiBadge.vue'
 import UiButton from '~/components/ui/UiButton.vue'
 import UiEmptyState from '~/components/ui/UiEmptyState.vue'
+import UiIcon from '~/components/ui/UiIcon.vue'
 import UiModal from '~/components/ui/UiModal.vue'
 import UiSkeleton from '~/components/ui/UiSkeleton.vue'
 import UiToggle from '~/components/ui/UiToggle.vue'
 import RoutineForm from '~/components/routines/RoutineForm.vue'
 import RoutinePreview from '~/components/routines/RoutinePreview.vue'
-import {
-  useRoutines,
-  type RoutineWithNext,
-} from '~/composables/useRoutines'
+import { useRoutines, type RoutineWithNext } from '~/composables/useRoutines'
 import { useToast } from '~/composables/useToast'
 import { WEEKDAYS_SHORT } from '~/utils/dates'
 import type { RoutineInput } from '~~/shared/types'
@@ -72,6 +70,7 @@ function reportError(err: unknown, fallback: string): void {
 }
 
 async function onSave(input: RoutineInput): Promise<void> {
+  if (saving.value) return
   saving.value = true
   try {
     if (editingRoutine.value) {
@@ -83,7 +82,7 @@ async function onSave(input: RoutineInput): Promise<void> {
     }
     closeEditor()
   } catch (err) {
-    reportError(err, 'Impossible de enregistrer la routine.')
+    reportError(err, "Impossible d'enregistrer la routine.")
   } finally {
     saving.value = false
   }
@@ -129,20 +128,25 @@ async function confirmDelete(): Promise<void> {
 
 <template>
   <div class="flex flex-col gap-6">
-    <header class="flex flex-wrap items-center justify-between gap-4">
+    <header class="flex flex-wrap items-end justify-between gap-4">
       <div>
-        <h1 class="text-2xl font-semibold text-ink-100">Routines</h1>
-        <p class="mt-1 text-sm text-ink-300">
+        <h1 class="text-[30px] font-bold tracking-[-0.03em] text-ink-100">
+          Routines
+        </h1>
+        <p class="mt-2 text-sm text-ink-300">
           Automatises tes tâches récurrentes.
         </p>
       </div>
-      <UiButton @click="openCreate">Nouvelle routine</UiButton>
+      <UiButton @click="openCreate">
+        <UiIcon name="plus" />
+        Nouvelle routine
+      </UiButton>
     </header>
 
     <!-- Erreur -->
     <div
       v-if="error"
-      class="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-danger-400/40 bg-danger-400/10 px-4 py-3"
+      class="flex max-w-3xl flex-wrap items-center justify-between gap-3 rounded-md border border-danger-400/40 bg-danger-400/10 px-4 py-3"
       role="alert"
     >
       <p class="text-sm text-danger-400">{{ error }}</p>
@@ -151,15 +155,14 @@ async function confirmDelete(): Promise<void> {
 
     <!-- Chargement -->
     <div v-if="pending" class="flex flex-col gap-3" aria-busy="true">
-      <UiSkeleton class="h-20 w-full" />
-      <UiSkeleton class="h-20 w-full" />
-      <UiSkeleton class="h-20 w-full" />
+      <UiSkeleton class="h-24 w-full" />
+      <UiSkeleton class="h-24 w-full" />
+      <UiSkeleton class="h-24 w-full" />
     </div>
 
     <!-- Vide -->
     <UiEmptyState
       v-else-if="routines.length === 0 && !error"
-      icon="🔁"
       title="Aucune routine."
       description="Crée un gabarit pour automatiser tes tâches quotidiennes."
     >
@@ -168,12 +171,12 @@ async function confirmDelete(): Promise<void> {
       </template>
     </UiEmptyState>
 
-    <!-- Liste -->
+    <!-- Liste : cartes .surface lift -->
     <ul v-else class="flex flex-col gap-3">
       <li
         v-for="routine in routines"
         :key="routine.id"
-        class="flex flex-wrap items-center justify-between gap-4 rounded-xl border border-line bg-surface-900 px-4 py-4"
+        class="surface lift flex flex-wrap items-center justify-between gap-4 px-4 py-4"
       >
         <div class="min-w-0 flex-1">
           <div class="flex flex-wrap items-center gap-2">
@@ -184,11 +187,20 @@ async function confirmDelete(): Promise<void> {
               {{ routine.is_active ? 'Active' : 'Inactive' }}
             </UiBadge>
           </div>
-          <p class="mt-1 text-sm text-ink-300">
-            {{ frequencyLabel(routine) }}
-            <span class="text-ink-500">· {{ routine.points }} pts</span>
-          </p>
-          <div class="mt-1">
+
+          <div
+            class="mt-2 flex flex-wrap items-baseline gap-x-3 gap-y-1 text-ink-500"
+          >
+            <span class="micro">{{ frequencyLabel(routine) }}</span>
+            <span class="text-xs">
+              <span class="tnum font-mono text-ink-300">
+                {{ routine.points }}
+              </span>
+              pts
+            </span>
+          </div>
+
+          <div class="mt-2">
             <RoutinePreview
               :dates="routine.next_dates"
               :is-active="routine.is_active"
@@ -200,7 +212,9 @@ async function confirmDelete(): Promise<void> {
           <UiToggle
             :model-value="routine.is_active"
             :label="`Activer la routine ${routine.title}`"
-            @update:model-value="(value: boolean) => onToggleActive(routine, value)"
+            @update:model-value="
+              (value: boolean) => onToggleActive(routine, value)
+            "
           />
           <UiButton size="sm" variant="outline" @click="openEdit(routine)">
             Modifier

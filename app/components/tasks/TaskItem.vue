@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import UiBadge from '~/components/ui/UiBadge.vue'
+import UiIcon from '~/components/ui/UiIcon.vue'
 import type { TaskWithOverdue } from '~/composables/useTasks'
 
 const props = defineProps<{
@@ -30,51 +31,45 @@ function onToggle(): void {
 </script>
 
 <template>
+  <!-- .task porte le moment ① (pop / done) ; .box et .strike sont tracés dans main.css -->
   <li
-    class="flex items-start gap-3 rounded-xl border border-line bg-surface-900 px-4 py-3"
-    :class="isDone ? 'opacity-60' : ''"
+    class="task flex items-start gap-3 rounded-md border border-line bg-surface-800 px-4 py-3.5 hover:bg-surface-700"
+    :class="isDone ? 'done' : ''"
+    :data-task-id="task.id"
   >
-    <!-- Case à cocher grande et cliquable -->
+    <!-- Case à cocher : la hit-area est agrandie sans décaler la ligne -->
     <button
       type="button"
       role="checkbox"
       :aria-checked="isDone"
-      :aria-label="isDone ? `Décocher « ${task.title} »` : `Valider « ${task.title} »`"
-      class="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-md border transition-colors focus-visible:outline-2 focus-visible:outline-accent-400"
-      :class="
-        isDone
-          ? 'border-ok-400 bg-ok-400/20 text-ok-400'
-          : 'border-line bg-surface-800 text-transparent hover:border-accent-400 hover:bg-surface-700'
+      :aria-label="
+        isDone ? `Décocher « ${task.title} »` : `Valider « ${task.title} »`
       "
+      class="-my-1 flex shrink-0 items-center justify-center rounded-xs p-1 focus-visible:outline-2 focus-visible:outline-accent-400"
       @click="onToggle"
     >
-      <svg
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        stroke-width="3"
-        stroke-linecap="round"
-        stroke-linejoin="round"
-        class="h-4 w-4"
-        aria-hidden="true"
-      >
-        <path d="M20 6 9 17l-5-5" />
-      </svg>
+      <span class="box" aria-hidden="true">
+        <svg viewBox="0 0 24 24" focusable="false">
+          <path d="M20 6 9 17l-5-5" />
+        </svg>
+      </span>
     </button>
 
     <div class="min-w-0 flex-1">
-      <p
-        class="break-words text-sm"
-        :class="isDone ? 'text-ink-300 line-through' : 'text-ink-100'"
-      >
-        {{ task.title }}
+      <p class="break-words text-sm text-ink-100">
+        <span class="strike">{{ task.title }}</span>
       </p>
-      <p v-if="task.notes" class="mt-0.5 break-words text-xs text-ink-500">
+      <p v-if="task.notes" class="mt-1 break-words text-xs text-ink-500">
         {{ task.notes }}
       </p>
       <div class="mt-2 flex flex-wrap items-center gap-2">
         <UiBadge :tone="priorityTone">{{ priorityLabel }}</UiBadge>
-        <UiBadge v-if="task.source === 'routine'" tone="accent">Routine</UiBadge>
+        <UiBadge v-if="task.source === 'routine'" tone="accent">
+          Routine
+        </UiBadge>
+        <span class="micro text-ink-700">
+          <span class="tnum">{{ task.points }}</span> pts
+        </span>
       </div>
     </div>
 
@@ -82,43 +77,18 @@ function onToggle(): void {
       <button
         type="button"
         :aria-label="`Modifier « ${task.title} »`"
-        class="rounded-md p-1.5 text-ink-500 transition-colors hover:bg-surface-800 hover:text-ink-100 focus-visible:outline-2 focus-visible:outline-accent-400"
+        class="rounded-xs p-1.5 text-ink-500 transition-colors hover:bg-surface-700 hover:text-ink-100 focus-visible:outline-2 focus-visible:outline-accent-400"
         @click="emit('edit')"
       >
-        <svg
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="2"
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          class="h-4 w-4"
-          aria-hidden="true"
-        >
-          <path d="M12 20h9" />
-          <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" />
-        </svg>
+        <UiIcon name="pencil" />
       </button>
       <button
         type="button"
         :aria-label="`Supprimer « ${task.title} »`"
-        class="rounded-md p-1.5 text-ink-500 transition-colors hover:bg-danger-400/15 hover:text-danger-400 focus-visible:outline-2 focus-visible:outline-accent-400"
+        class="rounded-xs p-1.5 text-ink-500 transition-colors hover:bg-danger-400/15 hover:text-danger-400 focus-visible:outline-2 focus-visible:outline-accent-400"
         @click="emit('remove')"
       >
-        <svg
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="2"
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          class="h-4 w-4"
-          aria-hidden="true"
-        >
-          <path d="M3 6h18" />
-          <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-          <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
-        </svg>
+        <UiIcon name="trash" />
       </button>
     </div>
   </li>
