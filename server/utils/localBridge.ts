@@ -1,36 +1,27 @@
 /**
- * Pont local OSSO — exécution de processus, écritures disque et presse-papier.
+ * Validation de chemin & statut du pont — **aucun processus, aucun disque**.
  *
- * Piliers de sécurité (ne jamais les affaiblir) :
- * 1. `SAFE_PATH_PATTERN` est une **allowlist** de caractères. Elle exclut tout
- *    métacaractère cmd.exe : `"` `'` `` ` `` `&` `|` `<` `>` `^` `%` `!` `$`
- *    `;` `(` `)` `~` `*` `?` `{` `}` `[]` `:` (après le disque) `\n` `\r` `\0`.
- * 2. Tout chemin est résolu (`path.resolve`) puis contraint à l'intérieur de
- *    `devRootPath` (jamais `path.normalize` seul).
- * 3. `spawn(..., { shell: false })` partout : aucune chaîne n'est interprétée
- *    par cmd.exe. Seule exception assumée : `openTerminalIn`, où la seule
- *    valeur injectée passe par l'allowlist et reste entre doubles guillemets
- *    (double protection), et où `windowsVerbatimArguments` évite toute
- *    ré-échappement ambigüe par Node.
+ * Après le remplacement du Local Bridge par le Companion (PLAN.md §2 piste A) :
+ * - `assertSafeAbsolutePath` **reste** : c'est une contrainte d'intégrité des
+ *   données (allowlist de caractères + confinement sous `devRootPath`), utilisée
+ *   par `POST /api/projects` et `POST /api/projects/:id/lead`. Il ne lance rien.
+ * - `isBridgeAvailable` / `assertBridgeAllowed` se basent désormais sur la
+ *   **présence du Companion** (`companion_presence`), plus sur `localBridge === 'true'`.
+ * - Le serveur **ne lit plus jamais** le dossier dev ni ne spawn de process :
+ *   scan et exécution sont délégués au Companion via la file `companion_commands`.
  *
- * La politique (« le pont est-il ouvert ? ») vit dans les routes via
- * `assertBridgeAllowed()` ; ces fonctions ne sont que le mécanisme.
+ * Allowlist (ne jamais l'affaiblir) : `SAFE_PATH_PATTERN` exclut tout
+ * métacaractère cmd.exe — `"` `'` `` ` `` `&` `|` `<` `>` `^` `%` `!` `$`
+ * `;` `(` `)` `~` `*` `?` `{` `}` `[]` `:` (après le disque), `\n` `\r` `\0`.
+ * Tout chemin est résolu (`path.resolve`) puis contraint à l'intérieur de `devRootPath`.
  */
-import { spawn } from 'node:child_process'
-import type { ChildProcess, ChildProcessWithoutNullStreams } from 'node:child_process'
-import { existsSync } from 'node:fs'
-import { writeFile } from 'node:fs/promises'
 import path from 'node:path'
 import type { BridgeStatus } from '~~/shared/types'
 import { badRequest, forbidden } from '~~/server/utils/http'
+import { getCompanionStatus } from '~~/server/services/localBridge'
 
 /** Allowlist stricte : lettre de disque, `:`, puis uniquement caractères inoffensifs. */
 export const SAFE_PATH_PATTERN = /^[A-Za-z]:[A-Za-z0-9 _.\-\\\/]+$/
-
-const PROCESS_TIMEOUT_MS = 30_000
-const CLIP_TIMEOUT_MS = 10_000
-const MAX_OUTPUT_CHARS = 8_000
-const MAX_PROMPT_CHARS = 200_000
 
 interface BridgeConfig {
   localBridge: string
@@ -39,7 +30,7 @@ interface BridgeConfig {
   terminalCommand: string
 }
 
-function bridgeConfig(): BridgeConfig {
+export function bridgeConfig(): BridgeConfig {
   const config = useRuntimeConfig()
   // `.env` n'est pas toujours répercuté sur `runtimeConfig` en `nuxt dev`
   // (les requêtes DB passent parce que `db/index.ts` lit `process.env` directement).
@@ -69,43 +60,27 @@ function bridgeConfig(): BridgeConfig {
   }
 }
 
-/** Statut public du pont — aucun processus lancé. */
-export function isBridgeAvailable(): BridgeStatus {
-  const { localBridge, devRootPath } = bridgeConfig()
+/**
+ * Statut public du pont — **aucun processus lancé**, aucun accès disque.
+ * La disponibilité est la présence du Companion ; `devRootPath` est fourni à
+ * titre informatif (il reste nécessaire à la validation de chemin).
+ */
+export async function isBridgeAvailable(): Promise<BridgeStatus> {
+  const status = await getCompanionStatus()
+  const { devRootPath } = bridgeConfig()
   const root = devRootPath.trim().length > 0 ? devRootPath : null
 
-  if (localBridge !== 'true') {
-    return {
-      available: false,
-      reason: 'Pont local désactivé — fonctionnalité disponible uniquement en local',
-      devRootPath: root,
-    }
-  }
-  if (root === null) {
-    return {
-      available: false,
-      reason: 'Racine du dossier dev non configurée (variable NUXT_DEV_ROOT_PATH).',
-      devRootPath: null,
-    }
-  }
-  if (!existsSync(root)) {
-    return {
-      available: false,
-      reason: `Le dossier dev est introuvable : ${root}`,
-      devRootPath: root,
-    }
-  }
-  return { available: true, reason: null, devRootPath: root }
+  return { available: status.available, reason: status.reason, devRootPath: root }
 }
 
-/** Lève un 403 si le pont est fermé. À appeler en tête de toute route exécutrice. */
-export function assertBridgeAllowed(): void {
-  const status = isBridgeAvailable()
-  if (!status.available) forbidden(status.reason ?? 'Pont local indisponible.')
+/** Lève un 403 si le Companion est hors ligne (rare : les routes enfilent maintenant). */
+export async function assertBridgeAllowed(): Promise<void> {
+  const status = await isBridgeAvailable()
+  if (!status.available) forbidden(status.reason ?? 'Companion indisponible.')
 }
 
 /**
- * Valide un chemin absolu de dossier avant toute écriture ou tout process :
+ * Valide un chemin absolu de dossier avant toute écriture ou tout envoi :
  * allowlist de caractères + résolution + confinement strict sous `devRootPath`.
  */
 export function assertSafeAbsolutePath(candidate: string): string {
@@ -139,193 +114,4 @@ export function assertSafeAbsolutePath(candidate: string): string {
     badRequest('Le chemin doit se trouver à l’intérieur du dossier dev.')
   }
   return resolved
-}
-
-export interface ProcessResult {
-  code: number | null
-  stdout: string
-  stderr: string
-}
-
-export interface RunProcessOptions {
-  cwd?: string
-}
-
-/**
- * Exécute un binaire avec ses arguments sous forme de tableau.
- * `shell: false` impératif : aucun argument n'est interprété par cmd.exe et
- * aucune valeur utilisateur n'est concaténée dans `command`.
- */
-export function runProcess(
-  command: string,
-  args: string[],
-  options: RunProcessOptions = {},
-): Promise<ProcessResult> {
-  return new Promise<ProcessResult>((resolve, reject) => {
-    let child: ChildProcessWithoutNullStreams
-    try {
-      child = spawn(command, args, {
-        cwd: options.cwd,
-        windowsHide: true,
-        shell: false,
-        timeout: PROCESS_TIMEOUT_MS,
-      })
-    } catch {
-      reject(new Error(`Impossible de lancer « ${command} ».`))
-      return
-    }
-
-    let stdout = ''
-    let stderr = ''
-    let timedOut = false
-    let settled = false
-    const startedAt = Date.now()
-
-    const killTimer = setTimeout(() => {
-      timedOut = true
-      try {
-        child.kill()
-      } catch {
-        // Process déjà terminé.
-      }
-    }, PROCESS_TIMEOUT_MS)
-
-    child.stdout.on('data', (chunk: Buffer) => {
-      if (stdout.length < MAX_OUTPUT_CHARS) {
-        stdout = (stdout + chunk.toString('utf8')).slice(0, MAX_OUTPUT_CHARS)
-      }
-    })
-    child.stderr.on('data', (chunk: Buffer) => {
-      if (stderr.length < MAX_OUTPUT_CHARS) {
-        stderr = (stderr + chunk.toString('utf8')).slice(0, MAX_OUTPUT_CHARS)
-      }
-    })
-
-    child.on('error', (error: NodeJS.ErrnoException) => {
-      if (settled) return
-      settled = true
-      clearTimeout(killTimer)
-      reject(new Error(`Échec du lancement de « ${command} » (${error.code ?? 'erreur inconnue'}).`))
-    })
-
-    child.on('close', (code: number | null, _signal: NodeJS.Signals | null) => {
-      if (settled) return
-      settled = true
-      clearTimeout(killTimer)
-      if (timedOut || Date.now() - startedAt >= PROCESS_TIMEOUT_MS) {
-        reject(new Error('Exécution interrompue : délai maximum de 30 secondes dépassé.'))
-        return
-      }
-      resolve({ code, stdout, stderr })
-    })
-  })
-}
-
-/**
- * Copie du texte dans le presse-papier Windows (`clip.exe`).
- * Best effort : retourne `true`/`false`, ne lève jamais.
- */
-export function copyToClipboard(text: string): Promise<boolean> {
-  return new Promise<boolean>((resolve) => {
-    let child: ChildProcessWithoutNullStreams
-    try {
-      child = spawn('clip.exe', [], { windowsHide: true, shell: false })
-    } catch {
-      resolve(false)
-      return
-    }
-
-    let settled = false
-    const guard = setTimeout(() => finish(false), CLIP_TIMEOUT_MS)
-    function finish(value: boolean): void {
-      if (settled) return
-      settled = true
-      clearTimeout(guard)
-      resolve(value)
-    }
-
-    child.once('error', () => finish(false))
-    // EPIPE possible si clip.exe se termine avant l'écriture.
-    child.stdin.once('error', () => finish(false))
-    child.once('close', (code: number | null) => finish(code === 0))
-    child.stdin.end(text, 'utf8')
-  })
-}
-
-/**
- * Écrit `prompt.md` dans un dossier déjà validé par l'allowlist.
- * Retourne le chemin du fichier écrit.
- */
-export async function writePromptFile(folderPath: string, content: string): Promise<string> {
-  const folder = assertSafeAbsolutePath(folderPath)
-  if (content.length > MAX_PROMPT_CHARS) {
-    badRequest('Contenu du prompt trop volumineux (200 000 caractères maximum).')
-  }
-  const filePath = path.join(folder, 'prompt.md')
-  try {
-    await writeFile(filePath, content, { encoding: 'utf8' })
-  } catch {
-    badRequest(`Écriture du fichier impossible dans : ${folder}`)
-  }
-  return filePath
-}
-
-export interface TerminalLaunch {
-  launched: boolean
-  command: string
-}
-
-/** Gabarit par défaut — affiché à l'utilisateur pour information. */
-const DEFAULT_TERMINAL_COMMAND = 'cmd /k cd /d "{{DOSSIER}}" && opencode'
-
-/**
- * Ouvre un terminal dans le dossier du projet et y lance `opencode`.
- * Double protection : le chemin passe l'allowlist ET reste entre doubles
- * guillemets dans la ligne de commande. Best effort côté lancement.
- */
-export async function openTerminalIn(folderPath: string): Promise<TerminalLaunch> {
-  const resolved = assertSafeAbsolutePath(folderPath)
-  const quoted = `"${resolved}"`
-  const custom = bridgeConfig().terminalCommand.trim()
-
-  // Commande affichée à l'utilisateur (informatif).
-  const command = custom.length > 0
-    ? custom.split('{{DOSSIER}}').join(quoted)
-    : DEFAULT_TERMINAL_COMMAND.split('{{DOSSIER}}').join(quoted)
-
-  // Ligne réellement exécutée. `windowsVerbatimArguments` : Node ne ré-échappe
-  // rien, la ligne est telle que nous la construisons — seule l'allowlist
-  // protège l'injection, et elle est sans échappatoire.
-  const line = custom.length > 0
-    ? command
-    : `start "" cmd /k "cd /d ${quoted} && opencode"`
-
-  return await new Promise<TerminalLaunch>((resolve) => {
-    let child: ChildProcess
-    try {
-      child = spawn('cmd.exe', ['/c', line], {
-        detached: true,
-        stdio: 'ignore',
-        windowsHide: false,
-        windowsVerbatimArguments: true,
-        shell: false,
-      })
-    } catch {
-      resolve({ launched: false, command })
-      return
-    }
-
-    let settled = false
-    child.once('spawn', () => {
-      if (settled) return
-      settled = true
-      resolve({ launched: true, command })
-    })
-    child.once('error', () => {
-      if (settled) return
-      settled = true
-      resolve({ launched: false, command })
-    })
-    child.unref()
-  })
 }

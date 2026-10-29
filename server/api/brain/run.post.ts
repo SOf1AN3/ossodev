@@ -1,20 +1,19 @@
-import { defineEventHandler } from 'h3'
-import { runApi } from '~~/server/utils/http'
-import { assertBridgeAllowed } from '~~/server/utils/localBridge'
-import { runBrainCommand } from '~~/server/services/brain'
+import { runApi, badRequest } from '~~/server/utils/http'
+import { enqueueCommand } from '~~/server/services/localBridge'
+import { bridgeConfig } from '~~/server/utils/localBridge'
 
 /**
- * POST /api/brain/run — exécute la commande `brain` configurée dans Réglages,
- * avec pour dossier courant la racine dev.
- *
- * Contrairement à la plupart des routes, celle-ci **ne doit jamais renvoyer un 500
- * opaque** : que la commande soit absente, qu'elle échoue ou qu'elle réussisse,
- * tout est sérialisé dans `data` pour être affiché proprement dans l'UI.
- * Seul un pont indisponible (Vercel, hors localhost) renvoie une 403.
+ * POST /api/brain/run — met en file la commande `brain:run`.
+ * Aucune commande shell dans le payload : le Companion exécute `brain_command`
+ * pris dans **sa propre config** (jamais transmise par le web).
+ * `dev_root` absent → 400 en français, jamais de crash.
  */
 export default defineEventHandler((event) =>
   runApi(event, async () => {
-    assertBridgeAllowed()
-    return runBrainCommand()
+    const devRoot = bridgeConfig().devRootPath.trim()
+    if (devRoot.length === 0) {
+      badRequest('Racine du dossier dev non configurée (variable NUXT_DEV_ROOT_PATH).', 'DEV_ROOT_MISSING')
+    }
+    return enqueueCommand('brain:run', { dev_root: devRoot })
   }),
 )

@@ -1,38 +1,37 @@
 import { notFound, requiredParam, runApi } from '~~/server/utils/http'
-import {
-  assertBridgeAllowed,
-  copyToClipboard,
-  openTerminalIn,
-  writePromptFile,
-} from '~~/server/utils/localBridge'
-import type { TerminalLaunch } from '~~/server/utils/localBridge'
+import { assertSafeAbsolutePath } from '~~/server/utils/localBridge'
 import { db } from '~~/db'
 import { leadSessions } from '~~/db/schema'
 import { getProject } from '~~/server/repositories/projects'
 import { listTasks } from '~~/server/repositories/projectTasks'
 import { getSettings } from '~~/server/repositories/settings'
 import { renderLeadPrompt } from '~~/server/services/prompt'
+import { enqueueCommand } from '~~/server/services/localBridge'
 import { parseUuidParam } from '~~/server/validation/projects'
 import type { LeadPreview } from '~~/shared/types'
 
 interface LeadLaunchResult {
   preview: LeadPreview
-  file: string
-  clipboardCopied: boolean
-  terminal: TerminalLaunch
+  command_id: string
+  status: 'pending'
 }
 
 /**
- * POST /api/projects/:id/lead — lance réellement la session LEAD :
- * écrit `prompt.md`, copie le prompt, ouvre le terminal, journalise la session.
+ * POST /api/projects/:id/lead — met en file la session LEAD.
+ * Valide le chemin (`assertSafeAbsolutePath`) → rend le prompt →
+ * `enqueueCommand('opencode:lead', { folder_path, prompt })`.
+ * **N'écrit plus `prompt.md`, n'ouvre plus de terminal, ne touche plus au
+ * presse-papier** : le Companion exécute tout sur le poste local.
+ * Journalisation `lead_sessions` en best effort (un échec n'annule pas la mise en file).
  */
 export default defineEventHandler((event) =>
   runApi(event, async (): Promise<LeadLaunchResult> => {
-    assertBridgeAllowed()
-
     const projectId = parseUuidParam(requiredParam(event, 'id'))
     const project = await getProject(projectId)
     if (!project) notFound('Projet')
+
+    // Contrainte d'intégrité du chemin — active même Companion hors ligne.
+    const folderPath = assertSafeAbsolutePath(project.folder_path)
 
     const tasks = await listTasks(projectId)
     const { leadIntroTemplate } = await getSettings()
@@ -51,13 +50,12 @@ export default defineEventHandler((event) =>
       placeholderFound: rendered.placeholderFound,
     }
 
-    // 1. Écriture disque AVANT tout process (chemin validé par l'allowlist).
-    const file = await writePromptFile(preview.folderPath, preview.prompt)
-    // 2. Presse-papier : best effort, n'interrompt pas.
-    const clipboardCopied = await copyToClipboard(preview.prompt).catch(() => false)
-    // 3. Terminal : best effort, n'interrompt pas.
-    const terminal = await openTerminalIn(preview.folderPath)
-    // 4. Historique : best effort, un échec n'annule pas la session.
+    const enqueued = await enqueueCommand('opencode:lead', {
+      folder_path: folderPath,
+      prompt: rendered.prompt,
+    })
+
+    // Historique : best effort, un échec DB n'annule pas la session.
     try {
       await db
         .insert(leadSessions)
@@ -66,6 +64,10 @@ export default defineEventHandler((event) =>
       // Journalisation ignorée en cas d'erreur DB.
     }
 
-    return { preview, file, clipboardCopied, terminal }
+    return {
+      preview,
+      command_id: enqueued.command_id,
+      status: enqueued.status,
+    }
   }),
 )
