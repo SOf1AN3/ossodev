@@ -204,6 +204,8 @@ export interface GamificationSummary {
   level: number
   levelName: string
   nextLevelAt: number
+  /** Nom du rang suivant — évite au front d'importer le catalogue serveur. */
+  nextLevelName: string
   streak: number
   bestStreak: number
   doneToday: number

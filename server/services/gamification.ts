@@ -321,6 +321,7 @@ function buildSummary(state: GamificationState): GamificationSummary {
     level,
     levelName: levelNameFor(level),
     nextLevelAt: level * POINTS_PER_LEVEL,
+    nextLevelName: levelNameFor(level + 1),
     streak: state.streak,
     bestStreak: state.bestStreak,
     doneToday,
