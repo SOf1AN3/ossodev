@@ -1,12 +1,11 @@
 <script setup lang="ts">
+import type { BadgeWithEarnedAt } from '~/composables/useGamification'
 import { useGamification } from '~/composables/useGamification'
+import { useMoments } from '~/composables/useMoments'
 import BadgeGrid from '~/components/gamification/BadgeGrid.vue'
-import LevelMeter from '~/components/gamification/LevelMeter.vue'
 import MissionCard from '~/components/gamification/MissionCard.vue'
 import RecordPanel from '~/components/gamification/RecordPanel.vue'
-import StreakBadge from '~/components/gamification/StreakBadge.vue'
 import UiButton from '~/components/ui/UiButton.vue'
-import UiCard from '~/components/ui/UiCard.vue'
 import UiEmptyState from '~/components/ui/UiEmptyState.vue'
 import UiSkeleton from '~/components/ui/UiSkeleton.vue'
 
@@ -14,6 +13,7 @@ useHead({ title: 'Progrès — OSSO' })
 
 const { summary, badges, records, mission, error, load } =
   useGamification()
+const { countUp } = useMoments()
 
 const nf = new Intl.NumberFormat('fr-FR')
 
@@ -21,13 +21,67 @@ const loading = computed<boolean>(
   () => summary.value === null && error.value === null,
 )
 
-const totalPoints = computed<string>(() =>
-  nf.format(summary.value?.points ?? 0),
-)
-
 const earnedCount = computed<number>(
   () => badges.value.filter((badge) => badge.earned_at !== null).length,
 )
+
+const daysWorked = computed<number>(() => records.value?.totalDaysWorked ?? 0)
+
+const daysWorkedLabel = computed<string>(() =>
+  daysWorked.value > 1 ? 'jours actifs' : 'jour actif',
+)
+
+/* — Bande de chiffres : compteurs animés à l'arrivée du résumé (450 ms,
+   neutralisés en « peu de mouvement » par `countUp`). — */
+const levelCount = ref(0)
+const pointsCount = ref(0)
+const bestStreakCount = ref(0)
+
+watch(
+  summary,
+  (stats) => {
+    if (stats === null) return
+    countUp(levelCount, stats.level)
+    countUp(pointsCount, stats.points)
+    countUp(bestStreakCount, stats.bestStreak)
+  },
+  { immediate: true },
+)
+
+/* — Bloc « Vers niveau N » — */
+const nextLevelNumber = computed<number>(() => (summary.value?.level ?? 0) + 1)
+
+const pointsToNext = computed<number>(() => {
+  const stats = summary.value
+  if (stats === null) return 0
+  return Math.max(0, stats.nextLevelAt - stats.points)
+})
+
+const nextPercent = computed<number>(() => {
+  const stats = summary.value
+  if (stats === null) return 0
+  if (stats.nextLevelAt <= 0) return 100
+  return Math.min(100, Math.round((stats.points / stats.nextLevelAt) * 100))
+})
+
+/* — Moment ② : le badge débloqué « à l'instant » s'embrase à l'ouverture.
+   `useGamification` toaste déjà les nouveaux badges (`applySummary`) —
+   on ne duplicate pas le toast, on pilote seulement l'animation. — */
+/** Fenêtre de détection d'un badge « fraîchement débloqué ». */
+const IGNITION_WINDOW_MS = 30 * 60 * 1000
+
+const ignitionCode = computed<string | null>(() => {
+  const now = Date.now()
+  let newest: { code: string; at: number } | null = null
+  for (const badge of badges.value) {
+    if (badge.earned_at === null) continue
+    const at = Date.parse(badge.earned_at)
+    if (Number.isNaN(at)) continue
+    if (now - at > IGNITION_WINDOW_MS) continue
+    if (newest === null || at > newest.at) newest = { code: badge.code, at }
+  }
+  return newest === null ? null : newest.code
+})
 
 onMounted(() => {
   void load()
@@ -36,17 +90,100 @@ onMounted(() => {
 
 <template>
   <div class="flex flex-col gap-6">
-    <header>
-      <h1 class="text-2xl font-semibold text-ink-100">Progrès</h1>
-      <p class="mt-1 text-sm text-ink-300">
-        Ton niveau, tes badges et tes records personnels.
-      </p>
+    <header class="flex flex-col gap-5">
+      <div>
+        <p class="micro text-ink-700">
+          Régularité · <span class="tnum">{{ daysWorked }}</span>
+          {{ daysWorkedLabel }}
+        </p>
+        <h1
+          class="mt-2 text-[30px] font-bold tracking-[-0.03em] text-ink-100"
+        >
+          Progrès
+        </h1>
+      </div>
+
+      <!-- Bande de chiffres -->
+      <div
+        v-if="summary !== null"
+        class="surface flex flex-wrap items-center gap-x-12 gap-y-6 px-8 py-6"
+      >
+        <!-- Niveau -->
+        <div class="flex min-w-0 flex-col gap-2">
+          <span class="micro text-ink-700">Niveau</span>
+          <span class="tnum display display-lg text-ink-100">
+            {{ levelCount }}
+          </span>
+          <span class="text-[14px] font-medium text-accent-400">
+            {{ summary.levelName }}
+          </span>
+        </div>
+
+        <span
+          class="hidden h-14 w-px self-stretch bg-line lg:block"
+          aria-hidden="true"
+        ></span>
+
+        <!-- Points -->
+        <div class="flex min-w-0 flex-col gap-2">
+          <span class="micro text-ink-700">Points</span>
+          <span class="tnum display display-lg text-ink-100">
+            {{ nf.format(pointsCount) }}
+          </span>
+        </div>
+
+        <span
+          class="hidden h-14 w-px self-stretch bg-line lg:block"
+          aria-hidden="true"
+        ></span>
+
+        <!-- Meilleure série -->
+        <div class="flex min-w-0 flex-col gap-2">
+          <span class="micro text-ink-700">Meilleure série</span>
+          <span class="tnum display display-lg text-accent-400">
+            {{ bestStreakCount }}
+          </span>
+        </div>
+
+        <span
+          class="hidden h-14 w-px self-stretch bg-line lg:block"
+          aria-hidden="true"
+        ></span>
+
+        <!-- Vers niveau N -->
+        <div class="flex min-w-[220px] flex-1 flex-col gap-2.5">
+          <div class="flex items-baseline justify-between gap-4">
+            <span class="micro text-ink-700">
+              Vers niveau {{ nextLevelNumber }}
+            </span>
+            <span class="tnum font-mono text-[12px] text-ink-700">
+              {{ nf.format(summary.points) }} / {{ nf.format(summary.nextLevelAt) }}
+            </span>
+          </div>
+          <div
+            class="h-[5px] overflow-hidden rounded-full bg-surface-600"
+            role="progressbar"
+            :aria-valuenow="nextPercent"
+            aria-valuemin="0"
+            aria-valuemax="100"
+            :aria-valuetext="`${nf.format(pointsToNext)} pts restants`"
+            :aria-label="`Progression vers le niveau ${nextLevelNumber}`"
+          >
+            <div
+              class="h-full rounded-full bg-accent-fill transition-[width] duration-[600ms] ease-[var(--ease-in-out)]"
+              :style="{ width: `${nextPercent}%` }"
+            ></div>
+          </div>
+          <span class="tnum font-mono text-[12px] text-ink-700">
+            {{ nf.format(pointsToNext) }} pts restants
+          </span>
+        </div>
+      </div>
     </header>
 
     <!-- Erreur globale -->
     <UiEmptyState
       v-if="summary === null && error !== null"
-      icon="⚠️"
       title="Impossible de charger tes statistiques"
       :description="error"
     >
@@ -72,49 +209,28 @@ onMounted(() => {
       <!-- Erreur partielle -->
       <div
         v-if="error !== null"
-        class="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-danger-400/40 bg-danger-400/10 px-4 py-3"
+        class="flex flex-wrap items-center justify-between gap-3 rounded-sm border border-danger-400/40 bg-danger-400/10 px-4 py-3"
         role="alert"
       >
         <p class="text-sm text-danger-400">{{ error }}</p>
         <UiButton size="sm" variant="outline" @click="load">Réessayer</UiButton>
       </div>
 
-      <!-- En-tête : niveau + série + points -->
-      <UiCard>
-        <LevelMeter
-          :level="summary.level"
-          :level-name="summary.levelName"
-          :points="summary.points"
-          :next-level-at="summary.nextLevelAt"
-        />
-
-        <div
-          class="mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-line pt-4"
-        >
-          <StreakBadge :streak="summary.streak" size="lg" />
-          <p class="text-sm text-ink-300">
-            <span class="font-semibold text-accent-400">{{ totalPoints }}</span>
-            points au total
-          </p>
-        </div>
-      </UiCard>
-
       <!-- Badges -->
       <section aria-labelledby="badges-title" class="flex flex-col gap-4">
-        <div class="flex flex-wrap items-center justify-between gap-3">
-          <h2 id="badges-title" class="text-base font-medium text-ink-100">
-            Badges
-          </h2>
-          <p class="text-xs text-ink-500">
-            {{ earnedCount }} / {{ badges.length }} débloqués
-          </p>
-        </div>
+        <h2 id="badges-title" class="micro text-ink-700">
+          Badges — <span class="tnum">{{ earnedCount }}</span> débloqués sur
+          <span class="tnum">{{ badges.length }}</span>
+        </h2>
 
-        <BadgeGrid v-if="badges.length > 0" :badges="badges" />
+        <BadgeGrid
+          v-if="badges.length > 0"
+          :badges="badges"
+          :ignition-code="ignitionCode"
+        />
 
         <UiEmptyState
           v-else
-          icon="🏅"
           title="Aucun badge disponible"
           description="Reviens un peu plus tard, le catalogue se remplit vite."
         />
@@ -129,24 +245,19 @@ onMounted(() => {
 
       <!-- Records -->
       <section aria-labelledby="records-title" class="flex flex-col gap-4">
-        <h2 id="records-title" class="text-base font-medium text-ink-100">
-          Records
-        </h2>
+        <h2 id="records-title" class="micro text-ink-700">Records</h2>
 
-        <UiCard v-if="records !== null">
-          <RecordPanel :records="records" />
-        </UiCard>
+        <RecordPanel v-if="records !== null" :records="records" />
 
         <UiEmptyState
           v-else
-          icon="📈"
           title="Pas encore de statistiques"
           description="Termine des tâches pour alimenter tes records."
         >
           <template #action>
             <NuxtLink
               to="/aujourdhui"
-              class="rounded text-xs font-medium text-accent-400 transition-colors hover:text-ink-100 focus-visible:outline-2 focus-visible:outline-accent-400"
+              class="rounded-xs text-xs font-medium text-accent-400 transition-colors hover:text-ink-100"
             >
               Voir mes tâches du jour
             </NuxtLink>
@@ -155,7 +266,7 @@ onMounted(() => {
       </section>
 
       <!-- Bandeau -->
-      <p class="rounded-xl border border-line bg-surface-900 px-4 py-3 text-xs text-ink-500">
+      <p class="text-[13px] text-ink-500">
         Ces statistiques ne comptent que tes tâches perso. Les projets dev ont
         leur propre espace.
       </p>

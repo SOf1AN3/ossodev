@@ -36,8 +36,9 @@ const trackClass = computed<string>(() =>
   props.size === 'lg' ? 'h-6' : 'h-2.5',
 )
 
+/* Aplat : `accent-fill` (jamais une couleur Tailwind par défaut). */
 const fillClass = computed<string>(() =>
-  props.tone === 'ok' ? 'bg-ok-400' : 'bg-accent-400',
+  props.tone === 'ok' ? 'bg-ok-400' : 'bg-accent-fill',
 )
 
 /** Le pourcentage n'est superposé à la barre que si elle est assez haute. */
@@ -65,14 +66,14 @@ const accessibleName = computed<string>(
       <span v-if="label" class="min-w-0 truncate text-ink-300">{{ label }}</span>
       <span
         v-if="showPercent && !percentInside"
-        class="shrink-0 tabular-nums text-ink-500"
+        class="tnum shrink-0 text-ink-500"
       >
         {{ percent }} %
       </span>
     </div>
 
     <div
-      class="relative w-full overflow-hidden rounded-full bg-surface-700"
+      class="relative w-full overflow-hidden rounded-full bg-surface-600"
       :class="trackClass"
       role="progressbar"
       :aria-label="accessibleName"
@@ -82,13 +83,13 @@ const accessibleName = computed<string>(
       :aria-valuetext="`${percent} %`"
     >
       <div
-        class="h-full rounded-full transition-[width] duration-500"
+        class="h-full rounded-full transition-[width] duration-[600ms] ease-[var(--ease-in-out)]"
         :class="fillClass"
         :style="{ width: `${percent}%` }"
       />
       <span
         v-if="percentInside"
-        class="absolute inset-y-0.5 right-1 flex items-center rounded-full bg-surface-950/70 px-1.5 text-xs font-semibold tabular-nums text-ink-100"
+        class="tnum absolute inset-y-0.5 right-1 flex items-center rounded-full bg-surface-950/70 px-1.5 text-xs font-semibold text-ink-100"
       >
         {{ percent }} %
       </span>
