@@ -6,7 +6,10 @@ import { claimPendingCommands } from '~~/server/services/localBridge'
  * POST /api/companion/commands/claim — réclamation atomique des commandes en file.
  * Bearer `COMPANION_SECRET` requis. Reclaim d'abord les `claimed` stale,
  * puis passe en `claimed` toutes les `pending` non expirées (transaction).
- * Ne retourne **jamais** le champ `signature`.
+ *
+ * Chaque commande renvoie `signature` + `expires_at` : le Companion vérifie le
+ * HMAC **avant** exécution. Sans cela, une ligne forgée directement en base
+ * serait exécutée — le HMAC est la défense, et il ne divulgue pas la clé.
  */
 export default defineEventHandler((event) =>
   runApi(event, async () => {

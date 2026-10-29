@@ -250,6 +250,10 @@ export interface CompanionCommand {
   payload: CompanionCommandPayload
   /** ISO 8601 */
   created_at: string
+  /** ISO 8601 — le Companion refuse un message plus vieux que 120 s */
+  expires_at: string
+  /** HMAC-SHA256 vérifié par le Companion AVANT exécution (défense contre une ligne forgée en base) */
+  signature: string
 }
 
 export interface CompanionStatus {

@@ -113,7 +113,14 @@ export async function reclaimStaleClaims(): Promise<number> {
   return rows.length
 }
 
-/** Convertit une ligne DB en `CompanionCommand` publique — **sans `signature`**. */
+/**
+ * Convertit une ligne DB en `CompanionCommand` publique.
+ *
+ * `signature` et `expires_at` **font partie de la réponse** : le Companion
+ * vérifie le HMAC avant exécution. Sans lui, il ne peut pas détecter une ligne
+ * forgée en base — c'est précisément la défense recherchée.
+ * Retourner un HMAC **ne divulgue pas la clé** (non réversible).
+ */
 function toPublicCommand(row: typeof companionCommands.$inferSelect): CompanionCommand {
   const payload =
     row.payload !== null && typeof row.payload === 'object' && !Array.isArray(row.payload)
@@ -124,6 +131,8 @@ function toPublicCommand(row: typeof companionCommands.$inferSelect): CompanionC
     command_key: row.command_key as CompanionCommandKey,
     payload,
     created_at: row.created_at.toISOString(),
+    expires_at: row.expires_at.toISOString(),
+    signature: row.signature,
   }
 }
 
@@ -132,7 +141,6 @@ function toPublicCommand(row: typeof companionCommands.$inferSelect): CompanionC
  * 1. remise en file des `claimed` stale (Companion mort) ;
  * 2. `UPDATE … SET status='claimed', claimed_at=now WHERE status='pending' AND expires_at > now RETURNING`.
  * En transaction — chaque ligne n'est réclamée qu'une seule fois.
- * Ne retourne **jamais** le champ `signature`.
  */
 export async function claimPendingCommands(): Promise<CompanionCommand[]> {
   // 1. Companion mort ? Ses `claimed` stale repassent en `pending` d'abord.
