@@ -67,9 +67,15 @@ mkdirSync(dir, { recursive: true })
 const configPath = join(dir, 'config.json')
 
 /** Valeurs par défaut conservées si le fichier existe déjà (l'utilisateur peut
- *  avoir renseigné une URL ou une commande propre à sa machine). */
+ *  avoir renseigné une URL ou une commande propre à sa machine).
+ *
+ *  `oss_url` pointe désormais sur la **production Vercel** : le serveur Nitro n'est
+ *  plus exécuté en local (plan V2, piste A). Le Companion n'a donc plus rien à joindre
+ *  sur `localhost`. Surchargeable via `NUXT_OSS_URL` pour un retour en local
+ *  (`node --env-file=.env scripts/companion-init.mjs`).
+ */
 const defaults = {
-  oss_url: 'http://localhost:3000',
+  oss_url: process.env.NUXT_OSS_URL || 'https://ossodev.vercel.app',
   secret,
   dev_root: process.env.NUXT_DEV_ROOT_PATH || 'C:/Users/Sofiane/Desktop/dev',
   brain_command: '',
