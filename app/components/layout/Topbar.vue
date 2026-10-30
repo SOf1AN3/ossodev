@@ -20,6 +20,8 @@ const route = useRoute()
 const { summary, load } = useGamification()
 const { isLight, toggle, sync } = useTheme()
 const { show: showToast } = useToast()
+// Tiroir de navigation mobile : état partagé avec layouts/default.vue.
+const { isOpen: isNavOpen, toggle: toggleNav } = useMobileNav()
 const {
   status: companionStatus,
   pending: companionPending,
@@ -157,10 +159,23 @@ onUnmounted(() => {
 
 <template>
   <header
-    class="sticky top-0 z-40 flex h-14 items-center justify-between gap-4 border-b border-line bg-surface-950/85 px-8 backdrop-blur-xl"
+    class="sticky top-0 z-40 flex h-14 items-center justify-between gap-4 border-b border-line bg-surface-950/85 px-4 backdrop-blur-xl sm:px-6 lg:px-8"
   >
-    <!-- Fil d'Ariane : titre de la page courante -->
-    <nav aria-label="Fil d'Ariane" class="min-w-0">
+    <!-- Bascule du tiroir de navigation (petits écrans) -->
+    <button
+      type="button"
+      class="flex h-8 w-8 shrink-0 items-center justify-center rounded-sm border border-line text-ink-300 transition-colors hover:bg-surface-800 hover:text-ink-100 lg:hidden"
+      aria-label="Ouvrir la navigation"
+      aria-controls="mobile-nav-panel"
+      :aria-expanded="isNavOpen"
+      @click="toggleNav"
+    >
+      <UiIcon name="menu" size="sm" />
+    </button>
+
+    <!-- Fil d'Ariane : titre de la page courante. Masqué sous sm : déjà tronqué
+         à 320px, et le h1 du contenu rappelle le titre — aucune info perdue. -->
+    <nav aria-label="Fil d'Ariane" class="hidden min-w-0 flex-1 sm:block">
       <p class="truncate text-[13px] text-ink-500" aria-current="page">
         {{ pageTitle }}
       </p>
@@ -168,13 +183,14 @@ onUnmounted(() => {
 
     <!-- Instruments -->
     <div class="flex shrink-0 items-center gap-3">
-      <!-- Horloge + date (masquée aux lecteurs d'écran : elle change sans action) -->
+      <!-- Horloge + date : masquée sous sm (déjà tronquée à 320px) et toujours
+           aria-hidden : elle change sans action de l'utilisateur. -->
       <span
-        class="font-mono text-[12px] text-ink-700 tnum"
+        class="hidden font-mono text-[12px] text-ink-700 tnum sm:inline"
         aria-hidden="true"
       >{{ clockLabel }}</span>
 
-      <span class="h-3.5 w-px bg-line" aria-hidden="true" />
+      <span class="hidden h-3.5 w-px bg-line sm:block" aria-hidden="true" />
 
       <!-- Compteur de série -->
       <span class="flex items-center gap-1.5" title="Série en cours (jours consécutifs)">

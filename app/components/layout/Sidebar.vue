@@ -2,16 +2,7 @@
 import { computed, nextTick, onMounted, onUpdated, onUnmounted, ref } from 'vue'
 import type { CSSProperties } from 'vue'
 import { useCompanion, companionReasonDetail } from '~/composables/useCompanion'
-
-interface NavItem {
-  label: string
-  to: string
-}
-
-interface NavGroup {
-  title: string
-  items: NavItem[]
-}
+import { NAV_GROUPS } from '~/utils/navigation'
 
 const route = useRoute()
 const { summary, pending: gamificationPending, load } = useGamification()
@@ -21,32 +12,9 @@ const {
   refresh: refreshCompanion,
 } = useCompanion()
 
-const groups: NavGroup[] = [
-  {
-    title: "AUJOURD'HUI",
-    items: [
-      { label: 'Tableau de bord', to: '/' },
-      { label: "Aujourd'hui", to: '/aujourdhui' },
-      { label: 'Planifier', to: '/planifier' },
-      { label: 'Routines', to: '/routines' },
-    ],
-  },
-  {
-    title: 'PROJETS',
-    items: [
-      { label: 'Idées', to: '/idees' },
-      { label: 'Projets dev', to: '/projets' },
-    ],
-  },
-  {
-    title: 'SYSTÈME',
-    items: [
-      { label: 'Progrès', to: '/progres' },
-      { label: 'Apprentissage', to: '/apprentissage' },
-      { label: 'Réglages', to: '/reglages' },
-    ],
-  },
-]
+// Groupes hérités de utils/navigation (source unique partagée avec le tiroir
+// mobile) : rendu et mesure de l'indicateur strictement identiques.
+const groups = NAV_GROUPS
 
 /** Match exact sur `to`, sauf pour la racine où seul `/` compte. */
 function isActive(to: string): boolean {
