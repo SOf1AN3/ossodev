@@ -19,11 +19,35 @@ const PAGE_TITLES: Readonly<Record<string, string>> = {
 const route = useRoute()
 const { summary, load } = useGamification()
 const { isLight, toggle, sync } = useTheme()
+const { show: showToast } = useToast()
 const {
   status: companionStatus,
   pending: companionPending,
   refresh: refreshCompanion,
 } = useCompanion()
+
+// ─── Déconnexion ─────────────────────────────────────────────────────────────
+// Le logout n'envoie que l'effacement du cookie : on ne navigue vers
+// /connexion QUE si le serveur a confirmé. Sans quoi le cookie resterait
+// valide pendant que l'utilisateur croirait être déconnecté.
+const loggingOut = ref(false)
+
+async function onLogout(): Promise<void> {
+  if (loggingOut.value) return
+  loggingOut.value = true
+  try {
+    await $fetch('/api/auth/logout', { method: 'POST' })
+    await navigateTo('/connexion')
+  } catch {
+    showToast({
+      title: 'Déconnexion impossible',
+      message: 'Réessaie dans un instant.',
+      tone: 'error',
+    })
+  } finally {
+    loggingOut.value = false
+  }
+}
 
 /** Titre de la page courante, déduit du chemin de la route. */
 const pageTitle = computed<string>(() => PAGE_TITLES[route.path] ?? 'OSSO')
@@ -181,6 +205,20 @@ onUnmounted(() => {
         @click="toggle"
       >
         <UiIcon :name="isLight ? 'moon' : 'sun'" size="sm" />
+      </button>
+
+      <!-- Séparateur, puis déconnexion -->
+      <span class="h-3.5 w-px bg-line" aria-hidden="true" />
+
+      <button
+        type="button"
+        class="flex h-8 w-8 items-center justify-center rounded-sm border border-line text-ink-300 transition-colors hover:border-danger-400 hover:bg-surface-800 hover:text-danger-400 disabled:cursor-not-allowed disabled:opacity-60"
+        aria-label="Se déconnecter du dashboard"
+        title="Se déconnecter"
+        :disabled="loggingOut"
+        @click="onLogout"
+      >
+        <UiIcon name="logout" size="sm" />
       </button>
     </div>
   </header>

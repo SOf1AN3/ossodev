@@ -27,6 +27,7 @@ export type IconName =
   | 'trash'
   | 'arrowUp'
   | 'arrowDown'
+  | 'logout'
   | 'sun'
   | 'moon'
 
@@ -99,6 +100,9 @@ const ICON_PATHS: Record<string, readonly string[] | undefined> = {
   ],
   arrowUp: ['M12 19.5V5', 'm5.8 11.2 6.2-6.2 6.2 6.2'],
   arrowDown: ['M12 4.5V19', 'm5.8 12.8 6.2 6.2 6.2-6.2'],
+  /* Sortie : encadrement ouvert à gauche + flèche sortante. Même vocabulaire
+     que arrowUp/arrowDown pour la flèche, porte au trait pour le cadre. */
+  logout: ['M9 21H5.5A1.5 1.5 0 0 1 4 19.5v-15A1.5 1.5 0 0 1 5.5 3H9', 'm16 16.5 4.5-4.5L16 7.5', 'M20.5 12H9'],
   sun: [
     'M17 12a5 5 0 1 1-10 0 5 5 0 1 1 10 0Z',
     'M12 6V3.4',
