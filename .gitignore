@@ -19,3 +19,5 @@ data/pg
 # Artefacts de conception du Directeur Artistique — jamais poussés
 DESIGN.md
 preview.html
+
+.vercel
