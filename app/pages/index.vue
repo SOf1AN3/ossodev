@@ -281,15 +281,15 @@ const pointsToNextLevel = computed<number>(() => {
       aria-busy="true"
       aria-label="Chargement du tableau de bord"
     >
-      <div class="surface mb-8 px-8 py-7">
+      <div class="surface mb-8 px-4 py-5 sm:px-8 sm:py-7">
         <UiSkeleton class="h-24 w-full" />
       </div>
-      <div class="grid grid-cols-1 gap-8 lg:grid-cols-12">
-        <div class="flex flex-col gap-8 lg:col-span-8">
+      <div class="grid grid-cols-1 gap-5 sm:gap-8 lg:grid-cols-12">
+        <div class="flex flex-col gap-5 sm:gap-8 lg:col-span-8">
           <UiSkeleton class="h-32 w-full" />
           <UiSkeleton class="h-64 w-full" />
         </div>
-        <div class="flex flex-col gap-8 lg:col-span-4">
+        <div class="flex flex-col gap-5 sm:gap-8 lg:col-span-4">
           <UiSkeleton class="h-56 w-full" />
           <UiSkeleton class="h-40 w-full" />
           <UiSkeleton class="h-44 w-full" />
@@ -310,7 +310,7 @@ const pointsToNextLevel = computed<number>(() => {
       </div>
 
       <!-- ═══ BANDE HÉRO COCKPIT ═══ -->
-      <div ref="refHeroBand" class="hero surface mb-8 px-8 py-7">
+      <div ref="refHeroBand" class="hero surface mb-8 px-4 py-5 sm:px-8 sm:py-7">
         <div class="hero-sweep" aria-hidden="true" />
 
         <div
@@ -326,7 +326,7 @@ const pointsToNextLevel = computed<number>(() => {
           />
 
           <!-- ③ Série -->
-          <div class="min-w-[130px]">
+          <div class="min-w-0 lg:min-w-[130px]">
             <p class="flex items-center gap-1.5">
               <span ref="refFlamme" class="inline-flex">
                 <UiIcon name="flame" class="h-5 w-5 text-accent-400" />
@@ -351,7 +351,7 @@ const pointsToNextLevel = computed<number>(() => {
           />
 
           <!-- ④ Niveau -->
-          <div class="min-w-[210px] flex-1">
+          <div class="min-w-0 lg:min-w-[210px] flex-1">
             <div
               class="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1"
             >
@@ -396,9 +396,9 @@ const pointsToNextLevel = computed<number>(() => {
       </div>
 
       <!-- ═══ GRILLE 8 / 4 ═══ -->
-      <div class="grid grid-cols-1 gap-8 lg:grid-cols-12">
+      <div class="grid grid-cols-1 gap-5 sm:gap-8 lg:grid-cols-12">
         <!-- Colonne gauche -->
-        <section class="flex flex-col gap-8 lg:col-span-8">
+        <section class="flex flex-col gap-5 sm:gap-8 lg:col-span-8">
           <!-- Projets dev -->
           <div class="flex flex-col gap-4">
             <div class="flex flex-wrap items-center justify-between gap-3">
@@ -584,7 +584,7 @@ const pointsToNextLevel = computed<number>(() => {
         </section>
 
         <!-- Colonne droite -->
-        <section class="flex flex-col gap-8 lg:col-span-4">
+        <section class="flex flex-col gap-5 sm:gap-8 lg:col-span-4">
           <IdeaCapture />
 
           <MissionSummary

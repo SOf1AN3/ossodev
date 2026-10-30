@@ -26,7 +26,7 @@ const dashOffset = computed<number>(() => 100 - percent.value)
 
 <template>
   <!-- ① Métrique géante -->
-  <div class="min-w-[190px]">
+  <div class="min-w-0 sm:min-w-[190px]">
     <h1 class="micro text-ink-700">{{ longDate }}</h1>
     <p class="tnum display display-xl mt-2 text-ink-100">
       <span>{{ summary.doneToday }}</span

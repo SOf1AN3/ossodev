@@ -141,7 +141,7 @@ onMounted(() => {
         ></span>
 
         <!-- Vers niveau N -->
-        <div class="flex min-w-[220px] flex-1 flex-col gap-2.5">
+        <div class="flex min-w-0 flex-1 flex-col gap-2.5 lg:min-w-[220px]">
           <div class="flex items-baseline justify-between gap-4">
             <span class="micro text-ink-700">
               Vers niveau {{ nextLevelNumber }}

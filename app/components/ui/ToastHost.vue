@@ -28,7 +28,7 @@ const timerToneClass: Record<ToastTone, string> = {
 <template>
   <!-- Hôte des notifications : monté une seule fois dans le layout -->
   <div
-    class="pointer-events-none fixed right-4 bottom-4 z-[60] flex w-full max-w-sm flex-col gap-2"
+    class="pointer-events-none fixed bottom-4 left-4 right-4 z-[60] flex max-w-none flex-col gap-2 sm:left-auto sm:max-w-sm sm:right-4"
     role="region"
     aria-label="Notifications"
   >
