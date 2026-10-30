@@ -171,7 +171,7 @@ onUpdated(() => {
     <nav
       ref="navEl"
       aria-label="Navigation principale"
-      class="relative flex flex-1 flex-col gap-5 overflow-y-auto px-2 pb-4"
+      class="relative flex flex-1 flex-col overflow-y-auto px-2 pb-4"
     >
       <!-- Barre « vous êtes ici » : unique, glissante, avec lueur ambre -->
       <span
@@ -182,7 +182,7 @@ onUpdated(() => {
       />
 
       <div v-for="group in groups" :key="group.title">
-        <p class="micro px-3 pt-3 pb-2 text-ink-700">{{ group.title }}</p>
+        <p class="micro px-3 pt-5 pb-1.5 select-none text-ink-700">{{ group.title }}</p>
         <ul class="space-y-1">
           <li v-for="item in group.items" :key="item.to">
             <NuxtLink

@@ -132,7 +132,7 @@ onBeforeUnmount(() => {
              landmark « Navigation principale » dans l'arbre d'accessibilité. -->
         <nav aria-label="Navigation principale" class="flex-1 overflow-y-auto px-2 pb-4">
           <div v-for="group in NAV_GROUPS" :key="group.title">
-            <p class="micro px-3 pt-3 pb-2 text-ink-700">{{ group.title }}</p>
+            <p class="micro px-3 pt-5 pb-1.5 select-none text-ink-700">{{ group.title }}</p>
             <ul class="space-y-1">
               <li v-for="item in group.items" :key="item.to">
                 <NuxtLink
