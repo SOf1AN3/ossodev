@@ -157,6 +157,19 @@ body::after {
   text-transform: uppercase;
   font-weight: 600;
 }
+/* Titre de section de navigation : « AUJOURD’HUI », « PROJETS », « SYSTÈME ».
+   Même grammaire que `.micro` (capitales + interlettrage) mais **plus grand que
+   les items** (18px vs 14px) : un titre de section plus petit que ce qu’il
+   annonce se lit comme un libellé de plus parmi les actions, pas comme une
+   structure. Déclaré comme classe propre plutôt que `.micro` + utility Tailwind,
+   car `.micro` est défini APRÈS l’import Tailwind et écraserait toute taille. */
+.label-section {
+  font-size: 1.125rem;
+  line-height: 1.2;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-weight: 700;
+}
 /* Métrique display : le cœur de la hiérarchie */
 .display {
   font-weight: 700;

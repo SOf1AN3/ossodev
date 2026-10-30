@@ -182,7 +182,7 @@ onUpdated(() => {
       />
 
       <div v-for="group in groups" :key="group.title">
-        <p class="micro px-3 pt-5 pb-1.5 select-none text-ink-700">{{ group.title }}</p>
+        <p class="label-section px-3 pt-6 pb-2 select-none text-ink-700">{{ group.title }}</p>
         <ul class="space-y-1">
           <li v-for="item in group.items" :key="item.to">
             <NuxtLink
