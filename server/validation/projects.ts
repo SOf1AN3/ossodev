@@ -76,7 +76,7 @@ export const projectTaskCreateSchema = z.object({
     .trim()
     .min(1, 'Le titre de la tâche est requis.')
     .max(300, 'Le titre de la tâche ne peut pas dépasser 300 caractères.'),
-  parent_id: uuidSchema.optional(),
+  parent_id: uuidSchema.nullish().transform((v) => v ?? undefined),
   position: z.number().int().min(0, 'La position doit être un entier positif.').optional(),
   is_done: z.boolean().default(false),
 })
@@ -88,7 +88,7 @@ export const projectTaskUpdateSchema = z.object({
     .min(1, 'Le titre de la tâche est requis.')
     .max(300, 'Le titre de la tâche ne peut pas dépasser 300 caractères.')
     .optional(),
-  parent_id: uuidSchema.optional(),
+  parent_id: uuidSchema.nullish().transform((v) => v ?? undefined),
   position: z.number().int().min(0, 'La position doit être un entier positif.').optional(),
   is_done: z.boolean().optional(),
 })
