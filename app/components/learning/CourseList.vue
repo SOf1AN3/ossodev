@@ -40,18 +40,12 @@ function formatRelative(iso: string): string {
           >
             {{ course.title }}
           </h2>
-          <UiBadge
-            class="shrink-0"
-            :tone="course.status === 'done' ? 'ok' : 'neutral'"
-          >
+          <UiBadge class="shrink-0" :tone="course.status === 'done' ? 'ok' : 'neutral'">
             {{ course.status === 'done' ? 'Accompli' : 'À lire' }}
           </UiBadge>
         </div>
 
-        <p
-          class="truncate font-mono text-[12px] text-ink-700"
-          :title="course.technology"
-        >
+        <p class="truncate font-mono text-[12px] text-ink-700" :title="course.technology">
           {{ course.technology }}
         </p>
 

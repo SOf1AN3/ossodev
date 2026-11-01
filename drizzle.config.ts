@@ -26,8 +26,8 @@ function loadDotEnvFile(): void {
 
     // Retire un éventuel encadrement par quotes simples ou doubles
     if (
-      (value.startsWith('"') && value.endsWith('"') && value.length >= 2)
-      || (value.startsWith("'") && value.endsWith("'") && value.length >= 2)
+      (value.startsWith('"') && value.endsWith('"') && value.length >= 2) ||
+      (value.startsWith("'") && value.endsWith("'") && value.length >= 2)
     ) {
       value = value.slice(1, -1)
     }

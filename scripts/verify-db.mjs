@@ -17,7 +17,9 @@ for (const t of tables) {
   `
   console.log(`\n  ${t.table_name} (${cols.length})`)
   for (const c of cols) {
-    console.log(`     - ${c.column_name.padEnd(18)} ${c.data_type}${c.is_nullable === 'NO' ? ' NOT NULL' : ''}`)
+    console.log(
+      `     - ${c.column_name.padEnd(18)} ${c.data_type}${c.is_nullable === 'NO' ? ' NOT NULL' : ''}`,
+    )
   }
 }
 
@@ -44,7 +46,8 @@ const cons = await sql`
 `
 const byType = { c: 'CHECK', u: 'UNIQUE', p: 'PRIMARY KEY', f: 'FOREIGN KEY' }
 console.log(`\nCONTRAINTES (${cons.length}) :`)
-for (const c of cons) console.log(`   [${byType[String(c.contype)] ?? String(c.contype)}] ${c.conname}`)
+for (const c of cons)
+  console.log(`   [${byType[String(c.contype)] ?? String(c.contype)}] ${c.conname}`)
 
 await sql.end({ timeout: 1 })
 console.log('\nVERIFICATION TERMINEE')

@@ -25,18 +25,12 @@ const iconSize: Record<NonNullable<StreakBadgeProps['size']>, 'sm' | 'md'> = {
   lg: 'md',
 }
 
-const toneClass = computed<string>(() =>
-  props.streak > 0 ? 'text-accent-400' : 'text-ink-500',
-)
+const toneClass = computed<string>(() => (props.streak > 0 ? 'text-accent-400' : 'text-ink-500'))
 
-const flameClass = computed<string>(() =>
-  props.streak > 0 ? '' : 'opacity-50',
-)
+const flameClass = computed<string>(() => (props.streak > 0 ? '' : 'opacity-50'))
 
 const label = computed<string>(() =>
-  props.streak > 0
-    ? `jour${props.streak > 1 ? 's' : ''} d’affilée`
-    : 'Série à relancer',
+  props.streak > 0 ? `jour${props.streak > 1 ? 's' : ''} d’affilée` : 'Série à relancer',
 )
 
 /* Cible du moment ③ : l'icône de flamme seule (le libellé reste immobile). */
@@ -50,12 +44,7 @@ defineExpose({ flameEl })
     class="inline-flex items-center rounded-full border border-line bg-surface-900 font-medium"
     :class="[sizeClasses[size], toneClass]"
   >
-    <span
-      ref="flameEl"
-      class="inline-flex"
-      :class="flameClass"
-      aria-hidden="true"
-    >
+    <span ref="flameEl" class="inline-flex" :class="flameClass" aria-hidden="true">
       <UiIcon name="flame" :size="iconSize[size]" />
     </span>
     <span v-if="streak > 0" class="tnum font-mono font-bold">{{ streak }}</span>

@@ -114,11 +114,7 @@ function checkboxLabel(): string {
       aria-hidden="true"
       title="Glisser pour réordonner"
     >
-      <span
-        v-for="n in 6"
-        :key="n"
-        class="block h-[3px] w-[3px] rounded-full bg-ink-700"
-      />
+      <span v-for="n in 6" :key="n" class="block h-[3px] w-[3px] rounded-full bg-ink-700" />
     </span>
 
     <!-- Case qui se dessine (.box) -->
@@ -147,7 +143,7 @@ function checkboxLabel(): string {
           class="w-full rounded-sm border border-line bg-surface-800 px-2.5 py-1.5 text-sm"
           :class="task.is_done ? 'text-ink-500 line-through' : 'text-ink-100'"
           @keydown="onEditKeydown"
-        >
+        />
       </div>
     </div>
 
@@ -172,23 +168,13 @@ function checkboxLabel(): string {
     <div class="flex shrink-0 items-center gap-1">
       <template v-if="editing">
         <UiButton size="sm" @click="commitEdit">Valider</UiButton>
-        <UiButton size="sm" variant="ghost" @click="cancelEdit">
-          Annuler
-        </UiButton>
+        <UiButton size="sm" variant="ghost" @click="cancelEdit"> Annuler </UiButton>
       </template>
 
       <template v-else-if="confirmingDelete">
         <span class="text-xs text-danger-400">Supprimer ?</span>
-        <UiButton size="sm" variant="danger" @click="emit('remove')">
-          Confirmer
-        </UiButton>
-        <UiButton
-          size="sm"
-          variant="ghost"
-          @click="confirmingDelete = false"
-        >
-          Annuler
-        </UiButton>
+        <UiButton size="sm" variant="danger" @click="emit('remove')"> Confirmer </UiButton>
+        <UiButton size="sm" variant="ghost" @click="confirmingDelete = false"> Annuler </UiButton>
       </template>
 
       <template v-else>

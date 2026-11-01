@@ -12,7 +12,10 @@ export default defineEventHandler((event) =>
   runApi(event, async () => {
     const devRoot = bridgeConfig().devRootPath.trim()
     if (devRoot.length === 0) {
-      badRequest('Racine du dossier dev non configurée (variable NUXT_DEV_ROOT_PATH).', 'DEV_ROOT_MISSING')
+      badRequest(
+        'Racine du dossier dev non configurée (variable NUXT_DEV_ROOT_PATH).',
+        'DEV_ROOT_MISSING',
+      )
     }
     return enqueueCommand('brain:run', { dev_root: devRoot })
   }),

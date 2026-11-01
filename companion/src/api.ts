@@ -42,11 +42,7 @@ const REQUEST_TIMEOUT_MS = 10_000
 
 class ApiError extends Error {}
 
-async function postJson<T>(
-  config: CompanionConfig,
-  route: string,
-  body: unknown,
-): Promise<T> {
+async function postJson<T>(config: CompanionConfig, route: string, body: unknown): Promise<T> {
   const url = `${config.oss_url}${route}`
   let response: Response
   try {
@@ -124,12 +120,19 @@ export async function complete(
 ): Promise<void> {
   const body: { status: 'done' | 'failed'; result_text?: string } = { status }
   if (resultText !== undefined) body.result_text = resultText
-  const raw = await postJson<unknown>(config, `/api/companion/commands/${encodeURIComponent(id)}/complete`, body)
+  const raw = await postJson<unknown>(
+    config,
+    `/api/companion/commands/${encodeURIComponent(id)}/complete`,
+    body,
+  )
   unwrapData<unknown>(raw, 'complete')
 }
 
 /** Envoie le résultat du scan brain (le serveur fait l'upsert). */
-export async function sendBrainResult(config: CompanionConfig, payload: BrainScanPayload): Promise<void> {
+export async function sendBrainResult(
+  config: CompanionConfig,
+  payload: BrainScanPayload,
+): Promise<void> {
   const raw = await postJson<unknown>(config, '/api/companion/brain-result', payload)
   unwrapData<unknown>(raw, 'brain-result')
 }

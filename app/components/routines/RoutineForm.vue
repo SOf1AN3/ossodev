@@ -50,9 +50,7 @@ watch(
 /** Validation alignée sur le serveur : une routine hebdo exige ≥ 1 jour. */
 const weekdayError = computed<string | null>(() => {
   if (frequency.value !== 'weekly') return null
-  return weekdays.value.length > 0
-    ? null
-    : 'Coche au moins un jour de la semaine.'
+  return weekdays.value.length > 0 ? null : 'Coche au moins un jour de la semaine.'
 })
 
 const canSave = computed<boolean>(
@@ -82,17 +80,8 @@ function onSubmit(): void {
     <UiInput v-model="title" label="Titre" placeholder="Titre de la routine" />
 
     <div class="flex flex-col gap-1.5">
-      <span
-        id="routine-frequency-label"
-        class="micro text-ink-500"
-      >
-        Fréquence
-      </span>
-      <div
-        role="group"
-        aria-labelledby="routine-frequency-label"
-        class="flex gap-2"
-      >
+      <span id="routine-frequency-label" class="micro text-ink-500"> Fréquence </span>
+      <div role="group" aria-labelledby="routine-frequency-label" class="flex gap-2">
         <button
           type="button"
           :aria-pressed="frequency === 'daily'"
@@ -131,28 +120,15 @@ function onSubmit(): void {
     </div>
 
     <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-      <UiInput
-        v-model="points"
-        type="number"
-        label="Points"
-        placeholder="10"
-      />
-      <UiInput
-        v-model="startDate"
-        type="date"
-        label="Date de début"
-      />
+      <UiInput v-model="points" type="number" label="Points" placeholder="10" />
+      <UiInput v-model="startDate" type="date" label="Date de début" />
     </div>
 
     <UiToggle v-model="isActive" label="Routine active" />
 
     <div class="flex justify-end gap-3 border-t border-line pt-4">
-      <UiButton variant="ghost" :disabled="saving" @click="emit('cancel')">
-        Annuler
-      </UiButton>
-      <UiButton type="submit" :disabled="!canSave" :loading="saving">
-        Enregistrer
-      </UiButton>
+      <UiButton variant="ghost" :disabled="saving" @click="emit('cancel')"> Annuler </UiButton>
+      <UiButton type="submit" :disabled="!canSave" :loading="saving"> Enregistrer </UiButton>
     </div>
   </form>
 </template>

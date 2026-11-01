@@ -60,11 +60,10 @@ export async function runApi<T>(
       data?: { error?: { code: string; message: string } }
     }
 
-    const shaped =
-      err?.data?.error ?? {
-        code: 'INTERNAL',
-        message: err?.statusMessage || err?.message || 'Erreur interne du serveur.',
-      }
+    const shaped = err?.data?.error ?? {
+      code: 'INTERNAL',
+      message: err?.statusMessage || err?.message || 'Erreur interne du serveur.',
+    }
 
     setResponseStatus(event, err?.statusCode ?? 500)
     return { error: shaped }

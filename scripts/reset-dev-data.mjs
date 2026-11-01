@@ -7,9 +7,16 @@ const CONFIRM = process.argv.includes('--yes')
 const sql = postgres(process.env.DATABASE_URL, { max: 1, ssl: 'require' })
 
 const TABLES = [
-  'user_badges', 'badges', 'weekly_missions',
-  'lead_sessions', 'project_tasks', 'projects',
-  'tasks', 'routines', 'ideas', 'settings',
+  'user_badges',
+  'badges',
+  'weekly_missions',
+  'lead_sessions',
+  'project_tasks',
+  'projects',
+  'tasks',
+  'routines',
+  'ideas',
+  'settings',
 ]
 
 const counts = async () => {
@@ -44,11 +51,17 @@ for (const [t, n] of Object.entries(after)) {
   console.log(`  ${t.padEnd(16)} ${n}`)
 }
 
-const leftovers = ['tasks', 'routines', 'ideas', 'projects', 'project_tasks', 'lead_sessions']
-  .filter((t) => after[t] > 0)
+const leftovers = [
+  'tasks',
+  'routines',
+  'ideas',
+  'projects',
+  'project_tasks',
+  'lead_sessions',
+].filter((t) => after[t] > 0)
 console.log(
   leftovers.length === 0
-    ? '\nBase vierge — prête à l\'emploi.'
+    ? "\nBase vierge — prête à l'emploi."
     : `\nDonnées restantes (volontaires ?) : ${leftovers.join(', ')}`,
 )
 

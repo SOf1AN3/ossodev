@@ -22,9 +22,7 @@ const emit = defineEmits<{
   reset: []
 }>()
 
-const sinceLabel = computed<string>(() =>
-  formatCompletedSince(props.completedAt),
-)
+const sinceLabel = computed<string>(() => formatCompletedSince(props.completedAt))
 </script>
 
 <template>
@@ -36,19 +34,10 @@ const sinceLabel = computed<string>(() =>
     </p>
     <p v-else class="micro text-ink-500">Cours à lire</p>
 
-    <UiButton
-      v-if="status === 'todo'"
-      :loading="busy"
-      @click="emit('finish')"
-    >
+    <UiButton v-if="status === 'todo'" :loading="busy" @click="emit('finish')">
       J'ai fini
     </UiButton>
-    <UiButton
-      v-else
-      variant="outline"
-      :loading="busy"
-      @click="emit('reset')"
-    >
+    <UiButton v-else variant="outline" :loading="busy" @click="emit('reset')">
       Remettre à lire
     </UiButton>
   </div>

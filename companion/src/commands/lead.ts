@@ -25,9 +25,8 @@ const PROMPT_MAX_BYTES = 500_000
  * ne peut y figurer), donc l'injection est structurellement impossible.
  */
 function openTerminal(folderPath: string, config: CompanionConfig): void {
-  const template = config.terminal_command.trim().length > 0
-    ? config.terminal_command
-    : DEFAULT_TERMINAL_COMMAND
+  const template =
+    config.terminal_command.trim().length > 0 ? config.terminal_command : DEFAULT_TERMINAL_COMMAND
 
   const substituted = template.split('{{DOSSIER}}').join(`"${folderPath}"`)
 
@@ -37,9 +36,8 @@ function openTerminal(folderPath: string, config: CompanionConfig): void {
   // Forme personnalisée : ligne passée telle quelle à `cmd /c`.
   const head = /^cmd\s+\/k\s+/i.exec(substituted)
   const inner = head === null ? substituted : substituted.slice(head[0].length)
-  const argv: string[] = head === null
-    ? ['/c', substituted]
-    : ['/c', 'start', '', 'cmd', '/k', `"${inner}"`]
+  const argv: string[] =
+    head === null ? ['/c', substituted] : ['/c', 'start', '', 'cmd', '/k', `"${inner}"`]
 
   try {
     const child = spawn('cmd.exe', argv, {

@@ -83,7 +83,12 @@ export function nextOccurrenceDates(routine: Routine, today: string): string[] {
     offset++
   ) {
     const candidate = addDaysISO(base, offset)
-    if (isRoutineDueOn({ frequency: routine.frequency, weekdays: routine.weekdays }, weekdayOf(candidate))) {
+    if (
+      isRoutineDueOn(
+        { frequency: routine.frequency, weekdays: routine.weekdays },
+        weekdayOf(candidate),
+      )
+    ) {
       dates.push(candidate)
     }
   }
@@ -97,10 +102,7 @@ function withNextDates(routine: Routine, today: string): RoutineWithNext {
 /** Toutes les routines, triées par titre, avec leurs 5 prochaines dates. */
 export async function listRoutines(): Promise<RoutineWithNext[]> {
   const today = todayISO()
-  const rows = await db
-    .select()
-    .from(routines)
-    .orderBy(asc(routines.title))
+  const rows = await db.select().from(routines).orderBy(asc(routines.title))
 
   return rows.map((row) => withNextDates(mapRoutineRow(row), today))
 }
@@ -126,7 +128,11 @@ export async function createRoutine(input: RoutineCreateInput): Promise<RoutineW
   if (row === undefined) apiError('INTERNAL', 'Création impossible.', 500)
   const created = mapRoutineRow(row)
   const today = todayISO()
-  if (created.is_active && created.start_date <= today && isRoutineDueOn(created, weekdayOf(today))) {
+  if (
+    created.is_active &&
+    created.start_date <= today &&
+    isRoutineDueOn(created, weekdayOf(today))
+  ) {
     await ensureRoutineInstances(today)
   }
   return withNextDates(created, today)
@@ -143,11 +149,7 @@ export async function updateRoutine(
   id: string,
   input: RoutineUpdateInput,
 ): Promise<RoutineUpdateResult | null> {
-  const existing = await db
-    .select()
-    .from(routines)
-    .where(eq(routines.id, id))
-    .limit(1)
+  const existing = await db.select().from(routines).where(eq(routines.id, id)).limit(1)
   const current = existing[0]
   if (current === undefined) return null
 
@@ -194,11 +196,7 @@ export async function updateRoutine(
   if (input.points !== undefined) values.points = input.points
   if (input.is_active !== undefined) values.is_active = input.is_active
 
-  const updatedRows = await db
-    .update(routines)
-    .set(values)
-    .where(eq(routines.id, id))
-    .returning()
+  const updatedRows = await db.update(routines).set(values).where(eq(routines.id, id)).returning()
 
   const updated = updatedRows[0]
   if (updated === undefined) return null

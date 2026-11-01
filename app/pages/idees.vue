@@ -39,8 +39,7 @@ const expandedIds = ref<string[]>([])
 
 const sortedIdeas = computed<Idea[]>(() =>
   [...ideas.value].sort(
-    (a, b) =>
-      new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
+    (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
   ),
 )
 
@@ -55,8 +54,7 @@ async function load(): Promise<void> {
     ideas.value = await listIdeas()
   } catch (err) {
     ideas.value = []
-    loadError.value =
-      err instanceof Error ? err.message : 'Impossible de charger les idées.'
+    loadError.value = err instanceof Error ? err.message : 'Impossible de charger les idées.'
   } finally {
     loading.value = false
   }
@@ -177,16 +175,12 @@ function formatRelative(iso: string): string {
     <header>
       <h1 class="text-2xl font-semibold text-ink-100">Idées</h1>
       <p class="mt-1 text-sm text-ink-300">
-        Note tes idées ici avant de les perdre — elles deviendront peut-être
-        des projets.
+        Note tes idées ici avant de les perdre — elles deviendront peut-être des projets.
       </p>
     </header>
 
     <!-- Zone de création permanente -->
-    <section
-      aria-label="Ajouter une idée"
-      class="surface lift px-4 py-3.5"
-    >
+    <section aria-label="Ajouter une idée" class="surface lift px-4 py-3.5">
       <form class="flex flex-col gap-4" @submit.prevent="submitCreate">
         <!-- .field : trait ambre qui se déploie au focus -->
         <div class="field">
@@ -221,11 +215,7 @@ function formatRelative(iso: string): string {
             Entrée dans le titre pour enregistrer directement.
           </span>
 
-          <UiButton
-            type="submit"
-            :loading="creating"
-            :disabled="newTitle.trim() === ''"
-          >
+          <UiButton type="submit" :loading="creating" :disabled="newTitle.trim() === ''">
             Enregistrer
           </UiButton>
         </div>
@@ -277,28 +267,16 @@ function formatRelative(iso: string): string {
             >
               {{ idea.description }}
             </p>
-            <p class="micro mt-1.5 text-ink-700">
-              Créée {{ formatRelative(idea.created_at) }}
-            </p>
+            <p class="micro mt-1.5 text-ink-700">Créée {{ formatRelative(idea.created_at) }}</p>
           </div>
 
           <div class="flex shrink-0 items-center gap-1">
             <template v-if="confirmingId === idea.id">
               <span class="text-xs text-danger-400">Supprimer ?</span>
-              <UiButton
-                size="sm"
-                variant="danger"
-                @click="confirmDelete(idea)"
-              >
+              <UiButton size="sm" variant="danger" @click="confirmDelete(idea)">
                 Confirmer
               </UiButton>
-              <UiButton
-                size="sm"
-                variant="ghost"
-                @click="confirmingId = null"
-              >
-                Annuler
-              </UiButton>
+              <UiButton size="sm" variant="ghost" @click="confirmingId = null"> Annuler </UiButton>
             </template>
 
             <template v-else>
@@ -344,11 +322,7 @@ function formatRelative(iso: string): string {
     </ul>
 
     <!-- Modal d'édition -->
-    <UiModal
-      :open="editing !== null"
-      title="Éditer l’idée"
-      @close="closeEdit"
-    >
+    <UiModal :open="editing !== null" title="Éditer l’idée" @close="closeEdit">
       <form class="flex flex-col gap-4" @submit.prevent="submitEdit">
         <UiInput v-model="editTitle" label="Titre" />
         <UiTextarea
@@ -360,14 +334,8 @@ function formatRelative(iso: string): string {
       </form>
 
       <template #footer>
-        <UiButton variant="ghost" :disabled="savingEdit" @click="closeEdit">
-          Annuler
-        </UiButton>
-        <UiButton
-          :loading="savingEdit"
-          :disabled="editTitle.trim() === ''"
-          @click="submitEdit"
-        >
+        <UiButton variant="ghost" :disabled="savingEdit" @click="closeEdit"> Annuler </UiButton>
+        <UiButton :loading="savingEdit" :disabled="editTitle.trim() === ''" @click="submitEdit">
           Enregistrer
         </UiButton>
       </template>

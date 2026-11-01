@@ -1,11 +1,7 @@
 <script setup lang="ts">
 import type { LeadPreview as LeadPreviewData } from '~~/shared/types'
 import { apiFetch } from '~/composables/useApi'
-import {
-  COMPANION_OFFLINE_REASON,
-  apiErrorMessage,
-  useCompanion,
-} from '~/composables/useCompanion'
+import { COMPANION_OFFLINE_REASON, apiErrorMessage, useCompanion } from '~/composables/useCompanion'
 import { useToast } from '~/composables/useToast'
 import ProjectsLeadPreview from '~/components/projects/LeadPreview.vue'
 import UiButton from '~/components/ui/UiButton.vue'
@@ -59,9 +55,7 @@ async function openPreview(): Promise<void> {
   if (loadingPreview.value) return
   loadingPreview.value = true
   try {
-    preview.value = await apiFetch<LeadPreviewData>(
-      `/api/projects/${props.projectId}/lead/preview`,
-    )
+    preview.value = await apiFetch<LeadPreviewData>(`/api/projects/${props.projectId}/lead/preview`)
     open.value = true
   } catch (err) {
     toast.show({
@@ -113,19 +107,12 @@ function closeModal(): void {
 
 <template>
   <div class="flex flex-col items-end gap-1.5">
-    <UiButton
-      :loading="loadingPreview"
-      :title="openTitle"
-      @click="openPreview"
-    >
+    <UiButton :loading="loadingPreview" :title="openTitle" @click="openPreview">
       <UiIcon name="terminal" />
       {{ openLabel }}
     </UiButton>
 
-    <div
-      v-if="disabledReason"
-      class="flex max-w-xs flex-col gap-0.5 text-right text-xs"
-    >
+    <div v-if="disabledReason" class="flex max-w-xs flex-col gap-0.5 text-right text-xs">
       <p class="text-ink-500">Lancement indisponible — {{ disabledReason }}</p>
       <p class="text-ink-700">L’aperçu reste consultable.</p>
     </div>
@@ -134,8 +121,8 @@ function closeModal(): void {
       <ProjectsLeadPreview v-if="preview" :preview="preview" />
 
       <p v-if="disabledReason" class="mt-3 text-xs text-ink-500">
-        Le Companion n’est pas en ligne sur ce poste — la session ne peut pas
-        démarrer pour l’instant.
+        Le Companion n’est pas en ligne sur ce poste — la session ne peut pas démarrer pour
+        l’instant.
       </p>
 
       <template #footer>
@@ -150,9 +137,7 @@ function closeModal(): void {
           />
           En attente du Companion…
         </p>
-        <UiButton variant="ghost" :disabled="launching" @click="closeModal">
-          Annuler
-        </UiButton>
+        <UiButton variant="ghost" :disabled="launching" @click="closeModal"> Annuler </UiButton>
         <UiButton
           :loading="launching"
           :disabled="!canRunLocal"

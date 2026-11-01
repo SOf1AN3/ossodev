@@ -28,9 +28,7 @@ interface FetchOptions {
   headers?: Record<string, string>
 }
 
-function isEnvelope<T>(
-  payload: ApiEnvelope<T> | T,
-): payload is ApiEnvelope<T> {
+function isEnvelope<T>(payload: ApiEnvelope<T> | T): payload is ApiEnvelope<T> {
   if (payload === null || typeof payload !== 'object' || Array.isArray(payload)) {
     return false
   }
@@ -41,10 +39,7 @@ function isEnvelope<T>(
  * Appel HTTP qui respecte l'enveloppe serveur `{ data } | { error }`.
  * Retourne directement la donnée, ou lève une `Error` portant le message serveur.
  */
-export async function apiFetch<T>(
-  url: string,
-  options: ApiFetchOptions = {},
-): Promise<T> {
+export async function apiFetch<T>(url: string, options: ApiFetchOptions = {}): Promise<T> {
   const fetchOptions: FetchOptions = {
     method: options.method ?? 'GET',
     // Cast ciblé : `ApiFetchOptions.body` est `unknown` pour accepter tout ce
@@ -97,9 +92,12 @@ export function useApiList<T>(url: string): ApiListResult<T> {
   // `.value` (jamais en place), donc aucun proxy réactif n'est attendu.
   const items = ref<T[]>([]) as Ref<T[]>
 
-  const { data, pending, error, refresh: rawRefresh } = useAsyncData<
-    ApiEnvelope<T[]> | T[]
-  >(url, () => apiFetch<ApiEnvelope<T[]> | T[]>(url))
+  const {
+    data,
+    pending,
+    error,
+    refresh: rawRefresh,
+  } = useAsyncData<ApiEnvelope<T[]> | T[]>(url, () => apiFetch<ApiEnvelope<T[]> | T[]>(url))
 
   // Synchronise la donnée normalisée dans `items`
   watchEffect(() => {

@@ -19,12 +19,7 @@ const emit = defineEmits<{
   scanned: []
 }>()
 
-const {
-  status,
-  pending: companionPending,
-  canRunLocal,
-  refresh,
-} = useCompanion()
+const { status, pending: companionPending, canRunLocal, refresh } = useCompanion()
 const toast = useToast()
 
 const confirmStep = ref(false)
@@ -145,20 +140,12 @@ async function confirmScan(): Promise<void> {
   >
     <div class="flex min-w-0 items-center gap-3">
       <!-- Voyant -->
-      <span
-        class="h-2.5 w-2.5 shrink-0 rounded-full"
-        :class="beaconClasses"
-        aria-hidden="true"
-      />
+      <span class="h-2.5 w-2.5 shrink-0 rounded-full" :class="beaconClasses" aria-hidden="true" />
 
       <div class="min-w-0">
         <p class="micro text-ink-500">{{ stateLabel }}</p>
 
-        <p
-          v-if="companionPending && !status"
-          class="mt-1 text-xs text-ink-500"
-          role="status"
-        >
+        <p v-if="companionPending && !status" class="mt-1 text-xs text-ink-500" role="status">
           Vérification du Companion…
         </p>
 
@@ -184,13 +171,9 @@ async function confirmScan(): Promise<void> {
       </template>
 
       <template v-else-if="confirmStep">
-        <span class="text-sm text-ink-300">
-          Lancer le scan du dossier dev ?
-        </span>
+        <span class="text-sm text-ink-300"> Lancer le scan du dossier dev ? </span>
         <UiButton size="sm" @click="confirmScan">Confirmer</UiButton>
-        <UiButton size="sm" variant="ghost" @click="confirmStep = false">
-          Annuler
-        </UiButton>
+        <UiButton size="sm" variant="ghost" @click="confirmStep = false"> Annuler </UiButton>
       </template>
 
       <UiButton
@@ -208,22 +191,15 @@ async function confirmScan(): Promise<void> {
 
     <!-- Companion hors ligne : explication, pas seulement une couleur -->
     <p v-if="!canRunLocal && status !== null" class="w-full text-sm text-ink-500">
-      Le Companion n’est pas en ligne sur ce poste. Démarre-le pour scanner ton
-      dossier dev.
+      Le Companion n’est pas en ligne sur ce poste. Démarre-le pour scanner ton dossier dev.
     </p>
 
     <ul
       v-if="lastErrors.length > 0"
       class="w-full rounded-sm border border-line bg-surface-800 px-3 py-2"
     >
-      <li class="micro text-danger-400">
-        Erreurs rencontrées pendant le scan
-      </li>
-      <li
-        v-for="(scanError, i) in lastErrors"
-        :key="i"
-        class="mt-1 text-xs text-ink-300"
-      >
+      <li class="micro text-danger-400">Erreurs rencontrées pendant le scan</li>
+      <li v-for="(scanError, i) in lastErrors" :key="i" class="mt-1 text-xs text-ink-300">
         {{ scanError }}
       </li>
     </ul>

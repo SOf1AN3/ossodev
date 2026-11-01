@@ -17,15 +17,10 @@ import { computed, nextTick, onMounted, ref, watch } from 'vue'
 
 useHead({ title: 'OSSO — Tableau de bord' })
 
-const { summary, badges, mission, error, load, refreshSummary, newlyEarned, clearNewlyEarned } = useGamification()
+const { summary, badges, mission, error, load, refreshSummary, newlyEarned, clearNewlyEarned } =
+  useGamification()
 const { listProjects } = useProjects()
-const {
-  today,
-  pending: todayPending,
-  error: todayError,
-  loadToday,
-  toggleDone,
-} = useTasks()
+const { today, pending: todayPending, error: todayError, loadToday, toggleDone } = useTasks()
 const toast = useToast()
 const { igniteBadge, flareFlame, sweepHero, countUp } = useMoments()
 
@@ -34,18 +29,13 @@ const projects = ref<ProjectWithCounts[]>([])
 const projectsLoading = ref(true)
 const projectsError = ref<string | null>(null)
 
-const loading = computed<boolean>(
-  () => summary.value === null && error.value === null,
-)
+const loading = computed<boolean>(() => summary.value === null && error.value === null)
 
 /** Projets récents ayant des tâches ouvertes, 4 maximum. */
 const visibleProjects = computed<ProjectWithCounts[]>(() =>
   [...projects.value]
     .filter((project) => project.open_tasks > 0)
-    .sort(
-      (a, b) =>
-        new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
-    )
+    .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
     .slice(0, 4),
 )
 
@@ -75,9 +65,7 @@ async function loadProjects(): Promise<void> {
   } catch (err) {
     projects.value = []
     projectsError.value =
-      err instanceof Error && err.message
-        ? err.message
-        : 'Impossible de charger les projets.'
+      err instanceof Error && err.message ? err.message : 'Impossible de charger les projets.'
   } finally {
     projectsLoading.value = false
   }
@@ -119,9 +107,7 @@ function igniteEarnedBadges(): void {
   if (earned.length === 0) return
 
   for (const badge of earned) {
-    const item = container.querySelector<HTMLElement>(
-      `[data-badge-code="${badge.code}"]`,
-    )
+    const item = container.querySelector<HTMLElement>(`[data-badge-code="${badge.code}"]`)
     if (item !== null) igniteBadge(item)
   }
   clearNewlyEarned()
@@ -170,9 +156,7 @@ watch(
   summary,
   async (current) => {
     const complete =
-      current !== null &&
-      current.scheduledToday > 0 &&
-      current.doneToday === current.scheduledToday
+      current !== null && current.scheduledToday > 0 && current.doneToday === current.scheduledToday
     if (!complete) {
       // Réversible : dévalider une tâche retire la ligne et réarme le moment.
       if (boucleePlayed) resetBouclee()
@@ -193,10 +177,7 @@ watch(
    ══════════════════════════════════════════════════════════════ */
 const previewTasks = computed<TaskWithOverdue[]>(() =>
   [...today.value]
-    .sort(
-      (a, b) =>
-        Number(a.status === 'done') - Number(b.status === 'done'),
-    )
+    .sort((a, b) => Number(a.status === 'done') - Number(b.status === 'done'))
     .slice(0, 3),
 )
 
@@ -313,9 +294,7 @@ const pointsToNextLevel = computed<number>(() => {
       <div ref="refHeroBand" class="hero surface mb-8 px-4 py-5 sm:px-8 sm:py-7">
         <div class="hero-sweep" aria-hidden="true" />
 
-        <div
-          class="relative flex flex-wrap items-center gap-x-9 gap-y-7"
-        >
+        <div class="relative flex flex-wrap items-center gap-x-9 gap-y-7">
           <!-- ① + ② : métrique géante + arc d'instrument -->
           <JourWidget :summary="summary" />
 
@@ -339,9 +318,7 @@ const pointsToNextLevel = computed<number>(() => {
               </span>
               <span class="text-[14px] text-ink-500">jours</span>
             </p>
-            <p class="mt-2 text-[13px] text-ink-500">
-              d’affilée sans rien rater
-            </p>
+            <p class="mt-2 text-[13px] text-ink-500">d’affilée sans rien rater</p>
           </div>
 
           <span
@@ -352,13 +329,10 @@ const pointsToNextLevel = computed<number>(() => {
 
           <!-- ④ Niveau -->
           <div class="min-w-0 lg:min-w-[210px] flex-1">
-            <div
-              class="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1"
-            >
+            <div class="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
               <p class="micro text-ink-700">Niveau {{ summary.level }}</p>
               <p class="tnum font-mono text-[12px] text-ink-700">
-                {{ formatPts(summary.points) }} /
-                {{ formatPts(summary.nextLevelAt) }} pts
+                {{ formatPts(summary.points) }} / {{ formatPts(summary.nextLevelAt) }} pts
               </p>
             </div>
             <p class="mt-2 text-[17px] font-semibold text-ink-100">
@@ -381,7 +355,8 @@ const pointsToNextLevel = computed<number>(() => {
               />
             </div>
             <p class="mt-2 text-[12px] text-ink-700">
-              {{ formatPts(pointsToNextLevel) }} pts avant {{ summary?.nextLevelName ?? 'le prochain rang' }}
+              {{ formatPts(pointsToNextLevel) }} pts avant
+              {{ summary?.nextLevelName ?? 'le prochain rang' }}
             </p>
           </div>
         </div>
@@ -402,11 +377,7 @@ const pointsToNextLevel = computed<number>(() => {
           <!-- Projets dev -->
           <div class="flex flex-col gap-4">
             <div class="flex flex-wrap items-center justify-between gap-3">
-              <h2
-                class="text-[19px] font-semibold tracking-[-0.01em] text-ink-100"
-              >
-                Projets dev
-              </h2>
+              <h2 class="text-[19px] font-semibold tracking-[-0.01em] text-ink-100">Projets dev</h2>
               <NuxtLink
                 to="/projets"
                 class="text-[13px] text-accent-400 transition-colors hover:text-ink-100"
@@ -435,9 +406,7 @@ const pointsToNextLevel = computed<number>(() => {
               role="alert"
             >
               <p class="text-sm text-danger-400">{{ projectsError }}</p>
-              <UiButton size="sm" variant="outline" @click="loadProjects">
-                Réessayer
-              </UiButton>
+              <UiButton size="sm" variant="outline" @click="loadProjects"> Réessayer </UiButton>
             </div>
 
             <!-- Vide : aucun projet -->
@@ -477,11 +446,7 @@ const pointsToNextLevel = computed<number>(() => {
           <!-- Aujourd'hui : c'est ce bloc qui équilibre la colonne -->
           <div class="flex flex-col gap-4">
             <div class="flex flex-wrap items-center justify-between gap-3">
-              <h2
-                class="text-[19px] font-semibold tracking-[-0.01em] text-ink-100"
-              >
-                Aujourd’hui
-              </h2>
+              <h2 class="text-[19px] font-semibold tracking-[-0.01em] text-ink-100">Aujourd’hui</h2>
               <NuxtLink
                 to="/aujourdhui"
                 class="text-[13px] text-accent-400 transition-colors hover:text-ink-100"
@@ -509,9 +474,7 @@ const pointsToNextLevel = computed<number>(() => {
               role="alert"
             >
               <p class="text-sm text-danger-400">{{ todayError }}</p>
-              <UiButton size="sm" variant="outline" @click="loadToday()">
-                Réessayer
-              </UiButton>
+              <UiButton size="sm" variant="outline" @click="loadToday()"> Réessayer </UiButton>
             </div>
 
             <!-- Vide -->
@@ -532,10 +495,7 @@ const pointsToNextLevel = computed<number>(() => {
 
             <!-- Aperçu : 3 tâches basculables (moment ①) -->
             <template v-else>
-              <ul
-                class="surface flex flex-col gap-1 p-2"
-                aria-label="Aperçu des tâches du jour"
-              >
+              <ul class="surface flex flex-col gap-1 p-2" aria-label="Aperçu des tâches du jour">
                 <li
                   v-for="task in previewTasks"
                   :key="task.id"
@@ -560,17 +520,12 @@ const pointsToNextLevel = computed<number>(() => {
                     <span class="min-w-0 flex-1 truncate text-sm text-ink-300">
                       <span class="strike">{{ task.title }}</span>
                     </span>
-                    <span class="micro tnum shrink-0 text-ink-700">
-                      {{ task.points }} pts
-                    </span>
+                    <span class="micro tnum shrink-0 text-ink-700"> {{ task.points }} pts </span>
                   </button>
                 </li>
               </ul>
 
-              <p
-                v-if="today.length > previewTasks.length"
-                class="text-[13px] text-ink-500"
-              >
+              <p v-if="today.length > previewTasks.length" class="text-[13px] text-ink-500">
                 + {{ today.length - previewTasks.length }} autres tâches —
                 <NuxtLink
                   to="/aujourdhui"
@@ -596,9 +551,7 @@ const pointsToNextLevel = computed<number>(() => {
           <!-- Derniers badges -->
           <div class="flex flex-col gap-4">
             <div class="flex flex-wrap items-center justify-between gap-3">
-              <h2
-                class="text-[19px] font-semibold tracking-[-0.01em] text-ink-100"
-              >
+              <h2 class="text-[19px] font-semibold tracking-[-0.01em] text-ink-100">
                 Derniers badges
               </h2>
               <NuxtLink
@@ -644,10 +597,7 @@ const pointsToNextLevel = computed<number>(() => {
               </li>
             </ul>
 
-            <p
-              v-else
-              class="surface px-4 py-6 text-center text-sm text-ink-500"
-            >
+            <p v-else class="surface px-4 py-6 text-center text-sm text-ink-500">
               Aucun badge débloqué pour l’instant.
             </p>
           </div>

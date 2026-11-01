@@ -1,9 +1,5 @@
 import { ref } from 'vue'
-import type {
-  LearningCourse,
-  LearningCourseSummary,
-  LearningStatus,
-} from '~~/shared/types'
+import type { LearningCourse, LearningCourseSummary, LearningStatus } from '~~/shared/types'
 import { apiFetch } from './useApi'
 
 /**
@@ -109,8 +105,7 @@ export function useLearning() {
     try {
       return await task()
     } catch (err) {
-      const apiError =
-        err instanceof LearningApiError ? err : toApiError(err, fallback)
+      const apiError = err instanceof LearningApiError ? err : toApiError(err, fallback)
       error.value = apiError.message
       throw apiError
     } finally {
@@ -128,10 +123,7 @@ export function useLearning() {
   /** Charge un cours complet et le pose dans `current`. */
   async function get(slug: string): Promise<LearningCourse> {
     const course = await run(
-      () =>
-        apiFetch<LearningCourse>(
-          `/api/learning/${encodeURIComponent(slug)}`,
-        ),
+      () => apiFetch<LearningCourse>(`/api/learning/${encodeURIComponent(slug)}`),
       'Impossible de charger ce cours.',
     )
     current.value = course
@@ -139,16 +131,13 @@ export function useLearning() {
   }
 
   /** Bascule `todo` ⇄ `done` et synchronise `current` (statut + `completed_at`). */
-  async function setStatus(
-    slug: string,
-    status: LearningStatus,
-  ): Promise<LearningStatusResult> {
+  async function setStatus(slug: string, status: LearningStatus): Promise<LearningStatusResult> {
     const result = await run(
       () =>
-        apiFetch<LearningStatusResult>(
-          `/api/learning/${encodeURIComponent(slug)}/status`,
-          { method: 'PATCH', body: { status } },
-        ),
+        apiFetch<LearningStatusResult>(`/api/learning/${encodeURIComponent(slug)}/status`, {
+          method: 'PATCH',
+          body: { status },
+        }),
       'Impossible de mettre à jour le statut.',
     )
 

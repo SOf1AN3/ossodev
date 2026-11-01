@@ -68,11 +68,7 @@ export async function updateTask(
   taskId: string,
   input: ProjectTaskUpdateInput,
 ): Promise<ProjectTaskRow> {
-  const found = await db
-    .select()
-    .from(projectTasks)
-    .where(eq(projectTasks.id, taskId))
-    .limit(1)
+  const found = await db.select().from(projectTasks).where(eq(projectTasks.id, taskId)).limit(1)
   const task = found[0]
   if (!task) notFound('Tâche')
   if (task.project_id !== projectId) badRequest("Cette tâche n'appartient pas à ce projet.")

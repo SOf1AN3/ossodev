@@ -44,11 +44,7 @@ import {
 const LOGIN_PATH = '/connexion'
 
 /** Routes API gérant elles-mêmes la session (login/logout/status). */
-const AUTH_API_PATHS = new Set<string>([
-  '/api/auth/login',
-  '/api/auth/logout',
-  '/api/auth/session',
-])
+const AUTH_API_PATHS = new Set<string>(['/api/auth/login', '/api/auth/logout', '/api/auth/session'])
 
 /** Routes Companion : déjà protégées par Bearer HMAC, on leur laisse la main. */
 const COMPANION_PREFIX = '/api/companion/'

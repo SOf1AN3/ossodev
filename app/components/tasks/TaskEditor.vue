@@ -37,10 +37,7 @@ const statusOptions: Array<{ value: TaskStatus; label: string }> = [
 ]
 
 const canSave = computed<boolean>(
-  () =>
-    props.open &&
-    props.saving !== true &&
-    title.value.trim().length > 0,
+  () => props.open && props.saving !== true && title.value.trim().length > 0,
 )
 
 // Recopie les valeurs de la tâche à chaque ouverture de la modale.
@@ -78,32 +75,18 @@ function onSubmit(): void {
     <form class="flex flex-col gap-4" @submit.prevent="onSubmit">
       <UiInput v-model="title" label="Titre" placeholder="Titre de la tâche" />
 
-      <UiTextarea
-        v-model="notes"
-        label="Notes"
-        placeholder="Notes (facultatif)"
-        :rows="3"
-      />
+      <UiTextarea v-model="notes" label="Notes" placeholder="Notes (facultatif)" :rows="3" />
 
       <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div class="flex flex-col gap-1.5">
-          <label
-            for="task-editor-priority"
-            class="micro text-ink-500"
-          >
-            Priorité
-          </label>
+          <label for="task-editor-priority" class="micro text-ink-500"> Priorité </label>
           <div class="field">
             <select
               id="task-editor-priority"
               v-model.number="priority"
               class="w-full rounded-sm border border-line bg-surface-800 px-3 py-2 text-sm text-ink-100 focus-visible:outline-2 focus-visible:outline-accent-400"
             >
-              <option
-                v-for="option in priorityOptions"
-                :key="option.value"
-                :value="option.value"
-              >
+              <option v-for="option in priorityOptions" :key="option.value" :value="option.value">
                 {{ option.label }}
               </option>
             </select>
@@ -111,23 +94,14 @@ function onSubmit(): void {
         </div>
 
         <div class="flex flex-col gap-1.5">
-          <label
-            for="task-editor-status"
-            class="micro text-ink-500"
-          >
-            Statut
-          </label>
+          <label for="task-editor-status" class="micro text-ink-500"> Statut </label>
           <div class="field">
             <select
               id="task-editor-status"
               v-model="status"
               class="w-full rounded-sm border border-line bg-surface-800 px-3 py-2 text-sm text-ink-100 focus-visible:outline-2 focus-visible:outline-accent-400"
             >
-              <option
-                v-for="option in statusOptions"
-                :key="option.value"
-                :value="option.value"
-              >
+              <option v-for="option in statusOptions" :key="option.value" :value="option.value">
                 {{ option.label }}
               </option>
             </select>
@@ -135,20 +109,12 @@ function onSubmit(): void {
         </div>
       </div>
 
-      <UiInput
-        v-model="scheduledDate"
-        type="date"
-        label="Date planifiée"
-      />
+      <UiInput v-model="scheduledDate" type="date" label="Date planifiée" />
     </form>
 
     <template #footer>
-      <UiButton variant="ghost" :disabled="saving" @click="emit('close')">
-        Annuler
-      </UiButton>
-      <UiButton :disabled="!canSave" :loading="saving" @click="onSubmit">
-        Enregistrer
-      </UiButton>
+      <UiButton variant="ghost" :disabled="saving" @click="emit('close')"> Annuler </UiButton>
+      <UiButton :disabled="!canSave" :loading="saving" @click="onSubmit"> Enregistrer </UiButton>
     </template>
   </UiModal>
 </template>

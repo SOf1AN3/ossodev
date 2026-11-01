@@ -32,11 +32,7 @@ function weekLabel(weekStart: string): string {
         >
           {{ mission.title }}
         </h2>
-        <h2
-          v-else
-          id="mission-title"
-          class="mt-1.5 text-[17px] font-semibold text-ink-100"
-        >
+        <h2 v-else id="mission-title" class="mt-1.5 text-[17px] font-semibold text-ink-100">
           Aucune mission
         </h2>
       </div>
@@ -63,8 +59,7 @@ function weekLabel(weekStart: string): string {
     </template>
 
     <p v-else class="mt-3 text-sm text-ink-300">
-      Définis une mission pour donner un cap à ta semaine depuis le tableau de
-      bord.
+      Définis une mission pour donner un cap à ta semaine depuis le tableau de bord.
     </p>
   </section>
 </template>

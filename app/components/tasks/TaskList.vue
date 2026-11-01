@@ -23,10 +23,7 @@ const emit = defineEmits<{
 <template>
   <section :aria-label="title">
     <h2 class="micro mb-3 text-ink-700">{{ title }}</h2>
-    <ul
-      class="mb-8 flex max-w-3xl flex-col gap-2"
-      :data-list-key="listKey"
-    >
+    <ul class="mb-8 flex max-w-3xl flex-col gap-2" :data-list-key="listKey">
       <TaskItem
         v-for="task in tasks"
         :key="task.id"

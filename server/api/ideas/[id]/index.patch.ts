@@ -1,5 +1,12 @@
 import { defineEventHandler } from 'h3'
-import { badRequest, notFound, readValid, requiredParam, runApi, uuidSchema } from '~~/server/utils/http'
+import {
+  badRequest,
+  notFound,
+  readValid,
+  requiredParam,
+  runApi,
+  uuidSchema,
+} from '~~/server/utils/http'
 import { updateIdea } from '~~/server/repositories/ideas'
 import { ideaUpdateSchema } from '~~/server/validation/ideas'
 

@@ -13,7 +13,6 @@ import type { TaskCreateInput, TaskListQuery, TaskUpdateInput } from '~~/server/
  */
 
 type TaskRow = typeof tasks.$inferSelect
-type RoutineRow = typeof routines.$inferSelect
 
 /** Tâche partagée amplifiée du marqueur de retard calculé côté serveur. */
 export type TaskWithOverdue = Task & { is_overdue: boolean }
@@ -225,7 +224,10 @@ export async function createTask(input: TaskCreateInput): Promise<TaskWithOverdu
  * sinon → `completed_at` = null. `updated_at` est toujours rafraîchi.
  * Retourne `null` si la tâche n'existe pas (→ 404 côté route).
  */
-export async function updateTask(id: string, input: TaskUpdateInput): Promise<TaskWithOverdue | null> {
+export async function updateTask(
+  id: string,
+  input: TaskUpdateInput,
+): Promise<TaskWithOverdue | null> {
   const now = new Date()
   const values: {
     title?: string
@@ -250,11 +252,7 @@ export async function updateTask(id: string, input: TaskUpdateInput): Promise<Ta
   if (input.scheduled_date !== undefined) values.scheduled_date = input.scheduled_date
   if (input.points !== undefined) values.points = input.points
 
-  const rows = await db
-    .update(tasks)
-    .set(values)
-    .where(eq(tasks.id, id))
-    .returning()
+  const rows = await db.update(tasks).set(values).where(eq(tasks.id, id)).returning()
 
   const row = rows[0]
   if (row === undefined) return null
@@ -276,10 +274,7 @@ export async function moveTask(id: string, scheduledDate: string): Promise<TaskW
 
 /** Suppression franche. Retourne l'id supprimé, ou `null` si la tâche n'existe pas. */
 export async function deleteTask(id: string): Promise<string | null> {
-  const rows = await db
-    .delete(tasks)
-    .where(eq(tasks.id, id))
-    .returning({ id: tasks.id })
+  const rows = await db.delete(tasks).where(eq(tasks.id, id)).returning({ id: tasks.id })
 
   const row = rows[0]
   return row === undefined ? null : row.id

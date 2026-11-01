@@ -29,11 +29,7 @@ interface ReorderResult {
 function toApiErrorMessage(err: unknown, fallback: string): string {
   if (err instanceof Error) {
     const message = err.message.trim()
-    if (
-      message === '' ||
-      message === 'Failed to fetch' ||
-      message === 'fetch failed'
-    ) {
+    if (message === '' || message === 'Failed to fetch' || message === 'fetch failed') {
       return 'Impossible de contacter le serveur. Vérifie que l’application OSSO tourne bien.'
     }
     return message
@@ -54,7 +50,7 @@ export function useProjects() {
     } catch (err) {
       const message = toApiErrorMessage(err, fallback)
       error.value = message
-      throw new Error(message)
+      throw new Error(message, { cause: err })
     } finally {
       pending.value = false
     }
@@ -107,8 +103,7 @@ export function useProjects() {
 
   async function deleteProject(id: string): Promise<void> {
     await run(
-      () =>
-        apiFetch<{ id: string }>(`/api/projects/${id}`, { method: 'DELETE' }),
+      () => apiFetch<{ id: string }>(`/api/projects/${id}`, { method: 'DELETE' }),
       'Impossible de supprimer le projet.',
     )
   }
@@ -116,8 +111,8 @@ export function useProjects() {
   function listTasks(projectId: string): Promise<ProjectTask[]> {
     return run(
       () =>
-        apiFetch<ProjectTask[]>(`/api/projects/${projectId}/tasks`).then(
-          (tasks) => [...tasks].sort((a, b) => a.position - b.position),
+        apiFetch<ProjectTask[]>(`/api/projects/${projectId}/tasks`).then((tasks) =>
+          [...tasks].sort((a, b) => a.position - b.position),
         ),
       'Impossible de charger les tâches.',
     )
@@ -141,10 +136,10 @@ export function useProjects() {
   ): Promise<ProjectTask> {
     return run(
       () =>
-        apiFetch<ProjectTask>(
-          `/api/projects/${projectId}/tasks/${taskId}`,
-          { method: 'PATCH', body: patch },
-        ),
+        apiFetch<ProjectTask>(`/api/projects/${projectId}/tasks/${taskId}`, {
+          method: 'PATCH',
+          body: patch,
+        }),
       'Impossible de modifier la tâche.',
     )
   }
@@ -152,24 +147,20 @@ export function useProjects() {
   async function deleteTask(projectId: string, taskId: string): Promise<void> {
     await run(
       () =>
-        apiFetch<{ id: string }>(
-          `/api/projects/${projectId}/tasks/${taskId}`,
-          { method: 'DELETE' },
-        ),
+        apiFetch<{ id: string }>(`/api/projects/${projectId}/tasks/${taskId}`, {
+          method: 'DELETE',
+        }),
       'Impossible de supprimer la tâche.',
     )
   }
 
-  async function reorderTasks(
-    projectId: string,
-    order: string[],
-  ): Promise<void> {
+  async function reorderTasks(projectId: string, order: string[]): Promise<void> {
     await run(
       () =>
-        apiFetch<ReorderResult>(
-          `/api/projects/${projectId}/tasks/reorder`,
-          { method: 'POST', body: { order } },
-        ),
+        apiFetch<ReorderResult>(`/api/projects/${projectId}/tasks/reorder`, {
+          method: 'POST',
+          body: { order },
+        }),
       'Impossible d’enregistrer le nouvel ordre des tâches.',
     )
   }

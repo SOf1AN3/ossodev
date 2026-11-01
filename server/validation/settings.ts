@@ -6,8 +6,10 @@
 import { z } from 'zod'
 
 /** NUL, ESC, etc. — interdit partout, y compris dans les modèles multi-lignes. */
+// eslint-disable-next-line no-control-regex -- rejeter ces caractères EST le but.
 const FORBIDDEN_CONTROL = /[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]/
 /** Commandes sur une seule ligne : aucun retour ni tabulation admis. */
+// eslint-disable-next-line no-control-regex -- idem, contrôle de sécurité délibéré.
 const FORBIDDEN_CONTROL_ONE_LINE = /[\x00-\x1f\x7f]/
 
 const CONTROL_MESSAGE = 'Caractère de contrôle interdit.'

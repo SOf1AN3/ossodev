@@ -8,19 +8,18 @@ import { z } from 'zod'
 
 export const ideaCreateSchema = z.object({
   title: z.string().trim().min(1, 'Titre requis.').max(200, 'Titre : 200 caractères maximum.'),
-  description: z
-    .string()
-    .max(5000, 'Description : 5 000 caractères maximum.')
-    .nullish(),
+  description: z.string().max(5000, 'Description : 5 000 caractères maximum.').nullish(),
 })
 export type IdeaCreateInput = z.infer<typeof ideaCreateSchema>
 
 /** Update partielle : tous les champs sont facultatifs. */
 export const ideaUpdateSchema = z.object({
-  title: z.string().trim().min(1, 'Titre requis.').max(200, 'Titre : 200 caractères maximum.').optional(),
-  description: z
+  title: z
     .string()
-    .max(5000, 'Description : 5 000 caractères maximum.')
-    .nullish(),
+    .trim()
+    .min(1, 'Titre requis.')
+    .max(200, 'Titre : 200 caractères maximum.')
+    .optional(),
+  description: z.string().max(5000, 'Description : 5 000 caractères maximum.').nullish(),
 })
 export type IdeaUpdateInput = z.infer<typeof ideaUpdateSchema>

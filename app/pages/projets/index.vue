@@ -39,8 +39,7 @@ async function load(): Promise<void> {
     projects.value = await listProjects(includeArchived.value)
   } catch (err) {
     projects.value = []
-    loadError.value =
-      err instanceof Error ? err.message : 'Impossible de charger les projets.'
+    loadError.value = err instanceof Error ? err.message : 'Impossible de charger les projets.'
   } finally {
     loading.value = false
   }
@@ -150,12 +149,7 @@ function formatRelative(iso: string | null): string {
       aria-busy="true"
       aria-label="Chargement des projets"
     >
-      <div
-        v-for="n in 3"
-        :key="n"
-        class="surface flex flex-col gap-3 px-5 py-4"
-        aria-hidden="true"
-      >
+      <div v-for="n in 3" :key="n" class="surface flex flex-col gap-3 px-5 py-4" aria-hidden="true">
         <div class="flex items-center gap-3">
           <UiSkeleton class="h-9 w-9 shrink-0" />
           <div class="min-w-0 flex-1">
@@ -187,10 +181,7 @@ function formatRelative(iso: string | null): string {
     />
 
     <!-- Grille -->
-    <div
-      v-else
-      class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3"
-    >
+    <div v-else class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
       <NuxtLink
         v-for="project in projects"
         :key="project.id"
@@ -213,9 +204,7 @@ function formatRelative(iso: string | null): string {
               >
                 {{ project.name }}
               </h2>
-              <UiBadge v-if="project.is_archived" class="shrink-0">
-                archivé
-              </UiBadge>
+              <UiBadge v-if="project.is_archived" class="shrink-0"> archivé </UiBadge>
             </div>
             <p
               class="mt-1 truncate font-mono text-[12px] text-ink-700"
@@ -250,24 +239,14 @@ function formatRelative(iso: string | null): string {
           />
         </div>
 
-        <p class="micro text-ink-700">
-          Dernier scan · {{ formatRelative(project.last_scan_at) }}
-        </p>
+        <p class="micro text-ink-700">Dernier scan · {{ formatRelative(project.last_scan_at) }}</p>
       </NuxtLink>
     </div>
 
     <!-- Modal d'ajout -->
-    <UiModal
-      :open="showAddModal"
-      title="Ajouter un projet"
-      @close="showAddModal = false"
-    >
+    <UiModal :open="showAddModal" title="Ajouter un projet" @close="showAddModal = false">
       <form class="flex flex-col gap-4" @submit.prevent="submitCreate">
-        <UiInput
-          v-model="newName"
-          label="Nom du projet"
-          placeholder="Mon super projet"
-        />
+        <UiInput v-model="newName" label="Nom du projet" placeholder="Mon super projet" />
         <div>
           <UiInput
             v-model="newFolderPath"

@@ -19,11 +19,7 @@ const emit = defineEmits<{
 
 const TACHES_PLACEHOLDER = '{{TACHES}}'
 
-const PLACEHOLDERS: string[] = [
-  TACHES_PLACEHOLDER,
-  '{{PROJET}}',
-  '{{DOSSIER}}',
-]
+const PLACEHOLDERS: string[] = [TACHES_PLACEHOLDER, '{{PROJET}}', '{{DOSSIER}}']
 
 const textareaWrapRef = ref<HTMLDivElement | null>(null)
 
@@ -37,10 +33,7 @@ function insertPlaceholder(placeholder: string): void {
   }
   const start = area.selectionStart ?? current.length
   const end = area.selectionEnd ?? start
-  emit(
-    'update:modelValue',
-    `${current.slice(0, start)}${placeholder}${current.slice(end)}`,
-  )
+  emit('update:modelValue', `${current.slice(0, start)}${placeholder}${current.slice(end)}`)
   nextTick(() => {
     area.focus()
     const position = start + placeholder.length
@@ -51,15 +44,11 @@ function insertPlaceholder(placeholder: string): void {
 
 <template>
   <section class="surface px-5 py-4">
-    <h2 class="text-base font-medium text-ink-100">
-      Modèle d’introduction LEAD
-    </h2>
+    <h2 class="text-base font-medium text-ink-100">Modèle d’introduction LEAD</h2>
     <p class="mt-1 text-sm text-ink-300">
       La liste des tâches du projet sera injectée à l’emplacement de
-      <span class="font-mono text-[12px] text-ink-700">
-        {{ TACHES_PLACEHOLDER }}
-      </span>.
-      Si tu retires ce marqueur, la liste sera ajoutée en fin de message.
+      <span class="font-mono text-[12px] text-ink-700"> {{ TACHES_PLACEHOLDER }} </span>. Si tu
+      retires ce marqueur, la liste sera ajoutée en fin de message.
     </p>
 
     <div ref="textareaWrapRef" class="mt-4">
@@ -88,9 +77,7 @@ function insertPlaceholder(placeholder: string): void {
     </div>
 
     <div class="mt-4 flex justify-end">
-      <UiButton :loading="saving" @click="emit('save')">
-        Enregistrer
-      </UiButton>
+      <UiButton :loading="saving" @click="emit('save')"> Enregistrer </UiButton>
     </div>
   </section>
 </template>

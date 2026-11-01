@@ -20,9 +20,7 @@ const nextOccurrence = computed<string | null>(() => {
     <template v-if="!isActive">Routine inactive</template>
     <template v-else-if="nextOccurrence">
       Prochaine occurrence :
-      <span
-        class="font-mono text-xs font-normal normal-case tracking-normal text-ink-100"
-      >
+      <span class="font-mono text-xs font-normal normal-case tracking-normal text-ink-100">
         {{ nextOccurrence }}
       </span>
     </template>

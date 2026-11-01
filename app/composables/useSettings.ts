@@ -12,11 +12,7 @@ const EMPTY_SETTINGS: Settings = {
 function toApiErrorMessage(err: unknown, fallback: string): string {
   if (err instanceof Error) {
     const message = err.message.trim()
-    if (
-      message === '' ||
-      message === 'Failed to fetch' ||
-      message === 'fetch failed'
-    ) {
+    if (message === '' || message === 'Failed to fetch' || message === 'fetch failed') {
       return 'Impossible de contacter le serveur. Vérifie que l’application OSSO tourne bien.'
     }
     return message
@@ -37,12 +33,9 @@ export function useSettings() {
       settings.value = await apiFetch<Settings>('/api/settings')
       return settings.value
     } catch (err) {
-      const message = toApiErrorMessage(
-        err,
-        'Impossible de charger les réglages.',
-      )
+      const message = toApiErrorMessage(err, 'Impossible de charger les réglages.')
       error.value = message
-      throw new Error(message)
+      throw new Error(message, { cause: err })
     } finally {
       pending.value = false
     }
@@ -58,12 +51,9 @@ export function useSettings() {
       })
       return settings.value
     } catch (err) {
-      const message = toApiErrorMessage(
-        err,
-        'Impossible d’enregistrer les réglages.',
-      )
+      const message = toApiErrorMessage(err, 'Impossible d’enregistrer les réglages.')
       error.value = message
-      throw new Error(message)
+      throw new Error(message, { cause: err })
     } finally {
       saving.value = false
     }

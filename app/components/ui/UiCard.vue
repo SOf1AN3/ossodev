@@ -11,10 +11,7 @@ withDefaults(defineProps<UiCardProps>(), {
 </script>
 
 <template>
-  <section
-    class="surface p-5"
-    :class="interactive ? 'lift' : ''"
-  >
+  <section class="surface p-5" :class="interactive ? 'lift' : ''">
     <header v-if="$slots.header" class="mb-4">
       <slot name="header" />
     </header>

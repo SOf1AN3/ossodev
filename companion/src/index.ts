@@ -11,11 +11,25 @@
  */
 
 import { spawn } from 'node:child_process'
-import { claim, complete, heartbeat, logNetworkFailure, sendBrainResult, type CompanionCommand } from './api.ts'
+import {
+  claim,
+  complete,
+  heartbeat,
+  logNetworkFailure,
+  sendBrainResult,
+  type CompanionCommand,
+} from './api.ts'
 import { buildScanPayload } from './commands/brainScan.ts'
 import { runBrain } from './commands/brainRun.ts'
 import { runLead } from './commands/lead.ts'
-import { errorMessage, loadConfig, log, registerSecretRedaction, truncate, type CompanionConfig } from './config.ts'
+import {
+  errorMessage,
+  loadConfig,
+  log,
+  registerSecretRedaction,
+  truncate,
+  type CompanionConfig,
+} from './config.ts'
 import { assertAllowedKey, assertSafeAbsolutePath, verifySignature } from './security.ts'
 import { startTray, type TrayHandle } from './tray.ts'
 
@@ -138,7 +152,10 @@ async function pollOnce(config: CompanionConfig, state: RunnerState): Promise<vo
     if (state.consecutiveFailures >= FAILURES_BEFORE_BACKOFF) {
       state.consecutiveFailures = 0
       state.intervalMs = Math.min(state.intervalMs * 2, MAX_INTERVAL_MS)
-      log('WARN', `Back-off : prochain cycle dans ${String(Math.round(state.intervalMs / 1000))} s.`)
+      log(
+        'WARN',
+        `Back-off : prochain cycle dans ${String(Math.round(state.intervalMs / 1000))} s.`,
+      )
     }
   }
 }
@@ -175,7 +192,10 @@ function main(): void {
     return
   }
   registerSecretRedaction(config.secret)
-  log('INFO', `Companion démarré — API ${config.oss_url}, dev_root ${config.dev_root}, intervalle ${String(config.poll_interval_ms)} ms.`)
+  log(
+    'INFO',
+    `Companion démarré — API ${config.oss_url}, dev_root ${config.dev_root}, intervalle ${String(config.poll_interval_ms)} ms.`,
+  )
 
   const state: RunnerState = {
     executedCount: 0,

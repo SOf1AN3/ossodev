@@ -104,12 +104,10 @@ function withCounts(
 }
 
 /** Liste des projets triés par nom (asc). Les archivés sont exclus par défaut. */
-export async function listProjects(
-  options: { includeArchived: boolean },
-): Promise<ProjectWithCounts[]> {
-  const condition = options.includeArchived
-    ? undefined
-    : eq(projects.is_archived, false)
+export async function listProjects(options: {
+  includeArchived: boolean
+}): Promise<ProjectWithCounts[]> {
+  const condition = options.includeArchived ? undefined : eq(projects.is_archived, false)
 
   const rows = await db
     .select({ ...PROJECT_COLUMNS, ...COUNT_COLUMNS })
@@ -164,10 +162,7 @@ export async function createProject(input: ProjectCreateInput): Promise<ProjectR
   }
 }
 
-export async function updateProject(
-  id: string,
-  input: ProjectUpdateInput,
-): Promise<ProjectRow> {
+export async function updateProject(id: string, input: ProjectUpdateInput): Promise<ProjectRow> {
   const existing = await db
     .select({ id: projects.id, name: projects.name })
     .from(projects)
@@ -181,22 +176,14 @@ export async function updateProject(
       .select({ id: projects.id })
       .from(projects)
       .where(
-        and(
-          eq(projects.name, input.name),
-          eq(projects.is_archived, false),
-          ne(projects.id, id),
-        ),
+        and(eq(projects.name, input.name), eq(projects.is_archived, false), ne(projects.id, id)),
       )
       .limit(1)
     if (clash.length > 0) badRequest('Un projet du même nom existe déjà.')
   }
 
   try {
-    const rows = await db
-      .update(projects)
-      .set(input)
-      .where(eq(projects.id, id))
-      .returning()
+    const rows = await db.update(projects).set(input).where(eq(projects.id, id)).returning()
     const row = rows[0]
     if (!row) notFound('Projet')
     return row
@@ -225,10 +212,7 @@ export async function deleteProject(id: string): Promise<void> {
  * sans toucher aux tâches. Sinon : insertion.
  * Inoffensif — aucun side-effect shell, aucune validation dossier.
  */
-export async function upsertProjectByPath(
-  name: string,
-  folderPath: string,
-): Promise<ProjectRow> {
+export async function upsertProjectByPath(name: string, folderPath: string): Promise<ProjectRow> {
   const rows = await db
     .insert(projects)
     .values({ name, folder_path: folderPath })

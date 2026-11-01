@@ -38,8 +38,7 @@ const loginSchema = z.object({
 const LOGIN_FAILED_MESSAGE = 'Mot de passe incorrect.'
 
 /** Message du throttling (code 429). */
-const RATE_LIMITED_MESSAGE =
-  'Trop de tentatives de connexion : réessaie dans quelques secondes.'
+const RATE_LIMITED_MESSAGE = 'Trop de tentatives de connexion : réessaie dans quelques secondes.'
 
 /** État de throttling par IP. */
 interface ThrottleEntry {

@@ -50,11 +50,7 @@ export async function updateIdea(id: string, input: IdeaUpdateInput): Promise<Id
   if (input.title !== undefined) values.title = input.title
   if (input.description !== undefined) values.description = input.description
 
-  const rows = await db
-    .update(ideas)
-    .set(values)
-    .where(eq(ideas.id, id))
-    .returning()
+  const rows = await db.update(ideas).set(values).where(eq(ideas.id, id)).returning()
 
   const row = rows[0]
   if (row === undefined) return null
@@ -63,10 +59,7 @@ export async function updateIdea(id: string, input: IdeaUpdateInput): Promise<Id
 
 /** Suppression franche. Retourne l'id supprimé, ou `null` si l'idée n'existe pas. */
 export async function deleteIdea(id: string): Promise<string | null> {
-  const rows = await db
-    .delete(ideas)
-    .where(eq(ideas.id, id))
-    .returning({ id: ideas.id })
+  const rows = await db.delete(ideas).where(eq(ideas.id, id)).returning({ id: ideas.id })
 
   return rows[0]?.id ?? null
 }

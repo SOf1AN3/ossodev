@@ -29,11 +29,7 @@ function onInput(event: Event): void {
 
 <template>
   <div class="field w-full">
-    <label
-      v-if="label"
-      :for="textareaId"
-      class="micro mb-1.5 block text-ink-500"
-    >
+    <label v-if="label" :for="textareaId" class="micro mb-1.5 block text-ink-500">
       {{ label }}
     </label>
     <textarea

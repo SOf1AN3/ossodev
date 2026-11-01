@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import type { BadgeWithEarnedAt } from '~/composables/useGamification'
 import { useGamification } from '~/composables/useGamification'
 import { useMoments } from '~/composables/useMoments'
 import BadgeGrid from '~/components/gamification/BadgeGrid.vue'
@@ -11,15 +10,12 @@ import UiSkeleton from '~/components/ui/UiSkeleton.vue'
 
 useHead({ title: 'Progrès — OSSO' })
 
-const { summary, badges, records, mission, error, load, newlyEarned } =
-  useGamification()
+const { summary, badges, records, mission, error, load, newlyEarned } = useGamification()
 const { countUp } = useMoments()
 
 const nf = new Intl.NumberFormat('fr-FR')
 
-const loading = computed<boolean>(
-  () => summary.value === null && error.value === null,
-)
+const loading = computed<boolean>(() => summary.value === null && error.value === null)
 
 const earnedCount = computed<number>(
   () => badges.value.filter((badge) => badge.earned_at !== null).length,
@@ -86,11 +82,7 @@ onMounted(() => {
           Régularité · <span class="tnum">{{ daysWorked }}</span>
           {{ daysWorkedLabel }}
         </p>
-        <h1
-          class="mt-2 text-[30px] font-bold tracking-[-0.03em] text-ink-100"
-        >
-          Progrès
-        </h1>
+        <h1 class="mt-2 text-[30px] font-bold tracking-[-0.03em] text-ink-100">Progrès</h1>
       </div>
 
       <!-- Bande de chiffres -->
@@ -109,10 +101,7 @@ onMounted(() => {
           </span>
         </div>
 
-        <span
-          class="hidden h-14 w-px self-stretch bg-line lg:block"
-          aria-hidden="true"
-        ></span>
+        <span class="hidden h-14 w-px self-stretch bg-line lg:block" aria-hidden="true"></span>
 
         <!-- Points -->
         <div class="flex min-w-0 flex-col gap-2">
@@ -122,10 +111,7 @@ onMounted(() => {
           </span>
         </div>
 
-        <span
-          class="hidden h-14 w-px self-stretch bg-line lg:block"
-          aria-hidden="true"
-        ></span>
+        <span class="hidden h-14 w-px self-stretch bg-line lg:block" aria-hidden="true"></span>
 
         <!-- Meilleure série -->
         <div class="flex min-w-0 flex-col gap-2">
@@ -135,17 +121,12 @@ onMounted(() => {
           </span>
         </div>
 
-        <span
-          class="hidden h-14 w-px self-stretch bg-line lg:block"
-          aria-hidden="true"
-        ></span>
+        <span class="hidden h-14 w-px self-stretch bg-line lg:block" aria-hidden="true"></span>
 
         <!-- Vers niveau N -->
         <div class="flex min-w-0 flex-1 flex-col gap-2.5 lg:min-w-[220px]">
           <div class="flex items-baseline justify-between gap-4">
-            <span class="micro text-ink-700">
-              Vers niveau {{ nextLevelNumber }}
-            </span>
+            <span class="micro text-ink-700"> Vers niveau {{ nextLevelNumber }} </span>
             <span class="tnum font-mono text-[12px] text-ink-700">
               {{ nf.format(summary.points) }} / {{ nf.format(summary.nextLevelAt) }}
             </span>
@@ -213,11 +194,7 @@ onMounted(() => {
           <span class="tnum">{{ badges.length }}</span>
         </h2>
 
-        <BadgeGrid
-          v-if="badges.length > 0"
-          :badges="badges"
-          :ignition-code="ignitionCode"
-        />
+        <BadgeGrid v-if="badges.length > 0" :badges="badges" :ignition-code="ignitionCode" />
 
         <UiEmptyState
           v-else
@@ -257,8 +234,7 @@ onMounted(() => {
 
       <!-- Bandeau -->
       <p class="text-[13px] text-ink-500">
-        Ces statistiques ne comptent que tes tâches perso. Les projets dev ont
-        leur propre espace.
+        Ces statistiques ne comptent que tes tâches perso. Les projets dev ont leur propre espace.
       </p>
     </template>
   </div>

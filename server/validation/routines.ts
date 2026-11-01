@@ -14,22 +14,34 @@ import { dateStringSchema, todayISO } from './tasks'
 const WEEKDAY_OUT_OF_RANGE = 'Jour invalide (0 = dimanche … 6 = samedi).'
 
 export const ROUTINE_MIN_WEEKDAY_MESSAGE = 'Les routines hebdomadaires exigent au moins un jour.'
-export const ROUTINE_DUPLICATE_WEEKDAY_MESSAGE = 'Les jours de la semaine ne doivent pas être dupliqués.'
-export const ROUTINE_WEEKDAYS_ON_DAILY_MESSAGE = "weekdays n'est autorisé que pour les routines hebdomadaires."
+export const ROUTINE_DUPLICATE_WEEKDAY_MESSAGE =
+  'Les jours de la semaine ne doivent pas être dupliqués.'
+export const ROUTINE_WEEKDAYS_ON_DAILY_MESSAGE =
+  "weekdays n'est autorisé que pour les routines hebdomadaires."
 
 export const routineFrequencySchema = z.enum(['daily', 'weekly'])
 
 const weekdaysFieldSchema = z
-  .array(z.number().int(WEEKDAY_OUT_OF_RANGE).min(0, WEEKDAY_OUT_OF_RANGE).max(6, WEEKDAY_OUT_OF_RANGE))
+  .array(
+    z.number().int(WEEKDAY_OUT_OF_RANGE).min(0, WEEKDAY_OUT_OF_RANGE).max(6, WEEKDAY_OUT_OF_RANGE),
+  )
   .optional()
 
 function addWeeklyIssues(weekdays: number[] | undefined, ctx: z.RefinementCtx): void {
   if (!weekdays || weekdays.length === 0) {
-    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['weekdays'], message: ROUTINE_MIN_WEEKDAY_MESSAGE })
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ['weekdays'],
+      message: ROUTINE_MIN_WEEKDAY_MESSAGE,
+    })
     return
   }
   if (new Set(weekdays).size !== weekdays.length) {
-    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['weekdays'], message: ROUTINE_DUPLICATE_WEEKDAY_MESSAGE })
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ['weekdays'],
+      message: ROUTINE_DUPLICATE_WEEKDAY_MESSAGE,
+    })
   }
 }
 
@@ -63,7 +75,12 @@ export type RoutineCreateInput = z.infer<typeof routineCreateSchema>
 /** Update partielle : si `weekdays` est présent, il doit rester valide (≥ 1 jour, unique). */
 export const routineUpdateSchema = z
   .object({
-    title: z.string().trim().min(1, 'Titre requis.').max(200, 'Titre : 200 caractères maximum.').optional(),
+    title: z
+      .string()
+      .trim()
+      .min(1, 'Titre requis.')
+      .max(200, 'Titre : 200 caractères maximum.')
+      .optional(),
     frequency: routineFrequencySchema.optional(),
     weekdays: weekdaysFieldSchema,
     points: z
@@ -78,7 +95,11 @@ export const routineUpdateSchema = z
   .superRefine((value, ctx) => {
     if (value.weekdays === undefined) return
     if (value.weekdays.length === 0) {
-      ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['weekdays'], message: ROUTINE_MIN_WEEKDAY_MESSAGE })
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['weekdays'],
+        message: ROUTINE_MIN_WEEKDAY_MESSAGE,
+      })
       return
     }
     if (new Set(value.weekdays).size !== value.weekdays.length) {

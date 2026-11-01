@@ -6,11 +6,7 @@ import UiSkeleton from '~/components/ui/UiSkeleton.vue'
 import RetardBanner from '~/components/tasks/RetardBanner.vue'
 import TaskEditor from '~/components/tasks/TaskEditor.vue'
 import TaskList from '~/components/tasks/TaskList.vue'
-import {
-  useTasks,
-  type TaskPatch,
-  type TaskWithOverdue,
-} from '~/composables/useTasks'
+import { useTasks, type TaskPatch, type TaskWithOverdue } from '~/composables/useTasks'
 import { useToast } from '~/composables/useToast'
 import { addDays, formatLongDate, toISODate } from '~/utils/dates'
 
@@ -82,10 +78,7 @@ function findRow(taskId: string): HTMLElement | null {
 
 /** `<ul data-list-key="…">` de l'une des deux colonnes. */
 function listEl(key: 'todo' | 'done'): HTMLElement | null {
-  return (
-    pageRef.value?.querySelector<HTMLElement>(`ul[data-list-key="${key}"]`) ??
-    null
-  )
+  return pageRef.value?.querySelector<HTMLElement>(`ul[data-list-key="${key}"]`) ?? null
 }
 
 async function onQuickAdd(): Promise<void> {
@@ -214,11 +207,7 @@ async function onSaveEditor(patch: TaskPatch): Promise<void> {
     <!-- Colonne d'exécution : tout le contenu est borné à 768px -->
     <header class="max-w-3xl">
       <p class="micro text-ink-700">{{ longDate }}</p>
-      <h1
-        class="mt-2 text-[30px] font-bold tracking-[-0.03em] text-ink-100"
-      >
-        Aujourd'hui
-      </h1>
+      <h1 class="mt-2 text-[30px] font-bold tracking-[-0.03em] text-ink-100">Aujourd'hui</h1>
       <p class="mt-2 text-sm text-ink-500">
         <span class="tnum font-medium text-accent-400">
           {{ doneTasks.length }}
@@ -250,10 +239,7 @@ async function onSaveEditor(patch: TaskPatch): Promise<void> {
           @enter="onQuickAdd"
         />
       </div>
-      <UiButton
-        type="submit"
-        :disabled="quickAddPending || quickTitle.trim().length === 0"
-      >
+      <UiButton type="submit" :disabled="quickAddPending || quickTitle.trim().length === 0">
         {{ quickAddPending ? 'Ajout en cours…' : 'Ajouter' }}
       </UiButton>
     </form>
@@ -265,9 +251,7 @@ async function onSaveEditor(patch: TaskPatch): Promise<void> {
       role="alert"
     >
       <p class="text-sm text-danger-400">{{ error }}</p>
-      <UiButton size="sm" variant="outline" @click="loadToday()">
-        Réessayer
-      </UiButton>
+      <UiButton size="sm" variant="outline" @click="loadToday()"> Réessayer </UiButton>
     </div>
 
     <!-- Chargement -->

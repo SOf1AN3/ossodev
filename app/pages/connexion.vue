@@ -57,12 +57,7 @@ async function onSubmit(): Promise<void> {
 <template>
   <main class="flex min-h-screen items-center justify-center p-6">
     <div class="surface w-full max-w-sm p-8">
-      <form
-        class="flex flex-col"
-        :aria-busy="submitting"
-        novalidate
-        @submit.prevent="onSubmit"
-      >
+      <form class="flex flex-col" :aria-busy="submitting" novalidate @submit.prevent="onSubmit">
         <header class="flex flex-col items-center text-center">
           <span aria-hidden="true" class="mb-4 h-2 w-2 rounded-full bg-accent-fill" />
           <p class="micro text-ink-700">OSSO</p>
@@ -73,9 +68,7 @@ async function onSubmit(): Promise<void> {
         </header>
 
         <div class="mt-8 flex flex-col gap-2">
-          <label for="connexion-mot-de-passe" class="micro text-ink-500">
-            Mot de passe
-          </label>
+          <label for="connexion-mot-de-passe" class="micro text-ink-500"> Mot de passe </label>
           <div class="field">
             <input
               id="connexion-mot-de-passe"

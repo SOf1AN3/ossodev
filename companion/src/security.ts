@@ -44,7 +44,9 @@ export function assertAllowedKey(key: string): void {
  */
 export function assertSafeAbsolutePath(rawPath: unknown, devRoot: string): string {
   if (typeof rawPath !== 'string' || rawPath.trim().length === 0) {
-    throw new SecurityError('Chemin refusé : un chemin de dossier est requis (folder_path vide ou invalide).')
+    throw new SecurityError(
+      'Chemin refusé : un chemin de dossier est requis (folder_path vide ou invalide).',
+    )
   }
   if (FORBIDDEN_CHARS.test(rawPath)) {
     throw new SecurityError('Chemin refusé : caractères interdits détectés (nul ou saut de ligne).')
@@ -52,7 +54,7 @@ export function assertSafeAbsolutePath(rawPath: unknown, devRoot: string): strin
   if (SAFE_PATH_PATTERN.test(rawPath) === false) {
     throw new SecurityError(
       `Chemin refusé : « ${rawPath} » n'est pas un chemin absolu Windows autorisé ` +
-      '(lettres, chiffres, espaces, points, tirets, barres obliques uniquement).',
+        '(lettres, chiffres, espaces, points, tirets, barres obliques uniquement).',
     )
   }
 

@@ -22,10 +22,7 @@ const loadError = ref<string | null>(null)
 
 const recentIdeas = computed<Idea[]>(() =>
   [...ideas.value]
-    .sort(
-      (a, b) =>
-        new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
-    )
+    .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
     .slice(0, 3),
 )
 
@@ -51,9 +48,7 @@ async function loadIdeas(): Promise<void> {
   } catch (err) {
     ideas.value = []
     loadError.value =
-      err instanceof Error && err.message
-        ? err.message
-        : 'Impossible de charger les idées.'
+      err instanceof Error && err.message ? err.message : 'Impossible de charger les idées.'
   } finally {
     loading.value = false
   }
@@ -99,10 +94,7 @@ async function submit(): Promise<void> {
 <template>
   <section class="flex flex-col gap-4" aria-labelledby="idees-title">
     <div class="flex items-center justify-between gap-3">
-      <h2
-        id="idees-title"
-        class="text-[19px] font-semibold tracking-[-0.01em] text-ink-100"
-      >
+      <h2 id="idees-title" class="text-[19px] font-semibold tracking-[-0.01em] text-ink-100">
         Une idée ?
       </h2>
       <NuxtLink
@@ -114,10 +106,7 @@ async function submit(): Promise<void> {
     </div>
 
     <!-- Saisie : `.field` sur le champ (UiInput) = trait ambre au focus -->
-    <form
-      class="surface lift flex flex-wrap items-end gap-2 px-4 py-3.5"
-      @submit.prevent="submit"
-    >
+    <form class="surface lift flex flex-wrap items-end gap-2 px-4 py-3.5" @submit.prevent="submit">
       <div class="min-w-44 flex-1">
         <UiInput
           v-model="draft"
@@ -152,15 +141,10 @@ async function submit(): Promise<void> {
         role="alert"
       >
         <p class="text-sm text-danger-400">{{ loadError }}</p>
-        <UiButton size="sm" variant="outline" @click="loadIdeas">
-          Réessayer
-        </UiButton>
+        <UiButton size="sm" variant="outline" @click="loadIdeas"> Réessayer </UiButton>
       </div>
 
-      <p
-        v-else-if="recentIdeas.length === 0"
-        class="px-2.5 py-2.5 text-[13px] text-ink-500"
-      >
+      <p v-else-if="recentIdeas.length === 0" class="px-2.5 py-2.5 text-[13px] text-ink-500">
         Rien à noter pour l’instant.
       </p>
 

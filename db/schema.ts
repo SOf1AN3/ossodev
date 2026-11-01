@@ -38,61 +38,71 @@ export const projects = pgTable('projects', {
 })
 
 // Checklist ordonnée d'un projet dev
-export const projectTasks = pgTable('project_tasks', {
-  id: uuid('id').defaultRandom().primaryKey(),
-  project_id: uuid('project_id')
-    .notNull()
-    .references(() => projects.id, { onDelete: 'cascade' }),
-  title: text('title').notNull(),
-  position: integer('position').notNull(),
-  is_done: boolean('is_done').notNull().default(false),
-  created_at: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
-  updated_at: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
-}, (t) => [
-  index('idx_project_tasks_project').on(t.project_id, t.position),
-])
+export const projectTasks = pgTable(
+  'project_tasks',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    project_id: uuid('project_id')
+      .notNull()
+      .references(() => projects.id, { onDelete: 'cascade' }),
+    title: text('title').notNull(),
+    position: integer('position').notNull(),
+    is_done: boolean('is_done').notNull().default(false),
+    created_at: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+    updated_at: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => [index('idx_project_tasks_project').on(t.project_id, t.position)],
+)
 
 // Gabarits de tâches répétitives
-export const routines = pgTable('routines', {
-  id: uuid('id').defaultRandom().primaryKey(),
-  title: text('title').notNull(),
-  frequency: text('frequency').notNull(),
-  // 0=dimanche … 6=samedi ; NULL si daily
-  weekdays: integer('weekdays').array(),
-  points: integer('points').notNull().default(10),
-  is_active: boolean('is_active').notNull().default(true),
-  start_date: date('start_date').notNull().default(sql`CURRENT_DATE`),
-  created_at: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
-  updated_at: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
-}, (t) => [
-  check('routines_frequency_check', sql`${t.frequency} in ('daily', 'weekly')`),
-])
+export const routines = pgTable(
+  'routines',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    title: text('title').notNull(),
+    frequency: text('frequency').notNull(),
+    // 0=dimanche … 6=samedi ; NULL si daily
+    weekdays: integer('weekdays').array(),
+    points: integer('points').notNull().default(10),
+    is_active: boolean('is_active').notNull().default(true),
+    start_date: date('start_date')
+      .notNull()
+      .default(sql`CURRENT_DATE`),
+    created_at: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+    updated_at: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => [check('routines_frequency_check', sql`${t.frequency} in ('daily', 'weekly')`)],
+)
 
 // Tâches perso (one-off OU instance de routine)
-export const tasks = pgTable('tasks', {
-  id: uuid('id').defaultRandom().primaryKey(),
-  title: text('title').notNull(),
-  notes: text('notes'),
-  status: text('status').notNull().default('todo'),
-  // 1 haute · 2 normale · 3 basse
-  priority: integer('priority').notNull().default(2),
-  source: text('source').notNull().default('oneoff'),
-  scheduled_date: date('scheduled_date').notNull(),
-  routine_id: uuid('routine_id').references(() => routines.id, { onDelete: 'set null' }),
-  points: integer('points').notNull().default(10),
-  completed_at: timestamp('completed_at', { withTimezone: true }),
-  created_at: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
-  updated_at: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
-}, (t) => [
-  check('tasks_status_check', sql`${t.status} in ('todo', 'doing', 'done')`),
-  check('tasks_source_check', sql`${t.source} in ('oneoff', 'routine')`),
-  // Idempotence : une routine ne génère qu'UNE instance par jour
-  uniqueIndex('uniq_routine_instance')
-    .on(t.routine_id, t.scheduled_date)
-    .where(sql`${t.routine_id} is not null`),
-  index('idx_tasks_scheduled').on(t.scheduled_date),
-  index('idx_tasks_status').on(t.status),
-])
+export const tasks = pgTable(
+  'tasks',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    title: text('title').notNull(),
+    notes: text('notes'),
+    status: text('status').notNull().default('todo'),
+    // 1 haute · 2 normale · 3 basse
+    priority: integer('priority').notNull().default(2),
+    source: text('source').notNull().default('oneoff'),
+    scheduled_date: date('scheduled_date').notNull(),
+    routine_id: uuid('routine_id').references(() => routines.id, { onDelete: 'set null' }),
+    points: integer('points').notNull().default(10),
+    completed_at: timestamp('completed_at', { withTimezone: true }),
+    created_at: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+    updated_at: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => [
+    check('tasks_status_check', sql`${t.status} in ('todo', 'doing', 'done')`),
+    check('tasks_source_check', sql`${t.source} in ('oneoff', 'routine')`),
+    // Idempotence : une routine ne génère qu'UNE instance par jour
+    uniqueIndex('uniq_routine_instance')
+      .on(t.routine_id, t.scheduled_date)
+      .where(sql`${t.routine_id} is not null`),
+    index('idx_tasks_scheduled').on(t.scheduled_date),
+    index('idx_tasks_status').on(t.status),
+  ],
+)
 
 // Inbox d'idées
 export const ideas = pgTable('ideas', {
@@ -103,16 +113,18 @@ export const ideas = pgTable('ideas', {
 })
 
 // Mission hebdomadaire (gamification V2)
-export const weeklyMissions = pgTable('weekly_missions', {
-  id: uuid('id').defaultRandom().primaryKey(),
-  // lundi de la semaine
-  week_start: date('week_start').notNull(),
-  title: text('title').notNull(),
-  target: integer('target').notNull(),
-  created_at: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
-}, (t) => [
-  unique('uniq_weekly_missions_week_start').on(t.week_start),
-])
+export const weeklyMissions = pgTable(
+  'weekly_missions',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    // lundi de la semaine
+    week_start: date('week_start').notNull(),
+    title: text('title').notNull(),
+    target: integer('target').notNull(),
+    created_at: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => [unique('uniq_weekly_missions_week_start').on(t.week_start)],
+)
 
 // Catalogue de badges (seedé en migration)
 export const badges = pgTable('badges', {
@@ -123,15 +135,17 @@ export const badges = pgTable('badges', {
 })
 
 // Badges obtenus
-export const userBadges = pgTable('user_badges', {
-  id: uuid('id').defaultRandom().primaryKey(),
-  badge_code: text('badge_code')
-    .notNull()
-    .references(() => badges.code, { onDelete: 'cascade' }),
-  earned_at: timestamp('earned_at', { withTimezone: true }).defaultNow().notNull(),
-}, (t) => [
-  unique('uniq_user_badges_badge_code').on(t.badge_code),
-])
+export const userBadges = pgTable(
+  'user_badges',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    badge_code: text('badge_code')
+      .notNull()
+      .references(() => badges.code, { onDelete: 'cascade' }),
+    earned_at: timestamp('earned_at', { withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => [unique('uniq_user_badges_badge_code').on(t.badge_code)],
+)
 
 // Journal des sessions LEAD lancées
 export const leadSessions = pgTable('lead_sessions', {
@@ -144,44 +158,58 @@ export const leadSessions = pgTable('lead_sessions', {
 })
 
 // Cours d'apprentissage : UNE ligne par technologie (global, D5)
-export const learningCourses = pgTable('learning_courses', {
-  id: uuid('id').defaultRandom().primaryKey(),
-  // slug : 'vuejs', 'tailwindcss', 'drizzle'
-  technology: text('technology').notNull(),
-  title: text('title').notNull(),
-  // Markdown sémantique + blocs mermaid
-  content_md: text('content_md').notNull(),
-  status: text('status').notNull().default('todo'),
-  created_at: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
-  updated_at: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
-  // posé à la bascule 'done', vidé au retour 'todo'
-  completed_at: timestamp('completed_at', { withTimezone: true }),
-}, (t) => [
-  check('learning_courses_status_check', sql`${t.status} in ('todo', 'done')`),
-  uniqueIndex('uniq_learning_technology').on(t.technology),
-  index('idx_learning_status').on(t.status),
-])
+export const learningCourses = pgTable(
+  'learning_courses',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    // slug : 'vuejs', 'tailwindcss', 'drizzle'
+    technology: text('technology').notNull(),
+    title: text('title').notNull(),
+    // Markdown sémantique + blocs mermaid
+    content_md: text('content_md').notNull(),
+    status: text('status').notNull().default('todo'),
+    created_at: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+    updated_at: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+    // posé à la bascule 'done', vidé au retour 'todo'
+    completed_at: timestamp('completed_at', { withTimezone: true }),
+  },
+  (t) => [
+    check('learning_courses_status_check', sql`${t.status} in ('todo', 'done')`),
+    uniqueIndex('uniq_learning_technology').on(t.technology),
+    index('idx_learning_status').on(t.status),
+  ],
+)
 
 // File de commandes exécutées par le Companion
-export const companionCommands = pgTable('companion_commands', {
-  id: uuid('id').defaultRandom().primaryKey(),
-  // identifiant liste blanche, JAMAIS une commande
-  command_key: text('command_key').notNull(),
-  payload: jsonb('payload').$type<unknown>().notNull().default(sql`'{}'::jsonb`),
-  // HMAC-SHA256 signé par Nitro
-  signature: text('signature').notNull(),
-  status: text('status').notNull().default('pending'),
-  result_text: text('result_text'),
-  claimed_at: timestamp('claimed_at', { withTimezone: true }),
-  executed_at: timestamp('executed_at', { withTimezone: true }),
-  // created_at + 120 s
-  expires_at: timestamp('expires_at', { withTimezone: true }).notNull(),
-  created_at: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
-}, (t) => [
-  check('companion_commands_status_check', sql`${t.status} in ('pending', 'claimed', 'done', 'failed')`),
-  index('idx_companion_pending').on(t.status, t.created_at),
-  index('idx_companion_expiry').on(t.expires_at),
-])
+export const companionCommands = pgTable(
+  'companion_commands',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    // identifiant liste blanche, JAMAIS une commande
+    command_key: text('command_key').notNull(),
+    payload: jsonb('payload')
+      .$type<unknown>()
+      .notNull()
+      .default(sql`'{}'::jsonb`),
+    // HMAC-SHA256 signé par Nitro
+    signature: text('signature').notNull(),
+    status: text('status').notNull().default('pending'),
+    result_text: text('result_text'),
+    claimed_at: timestamp('claimed_at', { withTimezone: true }),
+    executed_at: timestamp('executed_at', { withTimezone: true }),
+    // created_at + 120 s
+    expires_at: timestamp('expires_at', { withTimezone: true }).notNull(),
+    created_at: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => [
+    check(
+      'companion_commands_status_check',
+      sql`${t.status} in ('pending', 'claimed', 'done', 'failed')`,
+    ),
+    index('idx_companion_pending').on(t.status, t.created_at),
+    index('idx_companion_expiry').on(t.expires_at),
+  ],
+)
 
 // Présence du Companion (la pastille)
 export const companionPresence = pgTable('companion_presence', {

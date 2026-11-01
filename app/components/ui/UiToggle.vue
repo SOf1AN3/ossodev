@@ -43,11 +43,7 @@ function onKeydown(event: KeyboardEvent): void {
         aria-hidden="true"
       />
     </button>
-    <label
-      v-if="label"
-      :for="toggleId"
-      class="select-none text-sm text-ink-300"
-    >
+    <label v-if="label" :for="toggleId" class="select-none text-sm text-ink-300">
       {{ label }}
     </label>
   </div>

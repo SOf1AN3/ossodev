@@ -85,23 +85,13 @@ function submitNew(): void {
   <div class="flex flex-col gap-3">
     <h2 class="micro text-ink-500">Checklist</h2>
 
-    <p v-if="pending" class="text-sm text-ink-300" role="status">
-      Chargement des tâches…
+    <p v-if="pending" class="text-sm text-ink-300" role="status">Chargement des tâches…</p>
+
+    <p v-else-if="tasks.length === 0" class="text-sm text-ink-300">
+      Aucune tâche pour l’instant — ajoute la première ci-dessous pour construire le prompt LEAD.
     </p>
 
-    <p
-      v-else-if="tasks.length === 0"
-      class="text-sm text-ink-300"
-    >
-      Aucune tâche pour l’instant — ajoute la première ci-dessous pour
-      construire le prompt LEAD.
-    </p>
-
-    <ol
-      v-else
-      class="flex flex-col gap-2"
-      aria-label="Liste des tâches du projet"
-    >
+    <ol v-else class="flex flex-col gap-2" aria-label="Liste des tâches du projet">
       <ProjectsChecklistItem
         v-for="(task, index) in tasks"
         :key="task.id"

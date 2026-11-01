@@ -70,10 +70,7 @@ export function useRoutines(): UseRoutinesReturn {
     return created
   }
 
-  async function updateRoutine(
-    id: string,
-    patch: RoutinePatch,
-  ): Promise<Routine> {
+  async function updateRoutine(id: string, patch: RoutinePatch): Promise<Routine> {
     const updated = await apiFetch<Routine>(`/api/routines/${id}`, {
       method: 'PATCH',
       body: patch,

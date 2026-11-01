@@ -1,12 +1,4 @@
-import {
-  nextTick,
-  onMounted,
-  ref,
-  toValue,
-  watch,
-  type MaybeRefOrGetter,
-  type Ref,
-} from 'vue'
+import { nextTick, onMounted, ref, toValue, watch, type MaybeRefOrGetter, type Ref } from 'vue'
 import { marked } from 'marked'
 import DOMPurify from 'dompurify'
 import { useTheme } from './useTheme'
@@ -167,9 +159,7 @@ export function useCourseMarkdown(source: MaybeRefOrGetter<string>): {
 
     const root = container.value
     if (root === null) return
-    const blocks = Array.from(
-      root.querySelectorAll<HTMLElement>('pre.mermaid'),
-    )
+    const blocks = Array.from(root.querySelectorAll<HTMLElement>('pre.mermaid'))
     if (blocks.length === 0) return
 
     // Import dynamique : Mermaid ne doit jamais figuer dans le bundle principal.
@@ -196,7 +186,7 @@ export function useCourseMarkdown(source: MaybeRefOrGetter<string>): {
       // Validation d'abord : un diagramme invalide ne doit jamais atteindre
       // `render` (qui, lui, journaliserait l'erreur en console).
       // `parse` renvoie `false` (suppressErrors) ou un ParseResult valide.
-      let parsable = false
+      let parsable: boolean
       try {
         const parsed = await mermaid.parse(source, { suppressErrors: true })
         parsable = parsed !== false

@@ -49,20 +49,11 @@ const ICON_PATHS: Record<string, readonly string[] | undefined> = {
   ],
   zap: ['M13 2.5 5.5 13.5H11l-1 8 8-11.5h-5.6L13 2.5Z'],
   shield: ['M12 3 5 5.9v5.5c0 4.3 2.9 7.9 7 9.6 4.1-1.7 7-5.3 7-9.6V5.9L12 3Z'],
-  clock: [
-    'M20 12a8 8 0 1 1-16 0 8 8 0 1 1 16 0Z',
-    'M12 7.5V12l3 1.8',
-  ],
-  search: [
-    'M18 11a7 7 0 1 1-14 0 7 7 0 1 1 14 0Z',
-    'm16.1 16.1 4.4 4.4',
-  ],
+  clock: ['M20 12a8 8 0 1 1-16 0 8 8 0 1 1 16 0Z', 'M12 7.5V12l3 1.8'],
+  search: ['M18 11a7 7 0 1 1-14 0 7 7 0 1 1 14 0Z', 'm16.1 16.1 4.4 4.4'],
   check: ['m5 12.6 4.6 4.6L19 7.4'],
   close: ['m6.2 6.2 11.6 11.6', 'm17.8 6.2-11.6 11.6'],
-  pencil: [
-    'M4 20l.9-4.1L16.4 4.4a2.2 2.2 0 0 1 3 3L7.9 18.9 4 20Z',
-    'm14.5 6.3 3.2 3.2',
-  ],
+  pencil: ['M4 20l.9-4.1L16.4 4.4a2.2 2.2 0 0 1 3 3L7.9 18.9 4 20Z', 'm14.5 6.3 3.2 3.2'],
   sliders: [
     'M4 7.5h16',
     'M4 12h16',
@@ -103,7 +94,11 @@ const ICON_PATHS: Record<string, readonly string[] | undefined> = {
   arrowDown: ['M12 4.5V19', 'm5.8 12.8 6.2 6.2 6.2-6.2'],
   /* Sortie : encadrement ouvert à gauche + flèche sortante. Même vocabulaire
      que arrowUp/arrowDown pour la flèche, porte au trait pour le cadre. */
-  logout: ['M9 21H5.5A1.5 1.5 0 0 1 4 19.5v-15A1.5 1.5 0 0 1 5.5 3H9', 'm16 16.5 4.5-4.5L16 7.5', 'M20.5 12H9'],
+  logout: [
+    'M9 21H5.5A1.5 1.5 0 0 1 4 19.5v-15A1.5 1.5 0 0 1 5.5 3H9',
+    'm16 16.5 4.5-4.5L16 7.5',
+    'M20.5 12H9',
+  ],
   /* Menu hamburger : trois rails égaux, même empattement que `sliders`. */
   menu: ['M4 7h16', 'M4 12h16', 'M4 17h16'],
   sun: [
@@ -142,9 +137,7 @@ const sizeClasses: Record<NonNullable<UiIconProps['size']>, string> = {
   lg: 'h-5 w-5',
 }
 
-const paths = computed<readonly string[]>(
-  () => ICON_PATHS[props.name] ?? FALLBACK_PATHS,
-)
+const paths = computed<readonly string[]>(() => ICON_PATHS[props.name] ?? FALLBACK_PATHS)
 </script>
 
 <template>
@@ -159,10 +152,6 @@ const paths = computed<readonly string[]>(
     aria-hidden="true"
     focusable="false"
   >
-    <path
-      v-for="(d, index) in paths"
-      :key="index"
-      :d="d"
-    />
+    <path v-for="(d, index) in paths" :key="index" :d="d" />
   </svg>
 </template>

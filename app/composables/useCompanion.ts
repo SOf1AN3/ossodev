@@ -3,8 +3,7 @@ import type { CompanionStatus } from '~~/shared/types'
 import { apiFetch } from './useApi'
 
 /** Raison affichée dès que le Companion n'est pas confirmé en ligne. */
-export const COMPANION_OFFLINE_REASON =
-  'Le Companion n’est pas en ligne sur ce poste.'
+export const COMPANION_OFFLINE_REASON = 'Le Companion n’est pas en ligne sur ce poste.'
 
 /**
  * État d'une commande déposée dans la file du Companion
@@ -30,11 +29,7 @@ let inFlight: Promise<void> | null = null
 function toOfflineReason(err: unknown): string {
   if (err instanceof Error) {
     const message = err.message.trim()
-    if (
-      message === '' ||
-      message === 'Failed to fetch' ||
-      message === 'fetch failed'
-    ) {
+    if (message === '' || message === 'Failed to fetch' || message === 'fetch failed') {
       return 'Impossible de contacter le serveur OSSO.'
     }
   }
@@ -54,11 +49,7 @@ export function apiErrorMessage(err: unknown, fallback: string): string {
   if (envelope !== null) return envelope
   if (err instanceof Error) {
     const message = err.message.trim()
-    if (
-      message === '' ||
-      message === 'Failed to fetch' ||
-      message === 'fetch failed'
-    ) {
+    if (message === '' || message === 'Failed to fetch' || message === 'fetch failed') {
       return 'Impossible de contacter le serveur OSSO. Vérifie que l’application tourne bien.'
     }
     const status = HTTP_STATUS_PATTERN.exec(message)
@@ -126,9 +117,7 @@ export function useCompanion() {
     pending.value = true
     const request = (async () => {
       try {
-        const fetched = await apiFetch<CompanionStatus | undefined>(
-          '/api/companion/status',
-        )
+        const fetched = await apiFetch<CompanionStatus | undefined>('/api/companion/status')
         // Réponse vide (`{}`) : jamais interprétée comme une présence.
         status.value = fetched ?? {
           available: false,
@@ -162,13 +151,14 @@ export function useCompanion() {
     try {
       // `apiFetch` peut renvoyer `undefined` si le serveur répond `{}` :
       // on repart toujours d'un objet pour l'affichage.
-      const issue = await apiFetch<LeadIssue | undefined>(
-        `/api/projects/${projectId}/lead`,
-        { method: 'POST' },
-      )
+      const issue = await apiFetch<LeadIssue | undefined>(`/api/projects/${projectId}/lead`, {
+        method: 'POST',
+      })
       return issue ?? {}
     } catch (err) {
-      throw new Error(apiErrorMessage(err, 'La commande LEAD n’a pas pu être mise en file.'))
+      throw new Error(apiErrorMessage(err, 'La commande LEAD n’a pas pu être mise en file.'), {
+        cause: err,
+      })
     }
   }
 

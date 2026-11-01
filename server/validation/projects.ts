@@ -23,9 +23,7 @@ const FALLBACK_PATH_MESSAGE =
 function bridgeRejectionMessage(e: unknown): string {
   const err = e as { data?: { error?: { message?: unknown } } }
   const message = err?.data?.error?.message
-  return typeof message === 'string' && message.trim().length > 0
-    ? message
-    : FALLBACK_PATH_MESSAGE
+  return typeof message === 'string' && message.trim().length > 0 ? message : FALLBACK_PATH_MESSAGE
 }
 
 export const folderPathSchema = z
@@ -33,10 +31,7 @@ export const folderPathSchema = z
   .trim()
   .min(5, 'Le chemin du projet doit être absolu.')
   .max(400, 'Le chemin du projet ne peut pas dépasser 400 caractères.')
-  .refine(
-    (value) => !value.includes('\0'),
-    'Le chemin du projet contient un caractère interdit.',
-  )
+  .refine((value) => !value.includes('\0'), 'Le chemin du projet contient un caractère interdit.')
   .refine(
     (value) => WINDOWS_ABSOLUTE.test(value) || value.startsWith('/'),
     'Le chemin du projet doit être absolu.',
@@ -97,9 +92,7 @@ export const projectTaskUpdateSchema = z.object({
 })
 
 export const reorderSchema = z.object({
-  order: z
-    .array(uuidSchema)
-    .min(1, 'Liste de réordonnancement invalide.'),
+  order: z.array(uuidSchema).min(1, 'Liste de réordonnancement invalide.'),
 })
 
 export type ProjectCreateInput = z.infer<typeof projectCreateSchema>

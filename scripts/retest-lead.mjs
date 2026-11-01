@@ -41,7 +41,10 @@ const p = await api('/api/projects', {
 })
 ok(p.status === 200, 'création du projet', `HTTP ${p.status}`)
 const projectId = p.json?.data?.id
-if (!projectId) { console.log('KO   abort : pas de projet'); process.exit(1) }
+if (!projectId) {
+  console.log('KO   abort : pas de projet')
+  process.exit(1)
+}
 
 const titles = ['Alpha', 'Bravo', 'Charlie', 'Delta']
 for (const t of titles) {
@@ -60,11 +63,19 @@ ok(re.status === 200, 'réordonnancement', `HTTP ${re.status}`)
 const afterReorder = (await api(`/api/projects/${projectId}/tasks`)).json.data
   .sort((a, b) => a.position - b.position)
   .map((x) => x.title)
-ok(JSON.stringify(afterReorder) === JSON.stringify(desired), 'ordre persisté', afterReorder.join(' → '))
+ok(
+  JSON.stringify(afterReorder) === JSON.stringify(desired),
+  'ordre persisté',
+  afterReorder.join(' → '),
+)
 
 // --- aperçu ---
 const prev = await api(`/api/projects/${projectId}/lead/preview`)
-ok(prev.status === 200, 'GET lead/preview', `HTTP ${prev.status} ${prev.json?.error?.message ?? ''}`)
+ok(
+  prev.status === 200,
+  'GET lead/preview',
+  `HTTP ${prev.status} ${prev.json?.error?.message ?? ''}`,
+)
 const preview = prev.json?.data
 const prompt = preview?.prompt ?? ''
 
@@ -73,7 +84,10 @@ ok(prompt.includes(TEST_NAME), 'le prompt contient le nom du projet')
 ok(prompt.includes(TEST_DIR), 'le prompt contient le chemin du dossier')
 ok(preview?.placeholderFound === true, 'placeholderFound = true (template par défaut)')
 const foundIdx = desired.map((t) => prompt.indexOf(t))
-ok(foundIdx.every((i) => i >= 0), 'les 4 tâches sont dans le prompt')
+ok(
+  foundIdx.every((i) => i >= 0),
+  'les 4 tâches sont dans le prompt',
+)
 ok(
   JSON.stringify(foundIdx) === JSON.stringify([...foundIdx].sort((a, b) => a - b)),
   'les tâches sont dans le bon ordre',
@@ -84,7 +98,7 @@ const after = await countLead()
 ok(after === before, 'aperçu SANS effet de bord (lead_sessions inchangé)', `${before} → ${after}`)
 ok(!existsSync(`${TEST_DIR}/prompt.md`), 'aperçu SANS écriture disque')
 
-console.log('\n--- S6 : template d\'intro modifiable ---')
+console.log("\n--- S6 : template d'intro modifiable ---")
 const s0 = (await api('/api/settings')).json.data
 const MARKER = 'SENTINELLE_QA_S6'
 
@@ -96,8 +110,14 @@ await api('/api/settings', {
 const noPh = (await api(`/api/projects/${projectId}/lead/preview`)).json.data
 ok(noPh?.placeholderFound === false, 'S6.3 placeholderFound = false sans {{TACHES}}')
 ok(noPh?.prompt?.includes(MARKER), 'S6.3 la sentinelle du template est présente')
-ok(noPh?.prompt?.endsWith('Fin du message.') === false, 'S6.3 la liste est APPENDÉE en fin (pas laissée en dernier)')
-ok(desired.every((t) => noPh.prompt.includes(t)), 'S6.3 les 4 tâches sont en fin de prompt')
+ok(
+  noPh?.prompt?.endsWith('Fin du message.') === false,
+  'S6.3 la liste est APPENDÉE en fin (pas laissée en dernier)',
+)
+ok(
+  desired.every((t) => noPh.prompt.includes(t)),
+  'S6.3 les 4 tâches sont en fin de prompt',
+)
 const markerIdx = noPh.prompt.indexOf(MARKER)
 const firstTaskIdx = noPh.prompt.indexOf(desired[0])
 ok(markerIdx >= 0 && firstTaskIdx > markerIdx, 'S6.3 la liste vient APRÈS le corps du template')
@@ -109,13 +129,19 @@ await api('/api/settings', {
 })
 const withPh = (await api(`/api/projects/${projectId}/lead/preview`)).json.data
 ok(withPh?.placeholderFound === true, 'S6.4 placeholderFound = true avec {{TACHES}}')
-ok(withPh?.prompt?.includes('DEBUT avant') && withPh?.prompt?.includes('APRES fin'), 'S6.4 le corps est conservé')
+ok(
+  withPh?.prompt?.includes('DEBUT avant') && withPh?.prompt?.includes('APRES fin'),
+  'S6.4 le corps est conservé',
+)
 const atPh = withPh.prompt.indexOf('Alpha')
 const afterPh = withPh.prompt.indexOf('APRES fin')
 ok(atPh >= 0 && afterPh > atPh, 'S6.4 la liste est insérée À LA POSITION du marqueur')
 
 // restauration
-await api('/api/settings', { method: 'PUT', body: { ...s0, leadIntroTemplate: s0.leadIntroTemplate } })
+await api('/api/settings', {
+  method: 'PUT',
+  body: { ...s0, leadIntroTemplate: s0.leadIntroTemplate },
+})
 const restored = (await api('/api/settings')).json.data
 ok(restored.leadIntroTemplate === s0.leadIntroTemplate, 'template par défaut restauré')
 
@@ -128,5 +154,7 @@ const left = await countLead()
 ok(left === before, 'lead_sessions toujours à', String(left))
 
 await sql.end({ timeout: 1 })
-console.log(`\n=== ${ko === 0 ? 'S5 / S6 : TOUS LES CONTRÔLES PASSENT' : ko + ' CONTRÔLE(S) EN ÉCHEC'} ===`)
+console.log(
+  `\n=== ${ko === 0 ? 'S5 / S6 : TOUS LES CONTRÔLES PASSENT' : ko + ' CONTRÔLE(S) EN ÉCHEC'} ===`,
+)
 process.exit(ko === 0 ? 0 : 1)

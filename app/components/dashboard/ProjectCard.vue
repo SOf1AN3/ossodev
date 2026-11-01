@@ -19,10 +19,7 @@ function openTasksLabel(project: ProjectWithCounts): string {
 /** Largeur du remplissage, 0 → 100 (0 si le projet n'a aucune tâche). */
 function fillPercent(project: ProjectWithCounts): number {
   if (project.task_count <= 0) return 0
-  return Math.max(
-    0,
-    Math.min(100, Math.round((project.done_tasks / project.task_count) * 100)),
-  )
+  return Math.max(0, Math.min(100, Math.round((project.done_tasks / project.task_count) * 100)))
 }
 </script>
 
@@ -53,10 +50,7 @@ function fillPercent(project: ProjectWithCounts): number {
         {{ project.folder_path }}
       </span>
       <span class="mt-2.5 flex items-center gap-3">
-        <span
-          class="h-[4px] w-32 overflow-hidden rounded-full bg-surface-600"
-          aria-hidden="true"
-        >
+        <span class="h-[4px] w-32 overflow-hidden rounded-full bg-surface-600" aria-hidden="true">
           <span
             class="block h-full rounded-full bg-accent-fill"
             :style="{

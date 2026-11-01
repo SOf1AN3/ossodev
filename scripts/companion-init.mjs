@@ -104,7 +104,9 @@ console.log('\n=== Résumé Companion ===')
 console.log(`  OSSO            ${config.oss_url}`)
 console.log(`  Dossier dev     ${config.dev_root}`)
 console.log(`  Polling         ${config.poll_interval_ms} ms`)
-console.log(`  Commande brain  ${config.brain_command || '(non configurée — le dashboard affichera la commande à copier)'}`)
+console.log(
+  `  Commande brain  ${config.brain_command || '(non configurée — le dashboard affichera la commande à copier)'}`,
+)
 console.log(`  Commande term.  ${config.terminal_command}`)
 console.log(`  Secret          ${reveal ? secret : mask(secret)}`)
 if (!reveal) console.log('                  (relancer avec --show-secret pour l’afficher)')

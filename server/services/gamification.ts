@@ -473,7 +473,9 @@ export async function evaluateBadges(): Promise<BadgeEvaluation> {
   })
 
   const catalogCodes = new Set(catalog.map((badge) => badge.code))
-  const earnedAtByCode = new Map<string, string>(owned.map((row) => [row.badge_code, row.earned_at.toISOString()]))
+  const earnedAtByCode = new Map<string, string>(
+    owned.map((row) => [row.badge_code, row.earned_at.toISOString()]),
+  )
 
   const newlyCodes = Object.keys(rules)
     .filter((code) => rules[code] === true)
@@ -544,9 +546,7 @@ export async function getRecords(): Promise<GamificationRecords> {
       .where(gte(tasks.scheduled_date, addDaysISO(today, -HISTORY_DAYS)))
       // GROUP BY / ORDER BY interdisent les alias de colonne côté PostgreSQL :
       // on répète l'expression plutôt que d'utiliser `week_start`.
-      .groupBy(
-        sql`to_char(date_trunc('week', ${tasks.scheduled_date}::timestamp), 'YYYY-MM-DD')`,
-      )
+      .groupBy(sql`to_char(date_trunc('week', ${tasks.scheduled_date}::timestamp), 'YYYY-MM-DD')`)
       .orderBy(
         desc(dayPointsExpr),
         desc(dayDoneExpr),

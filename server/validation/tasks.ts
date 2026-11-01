@@ -20,9 +20,7 @@ export function isValidDateString(value: string): boolean {
   if (year === undefined || month === undefined || day === undefined) return false
   const parsed = new Date(year, month - 1, day)
   return (
-    parsed.getFullYear() === year &&
-    parsed.getMonth() === month - 1 &&
-    parsed.getDate() === day
+    parsed.getFullYear() === year && parsed.getMonth() === month - 1 && parsed.getDate() === day
   )
 }
 
@@ -101,7 +99,12 @@ export type TaskCreateInput = z.infer<typeof taskCreateSchema>
 
 /** Update partielle : tous les champs sont facultatifs. */
 export const taskUpdateSchema = z.object({
-  title: z.string().trim().min(1, 'Titre requis.').max(200, 'Titre : 200 caractères maximum.').optional(),
+  title: z
+    .string()
+    .trim()
+    .min(1, 'Titre requis.')
+    .max(200, 'Titre : 200 caractères maximum.')
+    .optional(),
   notes: z.string().nullish(),
   status: taskStatusSchema.optional(),
   priority: z
@@ -112,7 +115,12 @@ export const taskUpdateSchema = z.object({
     .optional(),
   source: taskSourceSchema.optional(),
   scheduled_date: dateStringSchema.optional(),
-  points: z.number().int('Points entiers.').min(1, 'Points : 1 à 1000.').max(1000, 'Points : 1 à 1000.').optional(),
+  points: z
+    .number()
+    .int('Points entiers.')
+    .min(1, 'Points : 1 à 1000.')
+    .max(1000, 'Points : 1 à 1000.')
+    .optional(),
 })
 export type TaskUpdateInput = z.infer<typeof taskUpdateSchema>
 

@@ -21,7 +21,7 @@ import { badRequest, forbidden } from '~~/server/utils/http'
 import { getCompanionStatus } from '~~/server/services/localBridge'
 
 /** Allowlist stricte : lettre de disque, `:`, puis uniquement caractères inoffensifs. */
-export const SAFE_PATH_PATTERN = /^[A-Za-z]:[A-Za-z0-9 _.\-\\\/]+$/
+export const SAFE_PATH_PATTERN = /^[A-Za-z]:[A-Za-z0-9 _.\-\\/]+$/
 
 interface BridgeConfig {
   localBridge: string

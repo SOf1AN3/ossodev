@@ -32,8 +32,7 @@ async function load(): Promise<void> {
     courses.value = await list()
   } catch (err) {
     courses.value = []
-    loadError.value =
-      err instanceof Error ? err.message : 'Impossible de charger les cours.'
+    loadError.value = err instanceof Error ? err.message : 'Impossible de charger les cours.'
   } finally {
     loading.value = false
   }
@@ -90,12 +89,7 @@ onMounted(() => {
       aria-busy="true"
       aria-label="Chargement des cours"
     >
-      <div
-        v-for="n in 4"
-        :key="n"
-        class="surface flex flex-col gap-3 px-5 py-4"
-        aria-hidden="true"
-      >
+      <div v-for="n in 4" :key="n" class="surface flex flex-col gap-3 px-5 py-4" aria-hidden="true">
         <UiSkeleton class="h-5 w-2/3" />
         <UiSkeleton class="h-3 w-1/3" />
         <UiSkeleton class="h-3 w-1/2" />

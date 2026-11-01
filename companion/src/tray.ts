@@ -134,19 +134,26 @@ export function startTray(callbacks: TrayCallbacks): TrayHandle {
     fs.mkdirSync(appDataDir(), { recursive: true })
     const script = buildTrayScript(statusFile)
     const encoded = Buffer.from(script, 'utf16le').toString('base64')
-    child = spawn('powershell.exe', ['-NoProfile', '-WindowStyle', 'Hidden', '-EncodedCommand', encoded], {
-      shell: false,
-      windowsHide: true,
-      stdio: ['ignore', 'pipe', 'pipe'],
-      env: { ...process.env, OSO_PARENT_PID: String(process.pid) },
-    })
+    child = spawn(
+      'powershell.exe',
+      ['-NoProfile', '-WindowStyle', 'Hidden', '-EncodedCommand', encoded],
+      {
+        shell: false,
+        windowsHide: true,
+        stdio: ['ignore', 'pipe', 'pipe'],
+        env: { ...process.env, OSO_PARENT_PID: String(process.pid) },
+      },
+    )
     child.on('error', (error) => {
       log('ERROR', `Tray PowerShell inaccessible : ${errorMessage(error)}`)
       child = null
     })
     child.on('exit', (code) => {
       if (disposed === false) {
-        log('WARN', `Tray PowerShell terminé prématurément (code ${String(code)}) — le Companion continue sans icône.`)
+        log(
+          'WARN',
+          `Tray PowerShell terminé prématurément (code ${String(code)}) — le Companion continue sans icône.`,
+        )
       }
       child = null
     })
@@ -167,7 +174,11 @@ export function startTray(callbacks: TrayCallbacks): TrayHandle {
         const clean = line.trim()
         // PowerShell émet du CLIXML sur stderr quand les flux sont redirigés —
         // c'est du bruit, pas une erreur.
-        if (clean.length > 0 && clean.includes('CLIXML') === false && clean.startsWith('#<') === false) {
+        if (
+          clean.length > 0 &&
+          clean.includes('CLIXML') === false &&
+          clean.startsWith('#<') === false
+        ) {
           log('WARN', `Tray : ${clean}`)
         }
       })

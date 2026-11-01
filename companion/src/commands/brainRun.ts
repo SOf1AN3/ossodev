@@ -13,7 +13,10 @@ const MAX_RESULT_CHARS = 400
 
 /** Découpe une commande en [fichier, ...args] — simple split espaces. */
 export function tokenize(command: string): string[] {
-  return command.trim().split(/\s+/).filter((part) => part.length > 0)
+  return command
+    .trim()
+    .split(/\s+/)
+    .filter((part) => part.length > 0)
 }
 
 /** Exécute la commande brain configurée et retourne un résultat court. */
@@ -86,7 +89,9 @@ export function runBrain(config: CompanionConfig): Promise<string> {
       if (code === 0) {
         succeed(detail.length > 0 ? detail : 'Commande brain terminée (aucune sortie).')
       } else {
-        fail(`Commande brain terminée avec le code ${String(code)}${detail.length > 0 ? ` : ${detail}` : '.'}`)
+        fail(
+          `Commande brain terminée avec le code ${String(code)}${detail.length > 0 ? ` : ${detail}` : '.'}`,
+        )
       }
     })
 

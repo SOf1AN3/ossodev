@@ -43,9 +43,8 @@ watch(
   (isOpen) => {
     if (!import.meta.client) return
     if (isOpen) {
-      previouslyFocused = document.activeElement instanceof HTMLElement
-        ? document.activeElement
-        : null
+      previouslyFocused =
+        document.activeElement instanceof HTMLElement ? document.activeElement : null
       document.addEventListener('keydown', onKeydown)
       nextTick(() => {
         panelRef.value?.focus()

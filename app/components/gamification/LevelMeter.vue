@@ -27,9 +27,7 @@ const threshold = computed<string>(() => nf.format(props.nextLevelAt))
         <span class="tnum display text-[28px] text-ink-100">{{ levelText }}</span>
         <span class="text-[14px] font-medium text-accent-400">{{ levelName }}</span>
       </p>
-      <p class="tnum font-mono text-[12px] text-ink-700">
-        {{ current }} / {{ threshold }} pts
-      </p>
+      <p class="tnum font-mono text-[12px] text-ink-700">{{ current }} / {{ threshold }} pts</p>
     </div>
 
     <ProgressBar

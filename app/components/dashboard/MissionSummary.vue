@@ -39,10 +39,7 @@ const targetPreview = computed<number | null>(() => {
 const percent = computed<number>(() => {
   const mission = props.mission
   if (mission === null || mission.target <= 0) return 0
-  return Math.max(
-    0,
-    Math.min(100, Math.round((props.progress / mission.target) * 100)),
-  )
+  return Math.max(0, Math.min(100, Math.round((props.progress / mission.target) * 100)))
 })
 
 function openModal(): void {
@@ -116,15 +113,10 @@ async function submit(): Promise<void> {
 <template>
   <section class="flex flex-col gap-4" aria-labelledby="mission-title">
     <div class="flex flex-wrap items-center justify-between gap-3">
-      <h2
-        id="mission-title"
-        class="text-[19px] font-semibold tracking-[-0.01em] text-ink-100"
-      >
+      <h2 id="mission-title" class="text-[19px] font-semibold tracking-[-0.01em] text-ink-100">
         Mission de la semaine
       </h2>
-      <UiBadge v-if="props.mission !== null && props.isCompleted" tone="ok">
-        Réussie
-      </UiBadge>
+      <UiBadge v-if="props.mission !== null && props.isCompleted" tone="ok"> Réussie </UiBadge>
     </div>
 
     <!-- Mission en cours -->
@@ -160,10 +152,7 @@ async function submit(): Promise<void> {
     </div>
 
     <!-- Aucune mission : action de création -->
-    <div
-      v-else
-      class="surface lift flex flex-col items-start gap-3 px-5 py-4"
-    >
+    <div v-else class="surface lift flex flex-col items-start gap-3 px-5 py-4">
       <p class="text-sm text-ink-300">
         Donne un cap à ta semaine : choisis un objectif et un nombre de tâches.
       </p>
@@ -171,11 +160,7 @@ async function submit(): Promise<void> {
     </div>
 
     <!-- Modale de création -->
-    <UiModal
-      :open="showModal"
-      title="Définir la mission de la semaine"
-      @close="closeModal"
-    >
+    <UiModal :open="showModal" title="Définir la mission de la semaine" @close="closeModal">
       <form class="flex flex-col gap-4" @submit.prevent="submit">
         <div>
           <UiInput
@@ -200,19 +185,13 @@ async function submit(): Promise<void> {
           <p v-if="fieldErrors.target" class="mt-1.5 text-xs text-danger-400">
             {{ fieldErrors.target }}
           </p>
-          <p v-else class="mt-1.5 text-xs text-ink-500">
-            Nombre entier de 1 à 1000.
-          </p>
+          <p v-else class="mt-1.5 text-xs text-ink-500">Nombre entier de 1 à 1000.</p>
         </div>
       </form>
 
       <template #footer>
-        <UiButton variant="ghost" :disabled="creating" @click="closeModal">
-          Annuler
-        </UiButton>
-        <UiButton :loading="creating" @click="submit">
-          Créer la mission
-        </UiButton>
+        <UiButton variant="ghost" :disabled="creating" @click="closeModal"> Annuler </UiButton>
+        <UiButton :loading="creating" @click="submit"> Créer la mission </UiButton>
       </template>
     </UiModal>
   </section>

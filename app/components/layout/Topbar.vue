@@ -103,9 +103,7 @@ const companionAria = computed<string>(() => {
   }
   if (current.available) return 'Companion en ligne'
   const detail = companionReasonDetail(current.reason)
-  return detail === null
-    ? 'Companion hors ligne'
-    : `Companion hors ligne — ${detail}`
+  return detail === null ? 'Companion hors ligne' : `Companion hors ligne — ${detail}`
 })
 
 /** Tooltip : dernière présence vu par le serveur. */
@@ -185,10 +183,9 @@ onUnmounted(() => {
     <div class="flex shrink-0 items-center gap-3">
       <!-- Horloge + date : masquée sous sm (déjà tronquée à 320px) et toujours
            aria-hidden : elle change sans action de l'utilisateur. -->
-      <span
-        class="hidden font-mono text-[12px] text-ink-700 tnum sm:inline"
-        aria-hidden="true"
-      >{{ clockLabel }}</span>
+      <span class="hidden font-mono text-[12px] text-ink-700 tnum sm:inline" aria-hidden="true">{{
+        clockLabel
+      }}</span>
 
       <span class="hidden h-3.5 w-px bg-line sm:block" aria-hidden="true" />
 

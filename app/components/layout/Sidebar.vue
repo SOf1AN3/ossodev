@@ -80,8 +80,7 @@ const companionDotClass = computed<string>(() => {
 
 const companionDotStyle = computed<CSSProperties>(() => {
   if (companion.value.tone === 'pending') return {}
-  const colorVar =
-    companion.value.tone === 'ok' ? '--color-ok-400' : '--color-danger-400'
+  const colorVar = companion.value.tone === 'ok' ? '--color-ok-400' : '--color-danger-400'
   return { boxShadow: `0 0 8px 0 var(${colorVar})` }
 })
 

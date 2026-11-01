@@ -7,19 +7,9 @@ import UiSkeleton from '~/components/ui/UiSkeleton.vue'
 import DateCalendar from '~/components/tasks/DateCalendar.vue'
 import TaskEditor from '~/components/tasks/TaskEditor.vue'
 import TaskList from '~/components/tasks/TaskList.vue'
-import {
-  useTasks,
-  type TaskPatch,
-  type TaskWithOverdue,
-} from '~/composables/useTasks'
+import { useTasks, type TaskPatch, type TaskWithOverdue } from '~/composables/useTasks'
 import { useToast } from '~/composables/useToast'
-import {
-  addDays,
-  formatLongDate,
-  fromISODate,
-  startOfWeek,
-  toISODate,
-} from '~/utils/dates'
+import { addDays, formatLongDate, fromISODate, startOfWeek, toISODate } from '~/utils/dates'
 
 useHead({ title: 'Planifier — OSSO' })
 
@@ -71,17 +61,13 @@ const dayTasks = computed<TaskWithOverdue[]>(() => {
   }
   if (filter.value === 'week') {
     return rangeTasks.value.filter(
-      (task) =>
-        task.scheduled_date >= weekStartIso &&
-        task.scheduled_date <= weekEndIso,
+      (task) => task.scheduled_date >= weekStartIso && task.scheduled_date <= weekEndIso,
     )
   }
   if (filter.value === 'later') {
     return rangeTasks.value.filter((task) => task.scheduled_date > weekEndIso)
   }
-  return rangeTasks.value.filter(
-    (task) => task.scheduled_date === selectedDate.value,
-  )
+  return rangeTasks.value.filter((task) => task.scheduled_date === selectedDate.value)
 })
 
 /** Toutes les dates distinctes portant des tâches (points sur le calendrier). */
@@ -93,9 +79,7 @@ const taskDates = computed<string[]>(() => {
   return [...seen]
 })
 
-const selectedLongDate = computed<string>(() =>
-  formatLongDate(fromISODate(selectedDate.value)),
-)
+const selectedLongDate = computed<string>(() => formatLongDate(fromISODate(selectedDate.value)))
 
 /** Titre de l'état vide selon le filtre actif. */
 const emptyTitle = computed<string>(() => {
@@ -195,20 +179,12 @@ function listHeading(): string {
 <template>
   <div class="flex flex-col gap-6">
     <header class="max-w-3xl">
-      <h1 class="text-[30px] font-bold tracking-[-0.03em] text-ink-100">
-        Planifier
-      </h1>
-      <p class="mt-2 text-sm text-ink-300">
-        Organise tes tâches à l'avance.
-      </p>
+      <h1 class="text-[30px] font-bold tracking-[-0.03em] text-ink-100">Planifier</h1>
+      <p class="mt-2 text-sm text-ink-300">Organise tes tâches à l'avance.</p>
     </header>
 
     <!-- Raccourcis : badges cliquables, état actif en accent -->
-    <div
-      role="group"
-      aria-label="Raccourcis de planification"
-      class="flex flex-wrap gap-1.5"
-    >
+    <div role="group" aria-label="Raccourcis de planification" class="flex flex-wrap gap-1.5">
       <button
         v-for="shortcut in shortcuts"
         :key="shortcut.key"
@@ -235,9 +211,7 @@ function listHeading(): string {
         variant="outline"
         :disabled="lastVisibleRange === null"
         @click="
-          lastVisibleRange
-            ? loadRange(lastVisibleRange.from, lastVisibleRange.to)
-            : undefined
+          lastVisibleRange ? loadRange(lastVisibleRange.from, lastVisibleRange.to) : undefined
         "
       >
         Réessayer
@@ -264,10 +238,7 @@ function listHeading(): string {
               @enter="onQuickAdd"
             />
           </div>
-          <UiButton
-            :disabled="quickTitle.trim().length === 0"
-            @click="onQuickAdd"
-          >
+          <UiButton :disabled="quickTitle.trim().length === 0" @click="onQuickAdd">
             Planifier
           </UiButton>
         </div>

@@ -85,15 +85,14 @@ async function main(): Promise<void> {
   // PowerShell caché → node lancé sans console visible, cwd = dossier companion.
   // Node >= 22.18 exécute les .ts en type stripping natif.
   const launcherContent = [
-    '$ErrorActionPreference = \'Stop\'',
+    "$ErrorActionPreference = 'Stop'",
     `Start-Process -FilePath ${q(nodeExe)} -ArgumentList ${q(entry)} -WorkingDirectory ${q(companionDir)} -WindowStyle Hidden`,
     '',
   ].join('\r\n')
   fs.writeFileSync(launcher, launcherContent, 'utf8')
 
   // Ligne de la tâche : courte, telle quelle, sans interprétation de shell.
-  const launchCommand =
-    `powershell.exe -NoProfile -WindowStyle Hidden -ExecutionPolicy Bypass -File "${launcher}"`
+  const launchCommand = `powershell.exe -NoProfile -WindowStyle Hidden -ExecutionPolicy Bypass -File "${launcher}"`
 
   out('─'.repeat(64))
   out(`Tâche planifiée : ${TASK_NAME}`)
@@ -113,10 +112,14 @@ async function main(): Promise<void> {
   // 2. Création (l'ancienne a été supprimée, ou n'existait pas).
   const create = await runSchtasks([
     '/Create',
-    '/TN', `${TASK_DIR}\\${TASK_NAME}`,
-    '/TR', launchCommand,
-    '/SC', 'ONLOGON',
-    '/RL', 'LIMITED',
+    '/TN',
+    `${TASK_DIR}\\${TASK_NAME}`,
+    '/TR',
+    launchCommand,
+    '/SC',
+    'ONLOGON',
+    '/RL',
+    'LIMITED',
     '/F',
   ])
 

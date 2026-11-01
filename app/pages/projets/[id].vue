@@ -1,8 +1,5 @@
 <script setup lang="ts">
-import {
-  useProjects,
-  type ProjectWithCounts,
-} from '~/composables/useProjects'
+import { useProjects, type ProjectWithCounts } from '~/composables/useProjects'
 import { useToast } from '~/composables/useToast'
 import type { ProjectTask } from '~~/shared/types'
 import ProjectsChecklist from '~/components/projects/Checklist.vue'
@@ -20,14 +17,7 @@ const projectId = computed<string>(() => {
   return Array.isArray(raw) ? (raw[0] ?? '') : (raw ?? '')
 })
 
-const {
-  getProject,
-  listTasks,
-  addTask,
-  updateTask,
-  deleteTask,
-  reorderTasks,
-} = useProjects()
+const { getProject, listTasks, addTask, updateTask, deleteTask, reorderTasks } = useProjects()
 const toast = useToast()
 
 const project = ref<ProjectWithCounts | null>(null)
@@ -54,8 +44,7 @@ async function load(): Promise<void> {
     tasks.value = loadedTasks
     if (!loadedProject) notFound.value = true
   } catch (err) {
-    loadError.value =
-      err instanceof Error ? err.message : 'Erreur inconnue.'
+    loadError.value = err instanceof Error ? err.message : 'Erreur inconnue.'
   } finally {
     loading.value = false
   }
@@ -242,10 +231,7 @@ async function onReorder(order: string[]): Promise<void> {
           <h1 class="mt-2 text-2xl font-semibold text-ink-100">
             {{ project.name }}
           </h1>
-          <p
-            class="mt-1 truncate font-mono text-[12px] text-ink-700"
-            :title="project.folder_path"
-          >
+          <p class="mt-1 truncate font-mono text-[12px] text-ink-700" :title="project.folder_path">
             {{ project.folder_path }}
           </p>
           <p class="mt-2 text-xs text-ink-300">

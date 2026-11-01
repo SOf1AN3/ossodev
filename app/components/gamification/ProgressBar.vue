@@ -32,42 +32,26 @@ const clampedValue = computed<number>(() =>
 
 const ariaMax = computed<number>(() => Math.max(props.max, 0))
 
-const trackClass = computed<string>(() =>
-  props.size === 'lg' ? 'h-6' : 'h-2.5',
-)
+const trackClass = computed<string>(() => (props.size === 'lg' ? 'h-6' : 'h-2.5'))
 
 /* Aplat : `accent-fill` (jamais une couleur Tailwind par défaut). */
-const fillClass = computed<string>(() =>
-  props.tone === 'ok' ? 'bg-ok-400' : 'bg-accent-fill',
-)
+const fillClass = computed<string>(() => (props.tone === 'ok' ? 'bg-ok-400' : 'bg-accent-fill'))
 
 /** Le pourcentage n'est superposé à la barre que si elle est assez haute. */
-const percentInside = computed<boolean>(
-  () => props.showPercent && props.size === 'lg',
-)
+const percentInside = computed<boolean>(() => props.showPercent && props.size === 'lg')
 
 const headerVisible = computed<boolean>(
-  () =>
-    props.label !== undefined ||
-    (props.showPercent && !percentInside.value),
+  () => props.label !== undefined || (props.showPercent && !percentInside.value),
 )
 
-const accessibleName = computed<string>(
-  () => props.ariaLabel ?? props.label ?? 'Progression',
-)
+const accessibleName = computed<string>(() => props.ariaLabel ?? props.label ?? 'Progression')
 </script>
 
 <template>
   <div class="w-full">
-    <div
-      v-if="headerVisible"
-      class="mb-1.5 flex items-center justify-between gap-2 text-xs"
-    >
+    <div v-if="headerVisible" class="mb-1.5 flex items-center justify-between gap-2 text-xs">
       <span v-if="label" class="min-w-0 truncate text-ink-300">{{ label }}</span>
-      <span
-        v-if="showPercent && !percentInside"
-        class="tnum shrink-0 text-ink-500"
-      >
+      <span v-if="showPercent && !percentInside" class="tnum shrink-0 text-ink-500">
         {{ percent }} %
       </span>
     </div>

@@ -72,11 +72,7 @@ let inFlight: Promise<void> | null = null
 function toErrorMessage(err: unknown, fallback: string): string {
   if (err instanceof Error) {
     const message = err.message.trim()
-    if (
-      message !== '' &&
-      message !== 'Failed to fetch' &&
-      message !== 'fetch failed'
-    ) {
+    if (message !== '' && message !== 'Failed to fetch' && message !== 'fetch failed') {
       return message
     }
   }
@@ -94,26 +90,19 @@ function applySummary(payload: GamificationSummaryPayload): void {
     const list = earned.map((badge) => `${badge.icon} ${badge.name}`)
     toast.show({
       tone: 'success',
-      title:
-        earned.length > 1
-          ? `${earned.length} nouveaux badges !`
-          : 'Nouveau badge débloqué !',
+      title: earned.length > 1 ? `${earned.length} nouveaux badges !` : 'Nouveau badge débloqué !',
       message: list.join(' · '),
     })
   }
 }
 
 async function fetchSummary(): Promise<void> {
-  const payload = await apiFetch<GamificationSummaryPayload>(
-    '/api/gamification/summary',
-  )
+  const payload = await apiFetch<GamificationSummaryPayload>('/api/gamification/summary')
   applySummary(payload)
 }
 
 async function fetchBadges(): Promise<void> {
-  badges.value = await apiFetch<BadgeWithEarnedAt[]>(
-    '/api/gamification/badges',
-  )
+  badges.value = await apiFetch<BadgeWithEarnedAt[]>('/api/gamification/badges')
 }
 
 async function fetchRecords(): Promise<void> {
@@ -121,9 +110,7 @@ async function fetchRecords(): Promise<void> {
 }
 
 async function fetchMission(): Promise<void> {
-  mission.value = await apiFetch<CurrentMission>(
-    '/api/gamification/missions/current',
-  )
+  mission.value = await apiFetch<CurrentMission>('/api/gamification/missions/current')
 }
 
 /**
@@ -141,18 +128,10 @@ function load(): Promise<void> {
   error.value = null
   inFlight = (async () => {
     try {
-      await Promise.all([
-        fetchSummary(),
-        fetchBadges(),
-        fetchRecords(),
-        fetchMission(),
-      ])
+      await Promise.all([fetchSummary(), fetchBadges(), fetchRecords(), fetchMission()])
       loaded = true
     } catch (err) {
-      error.value = toErrorMessage(
-        err,
-        'Impossible de charger tes statistiques.',
-      )
+      error.value = toErrorMessage(err, 'Impossible de charger tes statistiques.')
     } finally {
       pending.value = false
       inFlight = null
@@ -179,16 +158,14 @@ async function refreshSummary(): Promise<void> {
  * Si le serveur répond 400 « mission déjà existante », on recharge la
  * mission en cours et on signale `'existing'` au lieu d'afficher une erreur.
  */
-async function createMission(
-  payload: MissionCreatePayload,
-): Promise<CreateMissionResult> {
+async function createMission(payload: MissionCreatePayload): Promise<CreateMissionResult> {
   try {
     await apiFetch<Mission>('/api/gamification/missions', {
       method: 'POST',
       body: payload,
     })
   } catch (err) {
-    let existing: CurrentMission | null = null
+    let existing: CurrentMission | null
     try {
       await fetchMission()
       existing = mission.value
@@ -198,9 +175,9 @@ async function createMission(
     if (existing !== null && existing.mission !== null) {
       return 'existing'
     }
-    throw new Error(
-      toErrorMessage(err, 'Impossible de créer la mission de la semaine.'),
-    )
+    throw new Error(toErrorMessage(err, 'Impossible de créer la mission de la semaine.'), {
+      cause: err,
+    })
   }
   await fetchMission()
   return 'created'

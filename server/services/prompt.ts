@@ -45,7 +45,7 @@ function escapeMarkdown(title: string): string {
  * chacune avec sa position d'origine (1-based) et sa case à cocher.
  */
 function renderTasksBlock(tasks: LeadTaskItem[]): string {
-  if (tasks.length === 0) return '_Aucune tâche dans ce projet pour l\'instant._'
+  if (tasks.length === 0) return "_Aucune tâche dans ce projet pour l'instant._"
 
   const indexed = tasks.map((task, index) => ({ task, original: index + 1 }))
   const ordered = [
@@ -72,8 +72,10 @@ export function renderLeadPrompt(template: string, input: LeadPromptInput): Lead
   const tasksBlock = renderTasksBlock(input.tasks)
 
   const base = template
-    .split('{{PROJET}}').join(input.projectName)
-    .split('{{DOSSIER}}').join(input.folderPath)
+    .split('{{PROJET}}')
+    .join(input.projectName)
+    .split('{{DOSSIER}}')
+    .join(input.folderPath)
 
   const prompt = placeholderFound
     ? base.split('{{TACHES}}').join(tasksBlock)

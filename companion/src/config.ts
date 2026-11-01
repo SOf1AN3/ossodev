@@ -25,7 +25,9 @@ export class ConfigError extends Error {}
 export function appDataDir(): string {
   const base = process.env.APPDATA
   if (base === undefined || base.length === 0) {
-    throw new ConfigError('Variable APPDATA introuvable : impossible de localiser la config du Companion.')
+    throw new ConfigError(
+      'Variable APPDATA introuvable : impossible de localiser la config du Companion.',
+    )
   }
   return path.join(base, 'osso-companion')
 }
@@ -114,20 +116,27 @@ export function loadConfig(): CompanionConfig {
   const dev_root = readString(record, 'dev_root').trim()
 
   if (oss_url.length === 0 || secret.length === 0 || dev_root.length === 0) {
-    throw new ConfigError(`Configuration incomplète (${file}) : oss_url, secret et dev_root sont requis. ${CONFIG_HINT}`)
+    throw new ConfigError(
+      `Configuration incomplète (${file}) : oss_url, secret et dev_root sont requis. ${CONFIG_HINT}`,
+    )
   }
   if (/^https?:\/\/[^\s]+$/.test(oss_url) === false) {
-    throw new ConfigError(`Configuration invalide : oss_url doit être une URL http(s), reçu « ${oss_url} ». ${CONFIG_HINT}`)
+    throw new ConfigError(
+      `Configuration invalide : oss_url doit être une URL http(s), reçu « ${oss_url} ». ${CONFIG_HINT}`,
+    )
   }
   // dev_root vient du fichier local de confiance, contrôle souple : chemin absolu Windows.
   if (/^[A-Za-z]:[\\/]/.test(dev_root) === false) {
-    throw new ConfigError(`Configuration invalide : dev_root doit être un chemin absolu Windows (ex : C:/Users/…/dev), reçu « ${dev_root} ». ${CONFIG_HINT}`)
+    throw new ConfigError(
+      `Configuration invalide : dev_root doit être un chemin absolu Windows (ex : C:/Users/…/dev), reçu « ${dev_root} ». ${CONFIG_HINT}`,
+    )
   }
 
   const pollRaw = record.poll_interval_ms
-  const poll_interval_ms = typeof pollRaw === 'number' && Number.isFinite(pollRaw) && pollRaw >= 1_000
-    ? Math.floor(pollRaw)
-    : 7_000
+  const poll_interval_ms =
+    typeof pollRaw === 'number' && Number.isFinite(pollRaw) && pollRaw >= 1_000
+      ? Math.floor(pollRaw)
+      : 7_000
 
   return {
     oss_url: oss_url.replace(/\/+$/, ''),

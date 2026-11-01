@@ -15,15 +15,8 @@ import type { RoutineInput } from '~~/shared/types'
 
 useHead({ title: 'Routines — OSSO' })
 
-const {
-  routines,
-  pending,
-  error,
-  load,
-  createRoutine,
-  updateRoutine,
-  deleteRoutine,
-} = useRoutines()
+const { routines, pending, error, load, createRoutine, updateRoutine, deleteRoutine } =
+  useRoutines()
 
 const toast = useToast()
 
@@ -88,10 +81,7 @@ async function onSave(input: RoutineInput): Promise<void> {
   }
 }
 
-async function onToggleActive(
-  routine: RoutineWithNext,
-  value: boolean,
-): Promise<void> {
+async function onToggleActive(routine: RoutineWithNext, value: boolean): Promise<void> {
   try {
     await updateRoutine(routine.id, { is_active: value })
     toast.show({
@@ -130,12 +120,8 @@ async function confirmDelete(): Promise<void> {
   <div class="flex flex-col gap-6">
     <header class="flex flex-wrap items-end justify-between gap-4">
       <div>
-        <h1 class="text-[30px] font-bold tracking-[-0.03em] text-ink-100">
-          Routines
-        </h1>
-        <p class="mt-2 text-sm text-ink-300">
-          Automatises tes tâches récurrentes.
-        </p>
+        <h1 class="text-[30px] font-bold tracking-[-0.03em] text-ink-100">Routines</h1>
+        <p class="mt-2 text-sm text-ink-300">Automatises tes tâches récurrentes.</p>
       </div>
       <UiButton @click="openCreate">
         <UiIcon name="plus" />
@@ -188,9 +174,7 @@ async function confirmDelete(): Promise<void> {
             </UiBadge>
           </div>
 
-          <div
-            class="mt-2 flex flex-wrap items-baseline gap-x-3 gap-y-1 text-ink-500"
-          >
+          <div class="mt-2 flex flex-wrap items-baseline gap-x-3 gap-y-1 text-ink-500">
             <span class="micro">{{ frequencyLabel(routine) }}</span>
             <span class="text-xs">
               <span class="tnum font-mono text-ink-300">
@@ -201,10 +185,7 @@ async function confirmDelete(): Promise<void> {
           </div>
 
           <div class="mt-2">
-            <RoutinePreview
-              :dates="routine.next_dates"
-              :is-active="routine.is_active"
-            />
+            <RoutinePreview :dates="routine.next_dates" :is-active="routine.is_active" />
           </div>
         </div>
 
@@ -212,16 +193,10 @@ async function confirmDelete(): Promise<void> {
           <UiToggle
             :model-value="routine.is_active"
             :label="`Activer la routine ${routine.title}`"
-            @update:model-value="
-              (value: boolean) => onToggleActive(routine, value)
-            "
+            @update:model-value="(value: boolean) => onToggleActive(routine, value)"
           />
-          <UiButton size="sm" variant="outline" @click="openEdit(routine)">
-            Modifier
-          </UiButton>
-          <UiButton size="sm" variant="danger" @click="askDelete(routine)">
-            Supprimer
-          </UiButton>
+          <UiButton size="sm" variant="outline" @click="openEdit(routine)"> Modifier </UiButton>
+          <UiButton size="sm" variant="danger" @click="askDelete(routine)"> Supprimer </UiButton>
         </div>
       </li>
     </ul>
@@ -256,12 +231,8 @@ async function confirmDelete(): Promise<void> {
         Les occurrences passées seront conservées, les futures supprimées.
       </p>
       <template #footer>
-        <UiButton variant="ghost" :disabled="deleting" @click="closeDelete">
-          Annuler
-        </UiButton>
-        <UiButton variant="danger" :loading="deleting" @click="confirmDelete">
-          Supprimer
-        </UiButton>
+        <UiButton variant="ghost" :disabled="deleting" @click="closeDelete"> Annuler </UiButton>
+        <UiButton variant="danger" :loading="deleting" @click="confirmDelete"> Supprimer </UiButton>
       </template>
     </UiModal>
   </div>

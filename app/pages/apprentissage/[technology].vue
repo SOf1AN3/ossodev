@@ -1,9 +1,6 @@
 <script setup lang="ts">
 import type { CourseHeading } from '~/composables/useMarkdown'
-import {
-  LearningApiError,
-  useLearning,
-} from '~/composables/useLearning'
+import { LearningApiError, useLearning } from '~/composables/useLearning'
 import { useToast } from '~/composables/useToast'
 import CourseBody from '~/components/learning/CourseBody.vue'
 import CourseToc from '~/components/learning/CourseToc.vue'
@@ -44,8 +41,7 @@ async function load(): Promise<void> {
     await get(slug.value)
   } catch (err) {
     current.value = null
-    notFound.value =
-      err instanceof LearningApiError && err.status === 404
+    notFound.value = err instanceof LearningApiError && err.status === 404
     // Le message FR lisible reste exposé par `error` du composable.
   } finally {
     loading.value = false
@@ -114,10 +110,7 @@ async function onReset(): Promise<void> {
         <UiSkeleton class="h-3 w-48" />
         <UiSkeleton class="h-8 w-2/3" />
       </div>
-      <div
-        class="surface flex flex-col gap-4 px-6 py-5"
-        aria-hidden="true"
-      >
+      <div class="surface flex flex-col gap-4 px-6 py-5" aria-hidden="true">
         <UiSkeleton class="h-4 w-full" />
         <UiSkeleton class="h-4 w-5/6" />
         <UiSkeleton class="h-40 w-full" />
@@ -158,9 +151,7 @@ async function onReset(): Promise<void> {
     <!-- Cours -->
     <template v-else-if="current !== null">
       <header>
-        <p class="micro text-ink-700">
-          {{ current.technology }} · {{ statusLabel }}
-        </p>
+        <p class="micro text-ink-700">{{ current.technology }} · {{ statusLabel }}</p>
         <h1 class="mt-1 text-2xl font-semibold text-ink-100">
           {{ current.title }}
         </h1>
@@ -168,10 +159,7 @@ async function onReset(): Promise<void> {
 
       <div class="flex flex-col gap-8 lg:flex-row lg:items-start">
         <div class="flex min-w-0 flex-1 flex-col">
-          <CourseBody
-            :md="current.content_md"
-            @headings="headings = $event"
-          />
+          <CourseBody :md="current.content_md" @headings="headings = $event" />
 
           <StatusButton
             class="mt-6"

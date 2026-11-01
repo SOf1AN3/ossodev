@@ -33,11 +33,7 @@ function toggle(day: number): void {
 </script>
 
 <template>
-  <div
-    role="group"
-    aria-label="Jours de la semaine"
-    class="flex flex-wrap gap-2"
-  >
+  <div role="group" aria-label="Jours de la semaine" class="flex flex-wrap gap-2">
     <button
       v-for="day in orderedDays"
       :key="day"

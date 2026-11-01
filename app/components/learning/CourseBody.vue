@@ -26,6 +26,7 @@ watch(
 
 <template>
   <!-- v-html est assaini en amont par DOMPurify (useMarkdown) — jamais brut. -->
+  <!-- eslint-disable-next-line vue/no-v-html -->
   <div ref="container" class="course" v-html="html" />
 </template>
 

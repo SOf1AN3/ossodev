@@ -67,13 +67,9 @@ export function useTasks(): UseTasksReturn {
   /** Dernier intervalle chargé, pour recharger après une mutation. */
   let lastRange: { from: string; to: string } | null = null
 
-  const today = computed<TaskWithOverdue[]>(() =>
-    tasks.value.filter((task) => !task.is_overdue),
-  )
+  const today = computed<TaskWithOverdue[]>(() => tasks.value.filter((task) => !task.is_overdue))
 
-  const overdue = computed<TaskWithOverdue[]>(() =>
-    tasks.value.filter((task) => task.is_overdue),
-  )
+  const overdue = computed<TaskWithOverdue[]>(() => tasks.value.filter((task) => task.is_overdue))
 
   async function loadToday(options?: LoadOptions): Promise<void> {
     const silent = options?.silent === true
@@ -91,11 +87,7 @@ export function useTasks(): UseTasksReturn {
     }
   }
 
-  async function loadRange(
-    from: string,
-    to: string,
-    options?: LoadOptions,
-  ): Promise<void> {
+  async function loadRange(from: string, to: string, options?: LoadOptions): Promise<void> {
     const silent = options?.silent === true
     lastRange = { from, to }
     if (!silent) {
@@ -107,9 +99,7 @@ export function useTasks(): UseTasksReturn {
       // intervalle plus large.
       const cappedTo = toISODate(addDays(fromISODate(from), MAX_RANGE_DAYS - 1))
       const effectiveTo = cappedTo < to ? cappedTo : to
-      const rows = await apiFetch<TaskWithOverdue[]>(
-        `/api/tasks?from=${from}&to=${effectiveTo}`,
-      )
+      const rows = await apiFetch<TaskWithOverdue[]>(`/api/tasks?from=${from}&to=${effectiveTo}`)
       rangeTasks.value = Array.isArray(rows) ? rows : []
     } catch (loadError) {
       rangeError.value = toFrenchMessage(loadError)

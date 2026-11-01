@@ -7,6 +7,4 @@ import { getCurrentMission } from '~~/server/services/gamification'
  * Alias explicite de `GET /api/gamification/missions` (même comportement).
  * Existe pour que le front puisse nommer la route de façon lisible.
  */
-export default defineEventHandler((event) =>
-  runApi(event, async () => getCurrentMission()),
-)
+export default defineEventHandler((event) => runApi(event, async () => getCurrentMission()))

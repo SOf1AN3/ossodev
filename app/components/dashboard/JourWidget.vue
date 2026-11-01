@@ -35,11 +35,7 @@ const dashOffset = computed<number>(() => 100 - percent.value)
     <p class="mt-2 text-[13px] text-ink-500">tâches validées</p>
   </div>
 
-  <span
-    class="hidden self-stretch bg-line lg:block"
-    style="width: 1px"
-    aria-hidden="true"
-  />
+  <span class="hidden self-stretch bg-line lg:block" style="width: 1px" aria-hidden="true" />
 
   <!-- ② Arc d'instrument -->
   <div class="relative h-[104px] w-[104px]">

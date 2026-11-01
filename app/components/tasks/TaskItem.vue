@@ -42,9 +42,7 @@ function onToggle(): void {
       type="button"
       role="checkbox"
       :aria-checked="isDone"
-      :aria-label="
-        isDone ? `Décocher « ${task.title} »` : `Valider « ${task.title} »`
-      "
+      :aria-label="isDone ? `Décocher « ${task.title} »` : `Valider « ${task.title} »`"
       class="-my-1 flex shrink-0 items-center justify-center rounded-xs p-1 focus-visible:outline-2 focus-visible:outline-accent-400"
       @click="onToggle"
     >
@@ -64,9 +62,7 @@ function onToggle(): void {
       </p>
       <div class="mt-2 flex flex-wrap items-center gap-2">
         <UiBadge :tone="priorityTone">{{ priorityLabel }}</UiBadge>
-        <UiBadge v-if="task.source === 'routine'" tone="accent">
-          Routine
-        </UiBadge>
+        <UiBadge v-if="task.source === 'routine'" tone="accent"> Routine </UiBadge>
         <span class="micro text-ink-700">
           <span class="tnum">{{ task.points }}</span> pts
         </span>

@@ -11,11 +11,7 @@ export interface IdeaPayload {
 function toApiErrorMessage(err: unknown, fallback: string): string {
   if (err instanceof Error) {
     const message = err.message.trim()
-    if (
-      message === '' ||
-      message === 'Failed to fetch' ||
-      message === 'fetch failed'
-    ) {
+    if (message === '' || message === 'Failed to fetch' || message === 'fetch failed') {
       return 'Impossible de contacter le serveur. Vérifie que l’application OSSO tourne bien.'
     }
     return message
@@ -35,7 +31,7 @@ export function useIdeas() {
     } catch (err) {
       const message = toApiErrorMessage(err, fallback)
       error.value = message
-      throw new Error(message)
+      throw new Error(message, { cause: err })
     } finally {
       pending.value = false
     }
@@ -43,10 +39,7 @@ export function useIdeas() {
 
   /** Les idées les plus récentes en premier. */
   function listIdeas(): Promise<Idea[]> {
-    return run(
-      () => apiFetch<Idea[]>('/api/ideas'),
-      'Impossible de charger les idées.',
-    )
+    return run(() => apiFetch<Idea[]>('/api/ideas'), 'Impossible de charger les idées.')
   }
 
   function createIdea(payload: IdeaPayload): Promise<Idea> {
@@ -58,8 +51,7 @@ export function useIdeas() {
 
   function updateIdea(id: string, patch: IdeaPayload): Promise<Idea> {
     return run(
-      () =>
-        apiFetch<Idea>(`/api/ideas/${id}`, { method: 'PATCH', body: patch }),
+      () => apiFetch<Idea>(`/api/ideas/${id}`, { method: 'PATCH', body: patch }),
       'Impossible de modifier l’idée.',
     )
   }

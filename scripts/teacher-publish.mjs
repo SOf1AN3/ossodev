@@ -43,7 +43,11 @@ function loadDatabaseUrl(ossodir) {
 function fail(message, payloadPath) {
   console.error(`✗ Refusé : ${message}`)
   if (payloadPath && existsSync(payloadPath)) {
-    try { rmSync(payloadPath, { force: true }) } catch { /* rien */ }
+    try {
+      rmSync(payloadPath, { force: true })
+    } catch {
+      /* rien */
+    }
   }
   process.exit(1)
 }
@@ -72,7 +76,10 @@ try {
 const { technology, title, content_md: content } = payload
 
 if (typeof technology !== 'string' || !/^[a-z0-9][a-z0-9-]{1,40}$/.test(technology)) {
-  fail(`slug invalide « ${String(technology)} » (attendu : minuscules, chiffres, tirets)`, absPayload)
+  fail(
+    `slug invalide « ${String(technology)} » (attendu : minuscules, chiffres, tirets)`,
+    absPayload,
+  )
 }
 if (typeof title !== 'string' || title.trim().length < 1 || title.trim().length > 120) {
   fail('le titre doit faire entre 1 et 120 caractères', absPayload)

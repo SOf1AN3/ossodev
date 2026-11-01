@@ -4,15 +4,7 @@
 const FR_LOCALE = 'fr-FR'
 
 /** Index = 0 dimanche, cohérent avec `Date.getDay()`. */
-export const WEEKDAYS_SHORT: string[] = [
-  'dim',
-  'lun',
-  'mar',
-  'mer',
-  'jeu',
-  'ven',
-  'sam',
-]
+export const WEEKDAYS_SHORT: string[] = ['dim', 'lun', 'mar', 'mer', 'jeu', 'ven', 'sam']
 
 export const WEEKDAYS_LONG: string[] = [
   'dimanche',

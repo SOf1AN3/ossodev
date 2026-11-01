@@ -17,8 +17,7 @@ const emit = defineEmits<{
 }>()
 
 const DOSSIER_PLACEHOLDER = '{{DOSSIER}}'
-const WINDOWS_EXAMPLE =
-  'powershell -NoExit -Command "Set-Location \'{{DOSSIER}}\'"'
+const WINDOWS_EXAMPLE = 'powershell -NoExit -Command "Set-Location \'{{DOSSIER}}\'"'
 </script>
 
 <template>
@@ -35,9 +34,8 @@ const WINDOWS_EXAMPLE =
           @update:model-value="emit('update:brainCommand', $event)"
         />
         <p class="mt-1.5 text-xs text-ink-500">
-          Commande lancée par le pont pour déclencher le scan du dossier dev.
-          Si tu la laisses vide, OSSO affichera simplement la commande à copier
-          plutôt que de l’exécuter.
+          Commande lancée par le pont pour déclencher le scan du dossier dev. Si tu la laisses vide,
+          OSSO affichera simplement la commande à copier plutôt que de l’exécuter.
         </p>
       </div>
 
@@ -50,13 +48,11 @@ const WINDOWS_EXAMPLE =
           @update:model-value="emit('update:terminalCommand', $event)"
         />
         <p class="mt-1.5 text-xs text-ink-500">
-          Commande ouverte dans un terminal, depuis le dossier du projet. Le
-          placeholder
+          Commande ouverte dans un terminal, depuis le dossier du projet. Le placeholder
           <span class="font-mono text-[12px] text-ink-700">
             {{ DOSSIER_PLACEHOLDER }}
           </span>
-          est remplacé par le chemin absolu du projet. Exemple Windows par
-          défaut :
+          est remplacé par le chemin absolu du projet. Exemple Windows par défaut :
         </p>
         <p class="mt-1 font-mono text-[12px] text-ink-700">
           {{ WINDOWS_EXAMPLE }}
@@ -65,9 +61,7 @@ const WINDOWS_EXAMPLE =
     </div>
 
     <div class="mt-4 flex justify-end">
-      <UiButton :loading="saving" @click="emit('save')">
-        Enregistrer
-      </UiButton>
+      <UiButton :loading="saving" @click="emit('save')"> Enregistrer </UiButton>
     </div>
   </section>
 </template>

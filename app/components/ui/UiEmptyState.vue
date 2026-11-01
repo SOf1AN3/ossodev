@@ -24,14 +24,8 @@ const titleTag = computed(() => props.titleLevel)
 </script>
 
 <template>
-  <div
-    class="surface flex flex-col items-center justify-center gap-3 px-6 py-16 text-center"
-  >
-    <span
-      v-if="icon"
-      class="text-4xl"
-      aria-hidden="true"
-    >{{ icon }}</span>
+  <div class="surface flex flex-col items-center justify-center gap-3 px-6 py-16 text-center">
+    <span v-if="icon" class="text-4xl" aria-hidden="true">{{ icon }}</span>
     <span
       v-else
       class="mb-1 flex h-12 w-12 items-center justify-center rounded-full bg-surface-800 text-ink-500"
@@ -39,10 +33,7 @@ const titleTag = computed(() => props.titleLevel)
     >
       <UiIcon name="target" class="h-6 w-6" />
     </span>
-    <component
-      :is="titleTag"
-      class="text-lg font-medium text-ink-100"
-    >
+    <component :is="titleTag" class="text-lg font-medium text-ink-100">
       {{ title }}
     </component>
     <p v-if="description" class="max-w-md text-sm text-ink-300">{{ description }}</p>

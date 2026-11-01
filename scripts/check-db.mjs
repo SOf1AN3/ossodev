@@ -34,8 +34,10 @@ try {
     select table_name from information_schema.tables
     where table_schema = 'public' order by table_name
   `
-  console.log(`-> Tables existantes (${tables.length}) :`,
-    tables.map((t) => t.table_name).join(', ') || '(aucune)')
+  console.log(
+    `-> Tables existantes (${tables.length}) :`,
+    tables.map((t) => t.table_name).join(', ') || '(aucune)',
+  )
 
   console.log('\nSUCCES — la base Supabase est joignable.')
 } catch (e) {
@@ -43,7 +45,10 @@ try {
   if (String(e?.message ?? '').includes('ENOTFOUND')) {
     console.error('  => le hostname ne resout pas (DNS).')
   }
-  if (String(e?.message ?? '').includes('ECONNREFUSED') || String(e?.message ?? '').includes('ETIMEDOUT')) {
+  if (
+    String(e?.message ?? '').includes('ECONNREFUSED') ||
+    String(e?.message ?? '').includes('ETIMEDOUT')
+  ) {
     console.error('  => probablement le IPv6 de la connexion directe.')
     console.error('     Solution : recuperer l URL "Transaction pooler" (port 6543)')
     console.error('     dans Supabase > Settings > Database > Connection string.')

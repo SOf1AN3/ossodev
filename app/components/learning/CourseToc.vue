@@ -35,9 +35,7 @@ function observe(): void {
       // Active la première section visible dans l'ordre du document ;
       // si aucune n'est dans le bandeau (haut/bas de page), on conserve
       // la dernière section active.
-      const first = props.headings.find((heading) =>
-        visibleIds.has(heading.id),
-      )
+      const first = props.headings.find((heading) => visibleIds.has(heading.id))
       if (first !== undefined) activeId.value = first.id
     },
     {

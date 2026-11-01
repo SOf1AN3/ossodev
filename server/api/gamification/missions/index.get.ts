@@ -7,6 +7,4 @@ import { getCurrentMission } from '~~/server/services/gamification'
  * Mission de la semaine courante (lundi → dimanche) + progression.
  * `mission: null` si aucune mission cette semaine ; `progress` reste calculé.
  */
-export default defineEventHandler((event) =>
-  runApi(event, async () => getCurrentMission()),
-)
+export default defineEventHandler((event) => runApi(event, async () => getCurrentMission()))

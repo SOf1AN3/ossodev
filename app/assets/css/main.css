@@ -1,4 +1,4 @@
-@import "tailwindcss";
+@import 'tailwindcss';
 
 /* ══════════════════════════════════════════════════════════════
    OSSO — GRAPHITE CHAUD
@@ -8,9 +8,10 @@
    ══════════════════════════════════════════════════════════════ */
 
 @theme {
-  --font-sans: "Schibsted Grotesk", ui-sans-serif, system-ui, -apple-system,
-    "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  --font-sans:
+    'Schibsted Grotesk', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto,
+    'Helvetica Neue', Arial, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
 
   /* — Surfaces : du vide au relief — */
   --color-surface-950: #0b0a09; /* fond de page — JAMAIS une carte */
@@ -18,7 +19,7 @@
   --color-surface-800: #191817; /* élévation 1 : hover, listes actives */
   --color-surface-700: #211f1d; /* élévation 2 : modales, menus, toasts */
   --color-surface-600: #2b2825; /* bordures fortes, tracks de barres */
-  --color-line: #2b2825;        /* bordure fine (alias de surface-600) */
+  --color-line: #2b2825; /* bordure fine (alias de surface-600) */
 
   /* — Encre : blancs chauds, jamais #fff — */
   --color-ink-100: #f5f2ee;
@@ -30,7 +31,7 @@
   --color-accent-400: #ff9a3c;
   --color-accent-500: #d9741f;
   --color-accent-fill: #ff9a3c; /* aplats purs (barres, arc, indicateur) */
-  --color-on-accent: #140d05;   /* texte posé SUR accent-400 */
+  --color-on-accent: #140d05; /* texte posé SUR accent-400 */
 
   /* — Sémantiques : décalés du pur, jamais Tailwind par défaut — */
   --color-ok-400: #86c06c;
@@ -62,7 +63,7 @@
    Spécificité (0,1,1) : bat `:root` généré par Tailwind, quel que
    soit l'ordre d'injection.
    ══════════════════════════════════════════════════════════════ */
-html[data-theme="light"] {
+html[data-theme='light'] {
   color-scheme: light;
 
   --color-surface-950: #f6f3ee;
@@ -116,7 +117,7 @@ body {
 
 /* ─── Le grain : fait passer le rendu d’« écran » à « matière » ─── */
 body::after {
-  content: "";
+  content: '';
   position: fixed;
   inset: 0;
   pointer-events: none;
@@ -134,7 +135,9 @@ body::after {
   border: 1px solid var(--color-line);
   border-radius: var(--radius-md);
   /* arête de lumière 1px en haut + ombre ambiante large et plate */
-  box-shadow: inset 0 1px 0 var(--edge-soft), var(--shadow-rest);
+  box-shadow:
+    inset 0 1px 0 var(--edge-soft),
+    var(--shadow-rest);
 }
 .surface-raised {
   background: var(--color-surface-800);
@@ -217,7 +220,9 @@ body::after {
   color: var(--on-accent);
 }
 .btn-primary:hover {
-  box-shadow: 0 0 0 1px var(--color-accent-400), 0 8px 26px -8px var(--ember-glow);
+  box-shadow:
+    0 0 0 1px var(--color-accent-400),
+    0 8px 26px -8px var(--ember-glow);
 }
 
 /* Champ : trait ambre qui se déploie de la gauche au focus */
@@ -225,7 +230,7 @@ body::after {
   position: relative;
 }
 .field::after {
-  content: "";
+  content: '';
   position: absolute;
   left: 0;
   right: 0;
@@ -280,7 +285,7 @@ body::after {
   display: inline-block;
 }
 .strike::after {
-  content: "";
+  content: '';
   position: absolute;
   left: 0;
   top: 55%;
@@ -347,11 +352,21 @@ body::after {
 .page-enter > * {
   animation: rise 220ms var(--ease-out-expo) both;
 }
-.page-enter > *:nth-child(2) { animation-delay: 30ms; }
-.page-enter > *:nth-child(3) { animation-delay: 60ms; }
-.page-enter > *:nth-child(4) { animation-delay: 90ms; }
-.page-enter > *:nth-child(5) { animation-delay: 120ms; }
-.page-enter > *:nth-child(6) { animation-delay: 150ms; }
+.page-enter > *:nth-child(2) {
+  animation-delay: 30ms;
+}
+.page-enter > *:nth-child(3) {
+  animation-delay: 60ms;
+}
+.page-enter > *:nth-child(4) {
+  animation-delay: 90ms;
+}
+.page-enter > *:nth-child(5) {
+  animation-delay: 120ms;
+}
+.page-enter > *:nth-child(6) {
+  animation-delay: 150ms;
+}
 
 /* ══════════════════════════════════════════════════════════════
    LES QUATRE MOMENTS — seules animations longues de l’app.
@@ -359,9 +374,18 @@ body::after {
 
 /* ② ignition d’un badge */
 @keyframes ignite {
-  0%   { transform: scale(1);     box-shadow: 0 0 0 0 rgb(255 154 60 / 0); }
-  32%  { transform: scale(1.06);  box-shadow: 0 0 48px 12px rgb(255 154 60 / 0.4); }
-  100% { transform: scale(1);     box-shadow: 0 0 20px 2px var(--ember-glow); }
+  0% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgb(255 154 60 / 0);
+  }
+  32% {
+    transform: scale(1.06);
+    box-shadow: 0 0 48px 12px rgb(255 154 60 / 0.4);
+  }
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 20px 2px var(--ember-glow);
+  }
 }
 .igniting {
   animation: ignite 700ms var(--ease-out-expo);
@@ -379,20 +403,43 @@ body::after {
 .igniting .ember-particle {
   animation: drift 900ms var(--ease-out-expo) forwards;
 }
-.igniting .ember-particle:nth-child(2) { animation-delay: 80ms; left: 30%; }
-.igniting .ember-particle:nth-child(3) { animation-delay: 200ms; left: 50%; }
-.igniting .ember-particle:nth-child(4) { animation-delay: 320ms; left: 70%; }
+.igniting .ember-particle:nth-child(2) {
+  animation-delay: 80ms;
+  left: 30%;
+}
+.igniting .ember-particle:nth-child(3) {
+  animation-delay: 200ms;
+  left: 50%;
+}
+.igniting .ember-particle:nth-child(4) {
+  animation-delay: 320ms;
+  left: 70%;
+}
 @keyframes drift {
-  0%   { opacity: 0; transform: translateY(0) scale(1); }
-  25%  { opacity: 1; }
-  100% { opacity: 0; transform: translateY(-46px) scale(0.3); }
+  0% {
+    opacity: 0;
+    transform: translateY(0) scale(1);
+  }
+  25% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-46px) scale(0.3);
+  }
 }
 
 /* ③ flare de flamme */
 @keyframes flare {
-  0%   { transform: scale(1); }
-  40%  { transform: scale(1.22); }
-  100% { transform: scale(1); }
+  0% {
+    transform: scale(1);
+  }
+  40% {
+    transform: scale(1.22);
+  }
+  100% {
+    transform: scale(1);
+  }
 }
 .flaring {
   animation: flare 500ms var(--ease-out-expo);
@@ -423,10 +470,20 @@ body::after {
   animation: sweep-x 900ms var(--ease-in-out) forwards;
 }
 @keyframes sweep-x {
-  0%   { opacity: 0; transform: translateX(-60%); }
-  12%  { opacity: 1; }
-  88%  { opacity: 1; }
-  100% { opacity: 0; transform: translateX(60%); }
+  0% {
+    opacity: 0;
+    transform: translateX(-60%);
+  }
+  12% {
+    opacity: 1;
+  }
+  88% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(60%);
+  }
 }
 
 /* Toast : entrée sobre + minuteur qui se vide à gauche */
@@ -434,8 +491,14 @@ body::after {
   animation: toast-in 260ms var(--ease-out-expo) both;
 }
 @keyframes toast-in {
-  from { opacity: 0; transform: translateY(12px) scale(0.98); }
-  to   { opacity: 1; transform: none; }
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
 }
 .toast-timer {
   width: 2px;
@@ -445,7 +508,9 @@ body::after {
   animation: drain 4000ms linear forwards;
 }
 @keyframes drain {
-  to { transform: scaleY(0); }
+  to {
+    transform: scaleY(0);
+  }
 }
 
 /* ══════════════════════════════════════════════════════════════
@@ -461,13 +526,18 @@ body::after {
   scrollbar-width: thin;
   scrollbar-color: var(--color-surface-600) transparent;
 }
-*::-webkit-scrollbar { width: 9px; height: 9px; }
+*::-webkit-scrollbar {
+  width: 9px;
+  height: 9px;
+}
 *::-webkit-scrollbar-thumb {
   background: var(--color-surface-600);
   border-radius: 999px;
   border: 2px solid var(--color-surface-950);
 }
-*::-webkit-scrollbar-track { background: transparent; }
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
 
 /* ══════════════════════════════════════════════════════════════
    ACCESSIBILITÉ MOUVEMENT — l’information ne dépend jamais

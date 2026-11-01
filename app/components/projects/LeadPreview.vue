@@ -22,9 +22,7 @@ const TACHES_PLACEHOLDER = '{{TACHES}}'
 
     <p class="text-sm text-ink-300">
       Dossier :
-      <code
-        class="rounded-xs bg-surface-800 px-1.5 py-0.5 font-mono text-[12px] text-ink-700"
-      >
+      <code class="rounded-xs bg-surface-800 px-1.5 py-0.5 font-mono text-[12px] text-ink-700">
         {{ preview.folderPath }}
       </code>
     </p>
@@ -44,20 +42,18 @@ const TACHES_PLACEHOLDER = '{{TACHES}}'
       <span class="font-mono text-[12px] text-ink-700">
         {{ TACHES_PLACEHOLDER }}
       </span>
-      introuvable dans le modèle : la liste des tâches sera ajoutée en fin de
-      message.
+      introuvable dans le modèle : la liste des tâches sera ajoutée en fin de message.
     </p>
 
     <div>
       <p class="micro mb-1.5 text-ink-500">Aperçu du prompt</p>
       <pre
         class="max-h-96 overflow-auto rounded-sm bg-surface-800 p-4 font-mono text-[12px] whitespace-pre-wrap text-ink-300"
-      >{{ preview.prompt }}</pre>
+        >{{ preview.prompt }}</pre>
     </div>
 
     <p class="text-xs text-ink-500">
-      Le prompt sera copié dans le presse-papier et un terminal s’ouvrira dans
-      le dossier du projet.
+      Le prompt sera copié dans le presse-papier et un terminal s’ouvrira dans le dossier du projet.
     </p>
   </div>
 </template>

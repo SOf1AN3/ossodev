@@ -36,11 +36,7 @@ function onKeydown(event: KeyboardEvent): void {
 
 <template>
   <div class="field w-full">
-    <label
-      v-if="label"
-      :for="inputId"
-      class="micro mb-1.5 block text-ink-500"
-    >
+    <label v-if="label" :for="inputId" class="micro mb-1.5 block text-ink-500">
       {{ label }}
     </label>
     <input
@@ -51,6 +47,6 @@ function onKeydown(event: KeyboardEvent): void {
       class="w-full rounded-sm border border-line bg-surface-800 px-3 py-2 text-sm text-ink-100 placeholder:text-ink-700"
       @input="onInput"
       @keydown="onKeydown"
-    >
+    />
   </div>
 </template>

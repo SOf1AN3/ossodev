@@ -46,11 +46,7 @@ type CalendarWeek = CalendarDay[]
 const taskDateSet = computed<Set<string>>(() => new Set(props.taskDates))
 
 const weeks = computed<CalendarWeek[]>(() => {
-  const firstOfMonth = new Date(
-    visibleMonth.value.getFullYear(),
-    visibleMonth.value.getMonth(),
-    1,
-  )
+  const firstOfMonth = new Date(visibleMonth.value.getFullYear(), visibleMonth.value.getMonth(), 1)
   const lastOfMonth = new Date(
     visibleMonth.value.getFullYear(),
     visibleMonth.value.getMonth() + 1,
@@ -89,9 +85,7 @@ const monthLabel = computed<string>(() => {
 })
 
 /** Jours de la semaine affichés, lundi en premier. */
-const weekdayLabels: string[] = [1, 2, 3, 4, 5, 6, 0].map(
-  (index) => WEEKDAYS_SHORT[index] ?? '',
-)
+const weekdayLabels: string[] = [1, 2, 3, 4, 5, 6, 0].map((index) => WEEKDAYS_SHORT[index] ?? '')
 
 const gridRef = ref<HTMLElement | null>(null)
 
@@ -119,11 +113,7 @@ onMounted(() => {
 })
 
 function emitVisibleRange(): void {
-  const firstOfMonth = new Date(
-    visibleMonth.value.getFullYear(),
-    visibleMonth.value.getMonth(),
-    1,
-  )
+  const firstOfMonth = new Date(visibleMonth.value.getFullYear(), visibleMonth.value.getMonth(), 1)
   const lastOfMonth = new Date(
     visibleMonth.value.getFullYear(),
     visibleMonth.value.getMonth() + 1,
@@ -164,9 +154,7 @@ function focusDay(iso: string): void {
     visibleMonth.value = startOfMonth(target)
   }
   nextTick(() => {
-    const el = gridRef.value?.querySelector<HTMLElement>(
-      `[data-date="${iso}"]`,
-    )
+    const el = gridRef.value?.querySelector<HTMLElement>(`[data-date="${iso}"]`)
     el?.focus()
   })
 }

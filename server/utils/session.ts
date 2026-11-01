@@ -104,10 +104,7 @@ export function createSessionToken(sessionKey: string, nowUnixSeconds?: number):
  * Tout jeton malformé (absent, sans point, HMAC non hexadécimal, exp non
  * numérique) est rejeté sans lever d'exception.
  */
-export function verifySessionToken(
-  sessionKey: string,
-  token: string | undefined,
-): boolean {
+export function verifySessionToken(sessionKey: string, token: string | undefined): boolean {
   if (typeof token !== 'string' || token.length === 0) return false
 
   const separator = token.indexOf('.')
