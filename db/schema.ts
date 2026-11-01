@@ -1,5 +1,6 @@
 import { sql } from 'drizzle-orm'
 import {
+  type AnyPgColumn,
   boolean,
   check,
   date,
@@ -45,13 +46,16 @@ export const projectTasks = pgTable(
     project_id: uuid('project_id')
       .notNull()
       .references(() => projects.id, { onDelete: 'cascade' }),
+    parent_id: uuid('parent_id').references((): AnyPgColumn => projectTasks.id, {
+      onDelete: 'cascade',
+    }),
     title: text('title').notNull(),
     position: integer('position').notNull(),
     is_done: boolean('is_done').notNull().default(false),
     created_at: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
     updated_at: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
   },
-  (t) => [index('idx_project_tasks_project').on(t.project_id, t.position)],
+  (t) => [index('idx_project_tasks_tree').on(t.project_id, t.parent_id, t.position)],
 )
 
 // Gabarits de tâches répétitives
@@ -172,12 +176,29 @@ export const learningCourses = pgTable(
     updated_at: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
     // posé à la bascule 'done', vidé au retour 'todo'
     completed_at: timestamp('completed_at', { withTimezone: true }),
+    // dernière relecture manuelle du cours (null = jamais relu)
+    last_reviewed_at: timestamp('last_reviewed_at', { withTimezone: true }),
   },
   (t) => [
     check('learning_courses_status_check', sql`${t.status} in ('todo', 'done')`),
     uniqueIndex('uniq_learning_technology').on(t.technology),
     index('idx_learning_status').on(t.status),
   ],
+)
+
+// Technologies détectées par scan, liées aux cours d'apprentissage
+export const projectTechnologies = pgTable(
+  'project_technologies',
+  {
+    project_id: uuid('project_id')
+      .notNull()
+      .references(() => projects.id, { onDelete: 'cascade' }),
+    technology: text('technology')
+      .notNull()
+      .references(() => learningCourses.technology, { onDelete: 'cascade' }),
+    detected_at: timestamp('detected_at', { withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => [unique('uniq_project_technology').on(t.project_id, t.technology)],
 )
 
 // File de commandes exécutées par le Companion
@@ -230,6 +251,7 @@ export const schema = {
   userBadges,
   leadSessions,
   learningCourses,
+  projectTechnologies,
   companionCommands,
   companionPresence,
 }

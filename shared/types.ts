@@ -67,6 +67,8 @@ export interface Project {
 export interface ProjectTask {
   id: string
   project_id: string
+  /** Auto-référence : frère de tâche, null = racine */
+  parent_id: string | null
   title: string
   position: number
   is_done: boolean
@@ -74,6 +76,17 @@ export interface ProjectTask {
   created_at: string
   /** ISO 8601 */
   updated_at: string
+}
+
+/** Nœud récursif d'un arbre de tâches projet (tri parmi les frères via `position`). */
+export interface ProjectTaskNode {
+  id: string
+  project_id: string
+  title: string
+  position: number
+  is_done: boolean
+  parent_id: string | null
+  children: ProjectTaskNode[]
 }
 
 export interface Idea {
@@ -234,6 +247,16 @@ export interface LearningCourseSummary {
 
 export interface LearningCourse extends LearningCourseSummary {
   content_md: string
+}
+
+/** Cours d'apprentissage enrichi des projets qui l'utilisent (détection brain). */
+export interface CourseWithProjects {
+  technology: string
+  title: string
+  status: LearningStatus
+  /** ISO 8601 — null = jamais relu manuellement */
+  last_reviewed_at: string | null
+  projects: Array<{ id: string; name: string; folder_path: string }>
 }
 
 export type CompanionCommandKey = 'opencode:lead' | 'brain:scan' | 'brain:run'
