@@ -168,7 +168,9 @@ async function main() {
   // ── Préflight serveur ────────────────────────────────────────────────────
   const status = await getJson('/api/companion/status')
   if (status.status === 0) {
-    console.error(`\n✗ Serveur injoignable sur ${BASE} — lance \`npm run dev\` puis relance \`npm test\`.`)
+    console.error(
+      `\n✗ Serveur injoignable sur ${BASE} — lance \`npm run dev\` puis relance \`npm test\`.`,
+    )
     process.exit(1)
   }
   if (status.status === 501) {
