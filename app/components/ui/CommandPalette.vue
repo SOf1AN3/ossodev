@@ -83,18 +83,29 @@ const allItems = computed<PaletteItem[]>(() => [
   ...courseItems.value,
 ])
 
-// ─── Filtrage client (insensible à la casse, préfixe d'abord) ────────────────
+// ─── Filtrage client (insensible à la casse et aux accents, préfixe d'abord) ──
+
+/**
+ * Normalise une chaîne pour la recherche : casse abaissée puis accents
+ * retirés (décomposition NFD + suppression des marques combinantes).
+ *
+ * Indispensable en français : « Progrès » et « progres » doivent donner le
+ * même résultat, sinon l'utilisateur qui tape sans accent ne trouve rien.
+ */
+function searchable(text: string): string {
+  return text.toLowerCase().normalize('NFD').replace(/\p{M}/gu, '')
+}
 
 /** 0 si le libellé commence par la requête, 1 s'il la contient, sinon exclu. */
 function rankMatch(label: string, q: string): number | null {
-  const lower = label.toLowerCase()
+  const lower = searchable(label)
   if (lower.startsWith(q)) return 0
   if (lower.includes(q)) return 1
   return null
 }
 
 const groupedResults = computed<ResultGroup[]>(() => {
-  const q = query.value.trim().toLowerCase()
+  const q = searchable(query.value.trim())
   let flatIndex = 0
   const out: ResultGroup[] = []
   for (const label of GROUP_ORDER) {
