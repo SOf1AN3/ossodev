@@ -101,7 +101,10 @@ export function loadConfig(): CompanionConfig {
 
   let parsed: unknown
   try {
-    parsed = JSON.parse(raw)
+    // Un BOM UTF-8 (U+FEFF) est légal en tête de fichier UTF-8 : on le retire
+    // avant de parser, sinon JSON.parse échoue sur ce caractère invisible.
+    const text = raw.charCodeAt(0) === 0xfeff ? raw.slice(1) : raw
+    parsed = JSON.parse(text)
   } catch {
     throw new ConfigError(`Configuration illisible (JSON invalide) : ${file}. ${CONFIG_HINT}`)
   }

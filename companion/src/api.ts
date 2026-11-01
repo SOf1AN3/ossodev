@@ -25,6 +25,12 @@ export interface CompanionCommand {
 export interface BrainProject {
   name: string
   folder_path: string
+  /**
+   * Slugs de technologies détectés dans le `package.json` du projet, alignés
+   * sur `learning_courses.technology`. `[]` si le fichier est absent ou
+   * illisible — le scan ne doit jamais échouer pour ça.
+   */
+  technologies: string[]
 }
 
 export interface BrainScanPayload {

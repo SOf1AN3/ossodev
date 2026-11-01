@@ -96,6 +96,15 @@ if (existsSync(configPath) && !ROTATE) {
 }
 
 writeFileSync(configPath, `${JSON.stringify(config, null, 2)}\n`, 'utf8')
+
+// Garde défensive anti-BOM : `writeFileSync(..., 'utf8')` n'écrit jamais de BOM,
+// mais on relit le fichier pour s'assurer qu'aucun BOM (U+FEFF) n'a été introduit
+// entre-temps (éditeur, outil tiers) — le Companion refuserait sinon ce JSON.
+const written = readFileSync(configPath, 'utf8')
+if (written.charCodeAt(0) === 0xfeff) {
+  console.warn(`  ⚠ BOM UTF-8 détecté dans ${configPath} — réécriture sans BOM.`)
+  writeFileSync(configPath, written.slice(1), 'utf8')
+}
 console.log(`  → écrit dans ${configPath}`)
 
 // ── 3. Résumé ────────────────────────────────────────────────────────────────
