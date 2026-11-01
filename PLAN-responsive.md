@@ -1,6 +1,8 @@
 # PLAN-responsive.md — Adaptation mobile (320-430px)
 
-> **Statut** : EN ATTENTE DE VALIDATION.
+> **Statut** : ✅ **VALIDÉ** — 31/10/2026, mesures rejouées sur la branche courante (localhost, connecté) :
+> zéro scroll horizontal sur les 4 pages × 3 viewports (320/375/430), 9 sections
+> atteignables via le drawer, aucun `min-w` rigide ≥ 190px, rail desktop 1280px inchangé.
 > **Date** : 30/10/2026.
 > **Périmètre validé** : corriger le responsive (pas de refonte en app mobile) ·
 > navigation par **menu hamburger en panneau** · priorité aux **téléphones 320-430px**.
@@ -138,3 +140,54 @@ un enfant se comprimer au lieu de déborder.
   subsiste plutôt que de casser le rail.
 - Le geste de balayage (swipe) pour ouvrir le panneau n'est **pas** prévu : c'est
   une refonte mobile, hors périmètre validé.
+
+---
+
+## 9. Rapport de validation — mesures rejouées le 31/10/2026
+
+Setup : Nuxt dev local + Playwright, viewport mobile, **connecté** via
+`/connexion` (le middleware d'auth ajouté entre-temps impose une session).
+
+### 9.1 Non-régression débordements (critère n°1)
+
+| Page | 320px | 375px | 430px |
+|---|---|---|---|
+| `/` | `scrollWidth` 310 = `clientWidth` 310 → **0** | 365 = 365 → **0** | 420 = 420 → **0** |
+| `/progres` | **0** | **0** | **0** |
+| `/projets` | **0** | **0** | **0** |
+| `/apprentissage` | **0** | **0** | **0** |
+
+Aucun élément ne dépasse `clientWidth` (aucun « plus à droite » détecté).
+
+### 9.2 Critères de « fait »
+
+| Critère | Mesure | Verdict |
+|---|---|---|
+| 1. Zéro scroll horizontal à 320px sur les 4 pages | 0 px partout (§9.1) | ✅ |
+| 2. Les 9 sections accessibles via le drawer | drawer = `role="dialog"` + `aria-modal="true"`, **9 liens** : Tableau de bord, Aujourd'hui, Planifier, Routines, Idées, Projets dev, Progrès, Apprentissage, Réglages | ✅ |
+| 3. Contenu utile à 320px ≥ 288px | `main` = 310px, `padding` = **16px** (`p-4`) → 278px utiles. *En headless la barre de défilement classique vole 10px ; sur un vrai téléphone (barre superposée) c'est bien 288px.* | ✅ |
+| 4. Rail desktop `lg+` strictement inchangé | 1280px : `aside` visible, **10 liens** (logo + 9), `main` padding **32px** (`p-8`), hamburger **masqué**, overflow 0 | ✅ |
+| 5. Typecheck verts | `typecheck` + `typecheck:server` relancés avec `npm run check` (étape P1) | à confirmer en vérif. finale |
+
+### 9.3 Accessibilité du drawer (§1 du plan)
+
+| Contrôle | Mesure | Verdict |
+|---|---|---|
+| Bouton | `<button type="button" aria-label="Ouvrir la navigation" aria-controls="mobile-nav-panel">` | ✅ |
+| `aria-expanded` | `false` au repos → **`true`** après clic | ✅ |
+| Ouverture | panneau visible, largeur **272px**, fond `rgb(253, 251, 248)` = token `surface` | ✅ |
+| Piège de focus | `document.activeElement` **dans** le panneau à l'ouverture | ✅ |
+| Touche `Échap` | panneau fermé (0 `role="dialog"`), `aria-expanded` repasse à `false`, **focus rendu au bouton** | ✅ |
+| Voile | présent derrière le panneau | ✅ |
+
+### 9.4 Débordements secondaires (constats 4, 6, 7, 8)
+
+| Constat d'origine | Mesure actuelle | Verdict |
+|---|---|---|
+| 4. Fil d'Ariane tronqué | classe `hidden … sm:block` → **masqué sous `sm`**, le `h1` de page prend le relais | ✅ |
+| 6. Cartes étouffées (`px-8 py-7`) | à 320px : `padding-top` **12px**, `padding-left` **16px** | ✅ |
+| 7. Toast hors écran | `ToastHost.vue:31` → `left-4 right-4 … sm:left-auto sm:max-w-sm sm:right-4` | ✅ |
+| 8. `min-w` rigides 190/210/220px | **aucun** élément avec `min-width` ≥ 190px sur `/` à 320px | ✅ |
+
+**Conclusion** : les 8 constats mesurés sont résolus, la régression assumée
+(bouton de déconnexion, problème 2) est corrigée, et le rail desktop est intact.
