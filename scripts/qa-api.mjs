@@ -3,9 +3,18 @@
 // node --env-file=.env scripts/qa-api.mjs
 const BASE = process.env.OSSO_BASE ?? 'http://localhost:3000'
 const SECRET = process.env.COMPANION_SECRET
-if (!SECRET) { console.error('✗ COMPANION_SECRET absent — relance scripts/companion-init.mjs'); process.exit(1) }
+if (!SECRET) {
+  console.error('✗ COMPANION_SECRET absent — relance scripts/companion-init.mjs')
+  process.exit(1)
+}
 
-let ko = 0, n = 0
+// Session posée par `scripts/run-qa.mjs` (npm test). Les routes protégées par
+// le middleware d'auth renvoient 401 sans elle ; le header ne sert que s'il est
+// fourni, ce qui permet aussi de lancer ce fichier seul après un vrai login.
+const SESSION_COOKIE = process.env.OSSO_SESSION_COOKIE
+
+let ko = 0,
+  n = 0
 const ok = (cond, label, extra = '') => {
   n++
   if (!cond) ko++
@@ -14,11 +23,19 @@ const ok = (cond, label, extra = '') => {
 async function call(method, path, body, headers = {}) {
   const r = await fetch(`${BASE}${path}`, {
     method,
-    headers: { ...(body ? { 'content-type': 'application/json' } : {}), ...headers },
+    headers: {
+      ...(body ? { 'content-type': 'application/json' } : {}),
+      ...(SESSION_COOKIE ? { cookie: SESSION_COOKIE } : {}),
+      ...headers,
+    },
     body: body ? JSON.stringify(body) : undefined,
   })
   let json = null
-  try { json = await r.json() } catch { /* non-JSON */ }
+  try {
+    json = await r.json()
+  } catch {
+    /* non-JSON */
+  }
   return { status: r.status, json }
 }
 const auth = { Authorization: `Bearer ${SECRET}` }
@@ -29,10 +46,24 @@ const enq = await call('POST', '/api/brain/scan')
 ok(enq.status === 200, 'POST /api/brain/scan enfile', `HTTP ${enq.status}`)
 const id = enq.json?.data?.command_id
 ok(!!id, 'command_id renvoyé', String(id))
-ok(!('signature' in (enq.json?.data ?? {})), 'l\'enfilage ne retourne pas de signature', `clés : ${Object.keys(enq.json?.data ?? {}).join(',')}`)
+ok(
+  !('signature' in (enq.json?.data ?? {})),
+  "l'enfilage ne retourne pas de signature",
+  `clés : ${Object.keys(enq.json?.data ?? {}).join(',')}`,
+)
 
-ok((await call('POST', '/api/companion/commands/claim')).status === 403, 'claim SANS Authorization → 403')
-ok((await call('POST', '/api/companion/commands/claim', undefined, { Authorization: 'Bearer clé-faussée' })).status === 403, 'claim Bearer falsifié → 403')
+ok(
+  (await call('POST', '/api/companion/commands/claim')).status === 403,
+  'claim SANS Authorization → 403',
+)
+ok(
+  (
+    await call('POST', '/api/companion/commands/claim', undefined, {
+      Authorization: 'Bearer clé-faussée',
+    })
+  ).status === 403,
+  'claim Bearer falsifié → 403',
+)
 
 const avec = await call('POST', '/api/companion/commands/claim', undefined, auth)
 ok(avec.status === 200, 'claim BON Bearer → 200', `HTTP ${avec.status}`)
@@ -48,7 +79,8 @@ if (cmd) {
   const base = `${cmd.id}|${cmd.command_key}|${JSON.stringify(cmd.payload)}|${cmd.expires_at}`
   const { createHmac, timingSafeEqual } = await import('node:crypto')
   const expected = createHmac('sha256', SECRET).update(base).digest('hex')
-  const a = Buffer.from(expected, 'utf8'), b = Buffer.from(cmd.signature, 'utf8')
+  const a = Buffer.from(expected, 'utf8'),
+    b = Buffer.from(cmd.signature, 'utf8')
   ok(a.length === b.length && timingSafeEqual(a, b), 'HMAC recalculé = signature reçue')
 }
 
@@ -56,13 +88,38 @@ if (cmd) {
 console.log('\n=== S3 — ATOMICITÉ & IDEMPOTENCE ===')
 if (cmd) {
   const deux = await call('POST', '/api/companion/commands/claim', undefined, auth)
-  ok(!(deux.json?.data?.commands ?? []).some((c) => c.id === cmd.id), '2ᵉ claim : la commande n\'est plus retournée (claimed)')
-  const done = await call('POST', `/api/companion/commands/${cmd.id}/complete`, { status: 'done', result_text: 'test' }, auth)
+  ok(
+    !(deux.json?.data?.commands ?? []).some((c) => c.id === cmd.id),
+    "2ᵉ claim : la commande n'est plus retournée (claimed)",
+  )
+  const done = await call(
+    'POST',
+    `/api/companion/commands/${cmd.id}/complete`,
+    { status: 'done', result_text: 'test' },
+    auth,
+  )
   ok(done.status === 200, 'complete → 200', `HTTP ${done.status}`)
-  ok((await call('POST', `/api/companion/commands/${cmd.id}/complete`, { status: 'failed' }, auth)).status === 409, '2ᵉ complete → 409 (idempotence)')
+  ok(
+    (await call('POST', `/api/companion/commands/${cmd.id}/complete`, { status: 'failed' }, auth))
+      .status === 409,
+    '2ᵉ complete → 409 (idempotence)',
+  )
   const trois = await call('POST', '/api/companion/commands/claim', undefined, auth)
-  ok(!(trois.json?.data?.commands ?? []).some((c) => c.id === cmd.id), 'commande clôturée jamais réclamée')
-  ok((await call('POST', '/api/companion/commands/00000000-0000-0000-0000-000000000000/complete', { status: 'done' }, auth)).status === 404, 'complete d\'une commande inconnue → 404')
+  ok(
+    !(trois.json?.data?.commands ?? []).some((c) => c.id === cmd.id),
+    'commande clôturée jamais réclamée',
+  )
+  ok(
+    (
+      await call(
+        'POST',
+        '/api/companion/commands/00000000-0000-0000-0000-000000000000/complete',
+        { status: 'done' },
+        auth,
+      )
+    ).status === 404,
+    "complete d'une commande inconnue → 404",
+  )
 }
 
 // ═══ S4 — Expiration ════════════════════════════════════════════════════════
@@ -76,7 +133,10 @@ await sql`
           now() - interval '10 minutes', now() - interval '10 minutes')
   on conflict (id) do nothing`
 const exp = await call('POST', '/api/companion/commands/claim', undefined, auth)
-ok(!(exp.json?.data?.commands ?? []).some((c) => c.id === EXPIRED_ID), 'commande EXPIRÉE jamais retournée par claim')
+ok(
+  !(exp.json?.data?.commands ?? []).some((c) => c.id === EXPIRED_ID),
+  'commande EXPIRÉE jamais retournée par claim',
+)
 await sql`delete from companion_commands where id = ${EXPIRED_ID}`
 
 // ═══ S5 — Validation des chemins ════════════════════════════════════════════
@@ -91,14 +151,24 @@ const cas = [
 let i = 0
 for (const [path, quoi] of cas) {
   i++
-  const r = await call('POST', '/api/projects', { name: `qa-path-${Date.now()}-${i}`, folder_path: path })
-  ok(r.status === 400, `refus — ${quoi}`, `HTTP ${r.status}${r.status !== 400 ? ` : ${r.json?.error?.message}` : ''}`)
+  const r = await call('POST', '/api/projects', {
+    name: `qa-path-${Date.now()}-${i}`,
+    folder_path: path,
+  })
+  ok(
+    r.status === 400,
+    `refus — ${quoi}`,
+    `HTTP ${r.status}${r.status !== 400 ? ` : ${r.json?.error?.message}` : ''}`,
+  )
 }
-const legit = await call('POST', '/api/projects', { name: `qa-legit-${Date.now()}`, folder_path: `C:/Users/Sofiane/Desktop/dev/qa-legit-${Date.now()}` })
+const legit = await call('POST', '/api/projects', {
+  name: `qa-legit-${Date.now()}`,
+  folder_path: `C:/Users/Sofiane/Desktop/dev/qa-legit-${Date.now()}`,
+})
 ok(legit.status === 200, 'chemin légitime accepté', `HTTP ${legit.status}`)
 
 const fuite = await sql`select count(*)::int as n from projects where name like ${'qa-path-%'}`
-ok(fuite[0].n === 0, 'aucun projet malveillant n\'a été créé')
+ok(fuite[0].n === 0, "aucun projet malveillant n'a été créé")
 const purge = await sql`delete from projects where name like ${'qa-%'} returning name`
 console.log(`  projet(s) de test purgé(s) : ${purge.length}`)
 const total = await sql`select count(*)::int as n from projects`

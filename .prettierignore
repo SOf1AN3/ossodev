@@ -1,0 +1,19 @@
+# Dépendances et artefacts de build
+node_modules
+.nuxt
+.output
+dist
+coverage
+package-lock.json
+
+# Générés par drizzle-kit : les reformater provoquerait de la dérive au
+# prochain `db:generate`.
+db/migrations/meta
+
+# Le dashboard est gitignoré (jamais poussé) — on ne le formate pas non plus
+DESIGN.md
+preview.html
+
+# Données et exports bruts
+*.csv
+*.md

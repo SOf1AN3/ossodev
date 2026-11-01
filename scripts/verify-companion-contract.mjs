@@ -10,6 +10,10 @@ if (!SECRET) {
 }
 
 const auth = { Authorization: `Bearer ${SECRET}` }
+// Session posée par `scripts/run-qa.mjs` (npm test) : sans elle, les routes
+// hors `/api/companion/` sont refusées à 401 par le middleware d'auth.
+const SESSION_COOKIE = process.env.OSSO_SESSION_COOKIE
+const sessionHeaders = SESSION_COOKIE ? { cookie: SESSION_COOKIE } : {}
 let ko = 0
 const ok = (cond, label, extra = '') => {
   if (!cond) ko++
@@ -19,11 +23,19 @@ const ok = (cond, label, extra = '') => {
 async function post(path, body, headers = {}) {
   const r = await fetch(`${BASE}${path}`, {
     method: 'POST',
-    headers: { 'content-type': 'application/json', ...headers },
+    headers: {
+      'content-type': 'application/json',
+      ...sessionHeaders,
+      ...headers,
+    },
     body: body ? JSON.stringify(body) : undefined,
   })
   let json = null
-  try { json = await r.json() } catch { /* non JSON */ }
+  try {
+    json = await r.json()
+  } catch {
+    /* non JSON */
+  }
   return { status: r.status, json }
 }
 
@@ -69,7 +81,11 @@ const expected = createHmac('sha256', SECRET).update(base).digest('hex')
 const a = Buffer.from(expected, 'utf8')
 const b = Buffer.from(String(cmd.signature), 'utf8')
 const match = a.length === b.length && timingSafeEqual(a, b)
-ok(match, 'le HMAC recalculé correspond à la signature', match ? '' : `attendu ${expected.slice(0, 16)}…, reçu ${String(cmd.signature).slice(0, 16)}…`)
+ok(
+  match,
+  'le HMAC recalculé correspond à la signature',
+  match ? '' : `attendu ${expected.slice(0, 16)}…, reçu ${String(cmd.signature).slice(0, 16)}…`,
+)
 
 // ── 5. Une signature falsifiée doit être rejetée ─────────────────────────────
 const forged = '0'.repeat(String(cmd.signature).length)
@@ -79,7 +95,11 @@ ok(notMatch, 'une signature falsifiée est détectée')
 
 // ── 6. Clôture ──────────────────────────────────────────────────────────────
 console.log('\n=== COMPLETION ===')
-const done = await post(`/api/companion/commands/${cmd.id}/complete`, { status: 'done', result_text: 'vérification' }, auth)
+const done = await post(
+  `/api/companion/commands/${cmd.id}/complete`,
+  { status: 'done', result_text: 'vérification' },
+  auth,
+)
 ok(done.status === 200, 'complete → 200', `HTTP ${done.status}`)
 const again = await post(`/api/companion/commands/${cmd.id}/complete`, { status: 'failed' }, auth)
 ok(again.status === 409, '2e complete → 409 (idempotence)', `HTTP ${again.status}`)
