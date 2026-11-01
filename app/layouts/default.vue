@@ -2,6 +2,7 @@
 import { nextTick, onBeforeUnmount, ref, watch } from 'vue'
 import LayoutSidebar from '~/components/layout/Sidebar.vue'
 import LayoutTopbar from '~/components/layout/Topbar.vue'
+import CommandPalette from '~/components/ui/CommandPalette.vue'
 import { NAV_GROUPS } from '~/utils/navigation'
 
 const route = useRoute()
@@ -169,5 +170,8 @@ onBeforeUnmount(() => {
 
     <!-- Hôte des toasts (auto-importé depuis app/components/ui/) : monté une seule fois -->
     <UiToastHost />
+
+    <!-- Palette ⌘K (masquée sous lg) : raccourci clavier global -->
+    <CommandPalette />
   </div>
 </template>

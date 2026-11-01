@@ -22,6 +22,8 @@ const { isLight, toggle, sync } = useTheme()
 const { show: showToast } = useToast()
 // Tiroir de navigation mobile : état partagé avec layouts/default.vue.
 const { isOpen: isNavOpen, toggle: toggleNav } = useMobileNav()
+// Palette ⌘K : état partagé avec la palette montée dans layouts/default.vue.
+const { open: openCommandPalette } = useCommandPalette()
 const {
   status: companionStatus,
   pending: companionPending,
@@ -181,6 +183,18 @@ onUnmounted(() => {
 
     <!-- Instruments -->
     <div class="flex shrink-0 items-center gap-3">
+      <!-- Déclencheur de la palette ⌘K : desktop uniquement (lg+),
+           le tiroir hamburger reste le seul accès mobile. -->
+      <button
+        type="button"
+        class="hidden h-8 items-center gap-2 rounded-sm border border-line px-3 text-ink-500 transition-colors hover:bg-surface-800 hover:text-ink-100 lg:flex"
+        @click="openCommandPalette"
+      >
+        <UiIcon name="search" size="sm" />
+        <span class="text-[13px]">Rechercher</span>
+        <kbd class="font-mono text-[11px] text-ink-700">⌘K</kbd>
+      </button>
+
       <!-- Horloge + date : masquée sous sm (déjà tronquée à 320px) et toujours
            aria-hidden : elle change sans action de l'utilisateur. -->
       <span class="hidden font-mono text-[12px] text-ink-700 tnum sm:inline" aria-hidden="true">{{

@@ -1,16 +1,28 @@
 <script setup lang="ts">
 import type { LearningCourseSummary } from '~~/shared/types'
 import { useLearning } from '~/composables/useLearning'
-import CourseList from '~/components/learning/CourseList.vue'
+import { useToast } from '~/composables/useToast'
+import { apiFetch } from '~/composables/useApi'
+import UiBadge from '~/components/ui/UiBadge.vue'
 import UiButton from '~/components/ui/UiButton.vue'
 import UiEmptyState from '~/components/ui/UiEmptyState.vue'
+import UiIcon from '~/components/ui/UiIcon.vue'
+import UiModal from '~/components/ui/UiModal.vue'
 import UiSkeleton from '~/components/ui/UiSkeleton.vue'
 
 useHead({ title: 'Apprentissage — OSSO' })
 
 const { list } = useLearning()
+const toast = useToast()
 
-const courses = ref<LearningCourseSummary[]>([])
+/**
+ * `last_reviewed_at` n'est pas encore sur `LearningCourseSummary` (contrat
+ * figé : seul `CourseWithProjects` le porte) — lecture optionnelle défensive,
+ * sans `as`, compatible avec les deux états du contrat.
+ */
+type ReviewedCourse = LearningCourseSummary & { last_reviewed_at?: string | null }
+
+const courses = ref<ReviewedCourse[]>([])
 const loading = ref(true)
 const loadError = ref<string | null>(null)
 
@@ -41,6 +53,84 @@ async function load(): Promise<void> {
 onMounted(() => {
   void load()
 })
+
+// ─── Dernière révision ───────────────────────────────────────────────────────
+
+const REVIEW_DATE_FORMAT = new Intl.DateTimeFormat('fr-FR', {
+  day: 'numeric',
+  month: 'long',
+  year: 'numeric',
+})
+
+/** « Revu le 30 octobre 2026 » / « Jamais revu » — date en français. */
+function reviewLabel(iso: string | null | undefined): string {
+  if (iso == null) return 'Jamais revu'
+  const date = new Date(iso)
+  if (Number.isNaN(date.getTime())) return 'Jamais revu'
+  return `Revu le ${REVIEW_DATE_FORMAT.format(date)}`
+}
+
+/** « il y a 2 h » / « hier » — Intl.RelativeTimeFormat en français. */
+function formatRelative(iso: string): string {
+  const date = new Date(iso)
+  if (Number.isNaN(date.getTime())) return 'date inconnue'
+  const rtf = new Intl.RelativeTimeFormat('fr-FR', { numeric: 'auto' })
+  const diffMinutes = Math.round((date.getTime() - Date.now()) / 60000)
+  if (Math.abs(diffMinutes) < 60) {
+    return rtf.format(diffMinutes, 'minute')
+  }
+  const diffHours = Math.round(diffMinutes / 60)
+  if (Math.abs(diffHours) < 24) {
+    return rtf.format(diffHours, 'hour')
+  }
+  return rtf.format(Math.round(diffHours / 24), 'day')
+}
+
+// ─── Suppression d'un cours (confirmation en modale, jamais `confirm()`) ─────
+
+const deleteTarget = ref<LearningCourseSummary | null>(null)
+const deleting = ref(false)
+
+const deleteModalTitle = computed<string>(() =>
+  deleteTarget.value === null
+    ? 'Supprimer le cours'
+    : `Supprimer « ${deleteTarget.value.title} » ?`,
+)
+
+function askDelete(course: LearningCourseSummary): void {
+  deleteTarget.value = course
+}
+
+function cancelDelete(): void {
+  if (deleting.value) return
+  deleteTarget.value = null
+}
+
+async function confirmDelete(): Promise<void> {
+  const target = deleteTarget.value
+  if (target === null || deleting.value) return
+  deleting.value = true
+  try {
+    await apiFetch<{ id: string }>(`/api/learning/${encodeURIComponent(target.technology)}`, {
+      method: 'DELETE',
+    })
+    courses.value = courses.value.filter((course) => course.technology !== target.technology)
+    deleteTarget.value = null
+    toast.show({
+      tone: 'success',
+      title: 'Cours supprimé',
+      message: `« ${target.title} » a été retiré de la bibliothèque.`,
+    })
+  } catch (err) {
+    toast.show({
+      tone: 'error',
+      title: 'Suppression impossible',
+      message: err instanceof Error ? err.message : 'Erreur inconnue.',
+    })
+  } finally {
+    deleting.value = false
+  }
+}
 </script>
 
 <template>
@@ -114,7 +204,68 @@ onMounted(() => {
       description="Ouvre un projet et lance l'agent teacher pour générer tes premiers cours."
     />
 
-    <!-- Liste -->
-    <CourseList v-else :courses="courses" />
+    <!-- Liste (inline : le composant CourseList n'offre ni badge de révision ni suppression) -->
+    <ul v-else class="grid grid-cols-1 gap-4 md:grid-cols-2">
+      <li v-for="course in courses" :key="course.technology" class="group relative h-full">
+        <NuxtLink
+          :to="`/apprentissage/${course.technology}`"
+          class="surface lift flex h-full flex-col gap-3 px-5 py-4 pr-11 focus-visible:outline-2 focus-visible:outline-accent-400"
+        >
+          <div class="flex items-start justify-between gap-3">
+            <h2
+              class="min-w-0 font-semibold text-ink-100 transition-colors group-hover:text-accent-400"
+              :title="course.title"
+            >
+              {{ course.title }}
+            </h2>
+            <UiBadge class="shrink-0" :tone="course.status === 'done' ? 'ok' : 'neutral'">
+              {{ course.status === 'done' ? 'Accompli' : 'À lire' }}
+            </UiBadge>
+          </div>
+
+          <p class="truncate font-mono text-[12px] text-ink-700" :title="course.technology">
+            {{ course.technology }}
+          </p>
+
+          <UiBadge class="self-start" :tone="course.last_reviewed_at ? 'accent' : 'neutral'">
+            {{ reviewLabel(course.last_reviewed_at) }}
+          </UiBadge>
+
+          <p class="micro mt-auto text-ink-700">
+            Mis à jour · {{ formatRelative(course.updated_at) }}
+          </p>
+        </NuxtLink>
+
+        <!-- Suppression : bouton hors du lien pour ne jamais naviguer en cliquant -->
+        <button
+          type="button"
+          class="absolute right-2 top-2 z-10 rounded-xs p-1.5 text-ink-500 opacity-0 transition-opacity hover:bg-surface-800 hover:text-danger-400 focus-visible:opacity-100 group-hover:opacity-100"
+          :aria-label="`Supprimer le cours ${course.title}`"
+          title="Supprimer le cours"
+          @click="askDelete(course)"
+        >
+          <UiIcon name="trash" size="sm" />
+        </button>
+      </li>
+    </ul>
+
+    <!-- Confirmation de suppression : modale, jamais `confirm()` natif -->
+    <UiModal
+      :open="deleteTarget !== null"
+      :title="deleteModalTitle"
+      size="sm"
+      @close="cancelDelete"
+    >
+      <p class="text-sm text-ink-300">
+        Le contenu Markdown de ce cours sera
+        <strong class="text-ink-100">définitivement effacé</strong>. Cette action est irréversible.
+      </p>
+      <template #footer>
+        <UiButton variant="ghost" :disabled="deleting" @click="cancelDelete">Annuler</UiButton>
+        <UiButton variant="danger" :loading="deleting" @click="confirmDelete">
+          Supprimer définitivement
+        </UiButton>
+      </template>
+    </UiModal>
   </div>
 </template>

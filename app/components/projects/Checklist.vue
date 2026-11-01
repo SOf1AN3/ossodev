@@ -1,11 +1,11 @@
 <script setup lang="ts">
-import type { ProjectTask } from '~~/shared/types'
+import type { ProjectTaskNode } from '~~/shared/types'
 import ProjectsChecklistItem from '~/components/projects/ChecklistItem.vue'
 import UiButton from '~/components/ui/UiButton.vue'
 import UiInput from '~/components/ui/UiInput.vue'
 
 interface ChecklistProps {
-  tasks: ProjectTask[]
+  tasks: ProjectTaskNode[]
   pending?: boolean
   /** Verrouille les interactions pendant une écriture serveur. */
   busy?: boolean
@@ -17,11 +17,12 @@ const props = withDefaults(defineProps<ChecklistProps>(), {
 })
 
 const emit = defineEmits<{
-  toggle: [task: ProjectTask]
-  save: [task: ProjectTask, title: string]
-  remove: [task: ProjectTask]
-  add: [title: string]
-  /** Nouvel ordre complet (ids) à envoyer au serveur. */
+  toggle: [task: ProjectTaskNode]
+  save: [task: ProjectTaskNode, title: string]
+  remove: [task: ProjectTaskNode]
+  /** `parentId` = `null` pour une tâche racine, l'id de la cible pour une fille. */
+  add: [title: string, parentId: string | null]
+  /** Nouvel ordre des tâches RACINES (ids) à envoyer au serveur. */
   reorder: [order: string[]]
 }>()
 
@@ -63,8 +64,8 @@ function onMove(index: number, direction: -1 | 1): void {
   emit('reorder', moveOrder(props.tasks, index, target))
 }
 
-/** Recalcule la liste des ids après un déplacement de `from` vers `to`. */
-function moveOrder(tasks: ProjectTask[], from: number, to: number): string[] {
+/** Recalcule la liste des ids racine après un déplacement de `from` vers `to`. */
+function moveOrder(tasks: ProjectTaskNode[], from: number, to: number): string[] {
   const next = [...tasks]
   const [moved] = next.splice(from, 1)
   if (!moved) return tasks.map((task) => task.id)
@@ -76,8 +77,26 @@ function submitNew(): void {
   if (props.busy) return
   const title = newTitle.value.trim()
   if (title === '') return
-  emit('add', title)
+  emit('add', title, null)
   newTitle.value = ''
+}
+
+// ─── Remontée des événements des items (la tâche cible voyage avec l'événement) ─
+
+function onItemToggle(task: ProjectTaskNode): void {
+  emit('toggle', task)
+}
+
+function onItemSave(task: ProjectTaskNode, title: string): void {
+  emit('save', task, title)
+}
+
+function onItemRemove(task: ProjectTaskNode): void {
+  emit('remove', task)
+}
+
+function onItemAdd(title: string, parentId: string | null): void {
+  emit('add', title, parentId)
 }
 </script>
 
@@ -91,18 +110,20 @@ function submitNew(): void {
       Aucune tâche pour l’instant — ajoute la première ci-dessous pour construire le prompt LEAD.
     </p>
 
-    <ol v-else class="flex flex-col gap-2" aria-label="Liste des tâches du projet">
+    <ol v-else role="tree" class="flex flex-col gap-2" aria-label="Liste des tâches du projet">
       <ProjectsChecklistItem
         v-for="(task, index) in tasks"
         :key="task.id"
         :task="task"
+        :level="1"
         :index="index"
         :total="tasks.length"
         :drag-state="dragStateFor(index)"
         :busy="busy"
-        @toggle="emit('toggle', task)"
-        @save="(title) => emit('save', task, title)"
-        @remove="emit('remove', task)"
+        @toggle="onItemToggle"
+        @save="onItemSave"
+        @remove="onItemRemove"
+        @add="onItemAdd"
         @move="(direction) => onMove(index, direction)"
         @drag-start="onDragStart"
         @drag-enter="onDragEnter"

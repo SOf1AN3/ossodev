@@ -2,6 +2,8 @@
 import type { CourseHeading } from '~/composables/useMarkdown'
 import { LearningApiError, useLearning } from '~/composables/useLearning'
 import { useToast } from '~/composables/useToast'
+import { apiFetch } from '~/composables/useApi'
+import type { CourseWithProjects, LearningCourse } from '~~/shared/types'
 import CourseBody from '~/components/learning/CourseBody.vue'
 import CourseToc from '~/components/learning/CourseToc.vue'
 import StatusButton from '~/components/learning/StatusButton.vue'
@@ -25,6 +27,11 @@ const notFound = ref(false)
 const headings = ref<CourseHeading[]>([])
 const busy = ref(false)
 
+type LinkedProject = CourseWithProjects['projects'][number]
+
+/** Projets liés renvoyés par GET /api/learning/:technology (contrat partagé). */
+const linkedProjects = ref<LinkedProject[]>([])
+
 useHead({
   title: computed(() => `${current.value?.title ?? 'Cours'} — OSSO`),
 })
@@ -33,12 +40,51 @@ const statusLabel = computed<string>(() =>
   current.value?.status === 'done' ? 'Accompli' : 'À lire',
 )
 
+function isLinkedProject(value: unknown): value is LinkedProject {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    'id' in value &&
+    'name' in value &&
+    'folder_path' in value &&
+    typeof value.id === 'string' &&
+    typeof value.name === 'string' &&
+    typeof value.folder_path === 'string'
+  )
+}
+
+/**
+ * Le serveur enrichit le cours de ses projets liés ; `useLearning` n'expose
+ * que `LearningCourse` — lecture défensive du champ supplémentaire.
+ */
+function readLinkedProjects(course: LearningCourse | null): LinkedProject[] {
+  if (course === null || !('projects' in course)) return []
+  const raw: unknown = course.projects
+  if (!Array.isArray(raw)) return []
+  return raw.filter(isLinkedProject)
+}
+
+/**
+ * Pose `last_reviewed_at` à l'ouverture du cours — best-effort : un échec
+ * d'horodatage ne doit jamais casser la lecture (échec silencieux).
+ */
+async function markReviewed(technology: string): Promise<void> {
+  try {
+    await apiFetch(`/api/learning/${encodeURIComponent(technology)}/review`, { method: 'POST' })
+  } catch {
+    // Silencieux assumé : la lecture reste prioritaire sur l'horodatage.
+  }
+}
+
 async function load(): Promise<void> {
   loading.value = true
   notFound.value = false
   headings.value = []
+  linkedProjects.value = []
   try {
-    await get(slug.value)
+    const loaded = await get(slug.value)
+    linkedProjects.value = readLinkedProjects(loaded)
+    void markReviewed(loaded.technology)
   } catch (err) {
     current.value = null
     notFound.value = err instanceof LearningApiError && err.status === 404
@@ -156,6 +202,32 @@ async function onReset(): Promise<void> {
           {{ current.title }}
         </h1>
       </header>
+
+      <!-- Projets liés (contrat CourseWithProjects) -->
+      <section
+        v-if="linkedProjects.length > 0"
+        class="surface px-5 py-4"
+        aria-labelledby="used-in-title"
+      >
+        <h2 id="used-in-title" class="micro text-ink-700">Utilisé dans</h2>
+        <ul class="mt-2 flex flex-col gap-1">
+          <li v-for="project in linkedProjects" :key="project.id">
+            <NuxtLink
+              :to="`/projets/${project.id}`"
+              class="flex items-center gap-2 rounded-sm px-2 py-1.5 text-sm text-ink-300 transition-colors hover:bg-surface-800 hover:text-ink-100"
+            >
+              <UiIcon name="folder" size="sm" class="shrink-0 text-ink-700" />
+              <span class="truncate">{{ project.name }}</span>
+              <span
+                class="ml-auto truncate font-mono text-[11px] text-ink-700"
+                :title="project.folder_path"
+              >
+                {{ project.folder_path }}
+              </span>
+            </NuxtLink>
+          </li>
+        </ul>
+      </section>
 
       <div class="flex flex-col gap-8 lg:flex-row lg:items-start">
         <div class="flex min-w-0 flex-1 flex-col">

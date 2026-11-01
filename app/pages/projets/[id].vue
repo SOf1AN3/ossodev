@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { useProjects, type ProjectWithCounts } from '~/composables/useProjects'
 import { useToast } from '~/composables/useToast'
-import type { ProjectTask } from '~~/shared/types'
+import { apiFetch } from '~/composables/useApi'
+import type { ProjectTaskNode } from '~~/shared/types'
 import ProjectsChecklist from '~/components/projects/Checklist.vue'
 import ProjectsLeadButton from '~/components/projects/LeadButton.vue'
 import UiButton from '~/components/ui/UiButton.vue'
@@ -17,11 +18,11 @@ const projectId = computed<string>(() => {
   return Array.isArray(raw) ? (raw[0] ?? '') : (raw ?? '')
 })
 
-const { getProject, listTasks, addTask, updateTask, deleteTask, reorderTasks } = useProjects()
+const { getProject, updateTask, deleteTask, reorderTasks } = useProjects()
 const toast = useToast()
 
 const project = ref<ProjectWithCounts | null>(null)
-const tasks = ref<ProjectTask[]>([])
+const tasks = ref<ProjectTaskNode[]>([])
 const loading = ref(true)
 const loadError = ref<string | null>(null)
 const notFound = ref(false)
@@ -31,6 +32,11 @@ useHead({
   title: computed(() => `${project.value?.name ?? 'Projet'} — OSSO`),
 })
 
+/** Arbre des tâches — le serveur construit la hiérarchie (`ProjectTaskNode`). */
+function fetchTasks(): Promise<ProjectTaskNode[]> {
+  return apiFetch<ProjectTaskNode[]>(`/api/projects/${projectId.value}/tasks`)
+}
+
 async function load(): Promise<void> {
   loading.value = true
   loadError.value = null
@@ -38,7 +44,7 @@ async function load(): Promise<void> {
   try {
     const [loadedProject, loadedTasks] = await Promise.all([
       getProject(projectId.value),
-      listTasks(projectId.value),
+      fetchTasks(),
     ])
     project.value = loadedProject
     tasks.value = loadedTasks
@@ -54,15 +60,35 @@ onMounted(() => {
   void load()
 })
 
+/** Recharge l'arbre après une mutation : le statut des parents vient du serveur. */
+async function refreshTasks(): Promise<void> {
+  tasks.value = await fetchTasks()
+  refreshCounts()
+}
+
+/** Compteurs récursifs sur tout l'arbre (racines + descendants). */
+function countTree(nodes: ProjectTaskNode[]): { total: number; done: number } {
+  let total = 0
+  let done = 0
+  for (const node of nodes) {
+    total += 1
+    if (node.is_done) done += 1
+    const sub = countTree(node.children)
+    total += sub.total
+    done += sub.done
+  }
+  return { total, done }
+}
+
 /** Recalcule les compteurs affichés dans l'en-tête. */
 function refreshCounts(): void {
   if (!project.value) return
-  const done = tasks.value.filter((task) => task.is_done).length
+  const { total, done } = countTree(tasks.value)
   project.value = {
     ...project.value,
-    task_count: tasks.value.length,
+    task_count: total,
     done_tasks: done,
-    open_tasks: tasks.value.length - done,
+    open_tasks: total - done,
   }
 }
 
@@ -74,15 +100,12 @@ function toastError(title: string, err: unknown): void {
   })
 }
 
-async function onToggle(task: ProjectTask): Promise<void> {
+async function onToggle(task: ProjectTaskNode): Promise<void> {
   if (busy.value) return
   busy.value = true
   try {
-    const updated = await updateTask(projectId.value, task.id, {
-      is_done: !task.is_done,
-    })
-    tasks.value = tasks.value.map((t) => (t.id === updated.id ? updated : t))
-    refreshCounts()
+    await updateTask(projectId.value, task.id, { is_done: !task.is_done })
+    await refreshTasks()
   } catch (err) {
     toastError('Mise à jour impossible', err)
   } finally {
@@ -90,16 +113,16 @@ async function onToggle(task: ProjectTask): Promise<void> {
   }
 }
 
-async function onRename(task: ProjectTask, title: string): Promise<void> {
+async function onRename(task: ProjectTaskNode, title: string): Promise<void> {
   if (busy.value) return
   busy.value = true
   try {
-    const updated = await updateTask(projectId.value, task.id, { title })
-    tasks.value = tasks.value.map((t) => (t.id === updated.id ? updated : t))
+    await updateTask(projectId.value, task.id, { title })
+    await refreshTasks()
     toast.show({
       tone: 'success',
       title: 'Tâche mise à jour',
-      message: `« ${updated.title} »`,
+      message: `« ${title} »`,
     })
   } catch (err) {
     toastError('Renommage impossible', err)
@@ -108,17 +131,19 @@ async function onRename(task: ProjectTask, title: string): Promise<void> {
   }
 }
 
-async function onAdd(title: string): Promise<void> {
+async function onAdd(title: string, parentId: string | null): Promise<void> {
   if (busy.value) return
   busy.value = true
   try {
-    const created = await addTask(projectId.value, title)
-    tasks.value = [...tasks.value, created]
-    refreshCounts()
+    await apiFetch(`/api/projects/${projectId.value}/tasks`, {
+      method: 'POST',
+      body: { title, parent_id: parentId },
+    })
+    await refreshTasks()
     toast.show({
       tone: 'success',
       title: 'Tâche ajoutée',
-      message: `« ${created.title} »`,
+      message: `« ${title} »`,
     })
   } catch (err) {
     toastError('Ajout impossible', err)
@@ -127,13 +152,12 @@ async function onAdd(title: string): Promise<void> {
   }
 }
 
-async function onRemove(task: ProjectTask): Promise<void> {
+async function onRemove(task: ProjectTaskNode): Promise<void> {
   if (busy.value) return
   busy.value = true
   try {
     await deleteTask(projectId.value, task.id)
-    tasks.value = tasks.value.filter((t) => t.id !== task.id)
-    refreshCounts()
+    await refreshTasks()
     toast.show({
       tone: 'success',
       title: 'Tâche supprimée',
@@ -151,12 +175,9 @@ async function onReorder(order: string[]): Promise<void> {
   const previous = tasks.value
   const byId = new Map(previous.map((task) => [task.id, task]))
   const next = order
-    .map((id, index) => {
-      const task = byId.get(id)
-      return task ? { ...task, position: index } : null
-    })
-    .filter((task): task is ProjectTask => task !== null)
-  // Mise à jour optimiste
+    .map((id) => byId.get(id))
+    .filter((task): task is ProjectTaskNode => task !== undefined)
+  // Mise à jour optimiste (uniquement les racines bougent, les filles suivent)
   tasks.value = next
   busy.value = true
   try {
