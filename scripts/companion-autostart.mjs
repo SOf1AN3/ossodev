@@ -1,97 +1,113 @@
 /**
- * Crée (ou recrée) la tâche planifiée Windows `OSSO-Companion` : le Companion
- * démarre automatiquement à chaque connexion, sans flash de console.
+ * Active (ou retire) le démarrage automatique du Companion à la connexion
+ * Windows — **sans droits administrateur** et **sans flash de console**.
  *
- * Méthode : tâche planifiée `schtasks /SC ONLOGON` — PAS le dossier
- * `shell:startup` (un `.lnk` ou `.ps1` y ouvrirait une fenêtre de console).
+ *   node scripts/companion-autostart.mjs           # activer
+ *   node scripts/companion-autostart.mjs --remove  # retirer
  *
- *   node scripts/companion-autostart.mjs
+ * Méthode : un `.vbs` dans le dossier Démarrage de l'utilisateur
+ * (`shell:startup`), qui lance `start.ps1` via `WScript.Shell.Run(cmd, 0, False)`
+ * — le `0` signifie fenêtre **complètement cachée**, le `False` que le script ne
+ * bloque pas la connexion.
  *
- * Idempotent : la tâche existante est supprimée puis recréée. En cas de refus
- * de `schtasks` (droits insuffisants), la commande manuelle est affichée et le
- * script se termine avec un code de sortie non nul — sans planter le lot.
+ * Pourquoi pas `schtasks /SC ONLOGON` : la création d'une tâche ONLOGON dans le
+ * dossier racine exige une invite d'administration (« Accès refusé » sinon), et
+ * ce script doit fonctionner pour un utilisateur standard. Le dossier Démarrage,
+ * lui, est écrit par n'importe qui — et le `.vbs` évite le flash de console
+ * qu'aurait un raccourci `.lnk` ou un `.ps1` posé là brut.
+ *
+ * Idempotent : le `.vbs` est réécrit à chaque exécution, jamais dupliqué.
  */
-import { spawnSync } from 'node:child_process'
-import { existsSync } from 'node:fs'
+import { existsSync, mkdirSync, readFileSync, writeFileSync, rmSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 const ROOT = dirname(dirname(fileURLToPath(import.meta.url)))
-const COMPANION_DIR = join(ROOT, 'companion')
-const START_PS1 = join(COMPANION_DIR, 'start.ps1')
-const TASK_NAME = 'OSSO-Companion'
+const TASK_MARK = 'osso-companion.vbs'
 
-/** Commande cible de la tâche : PowerShell caché qui lance `start.ps1`. */
-const TARGET_COMMAND = `powershell.exe -NoProfile -WindowStyle Hidden -File "${START_PS1}"`
+/** Dossier Démarrage de l'utilisateur — pas besoin d'admin. */
+const STARTUP_DIR = join(
+  process.env.APPDATA ?? '',
+  'Microsoft',
+  'Windows',
+  'Start Menu',
+  'Programs',
+  'Startup',
+)
+
+/** Où `start.ps1` peut se trouver, dans l'ordre de priorité. */
+function locateStartScript() {
+  const candidats = [
+    join(process.env.APPDATA ?? '', 'osso-companion', 'start.ps1'),
+    join(ROOT, 'companion', 'start.ps1'),
+  ]
+  return candidats.find((p) => existsSync(p)) ?? null
+}
 
 /**
- * Exécute `schtasks.exe` avec un tableau d'arguments — jamais une chaîne
- * concaténée passée à un shell interprété. Le répertoire de travail du
- * lancement est `companion/` : `schtasks` n'expose aucun équivalent pour la
- * tâche elle-même, d'où le chemin absolu vers `start.ps1`.
+ * Génère `start.ps1` s'il est absent : il lance Node en fenêtre cachée avec le
+ * bon répertoire de travail. Les chemins sont absolus et propres à la machine,
+ * d'où une génération à la volée plutôt qu'un fichier versionné.
  */
-function schtasks(args) {
-  return spawnSync('schtasks.exe', args, {
-    cwd: COMPANION_DIR,
-    encoding: 'utf8',
-    windowsHide: true,
-  })
+function ensureStartScript() {
+  const existant = locateStartScript()
+  if (existant !== null) return existant
+
+  const cible = join(process.env.APPDATA ?? '', 'osso-companion', 'start.ps1')
+  const node = join(process.env.PROGRAMFILES ?? 'C:\\Program Files', 'nodejs', 'node.exe')
+  const entry = join(ROOT, 'companion', 'src', 'index.ts')
+  const workingDir = join(ROOT, 'companion')
+
+  mkdirSync(dirname(cible), { recursive: true })
+  writeFileSync(
+    cible,
+    [
+      "$ErrorActionPreference = 'Stop'",
+      `Start-Process -FilePath '${node}' -ArgumentList '${entry}' -WorkingDirectory '${workingDir}' -WindowStyle Hidden`,
+      '',
+    ].join('\r\n'),
+    'utf8',
+  )
+  console.log(`✔ start.ps1 généré : ${cible}`)
+  return cible
 }
 
-/** Commande complète à recopier dans une invite d'administration si besoin. */
-function manualCommand() {
-  const escaped = TARGET_COMMAND.replace(/"/g, '\\"')
-  return `schtasks /Create /TN ${TASK_NAME} /TR "${escaped}" /SC ONLOGON /F`
+/** Contenu du lanceur caché. `0` = fenêtre invisible, `False` = non bloquant. */
+function buildVbs(startScript) {
+  // Dans un littéral VBS, un guillemet s'échappe en "".
+  const commande = `powershell.exe -NoProfile -WindowStyle Hidden -File "${startScript}"`
+  const echappe = commande.replace(/"/g, '""')
+  return [
+    "' OSSO Companion — lance le processus au login, en fenêtre cachée.",
+    'Set sh = CreateObject("WScript.Shell")',
+    `sh.Run "${echappe}", 0, False`,
+    '',
+  ].join('\r\n')
 }
 
-/** Affiche l'état courant de la tâche (best effort). */
-function printTaskState() {
-  console.log(`\nÉtat de la tâche ${TASK_NAME} :`)
-  const state = schtasks(['/Query', '/TN', TASK_NAME])
-  const detail = (state.stderr || state.stdout || '').trim()
-  if (state.status === 0 && detail.length > 0) {
-    console.log(detail)
+const retirer = process.argv.includes('--remove')
+const cible = join(STARTUP_DIR, TASK_MARK)
+
+if (retirer) {
+  if (existsSync(cible)) {
+    rmSync(cible, { force: true })
+    console.log(`✔ Retiré : ${cible}`)
+    console.log('  Le Companion ne démarrera plus automatiquement au login.')
   } else {
-    console.log(`  introuvable${detail.length > 0 ? ` — ${detail}` : ''}`)
+    console.log(`· Rien à retirer : ${cible} n'existait pas.`)
   }
+  process.exit(0)
 }
 
-if (!existsSync(START_PS1)) {
-  console.warn(`⚠ Avertissement : introuvable ${START_PS1}`)
-  console.warn('  La tâche sera créée, mais échouera au login tant que ce fichier n’existe pas.')
-}
+const startScript = ensureStartScript()
 
-// 1. Suppression idempotente (sans effet si la tâche n’existe pas encore).
-const deletion = schtasks(['/Delete', '/TN', TASK_NAME, '/F'])
-if (deletion.status === 0) {
-  console.log(`Tâche ${TASK_NAME} existante supprimée — recréation.`)
-}
+mkdirSync(STARTUP_DIR, { recursive: true })
+writeFileSync(cible, buildVbs(startScript), 'utf8')
 
-// 2. Création de la tâche de démarrage au login.
-const creation = schtasks([
-  '/Create',
-  '/TN',
-  TASK_NAME,
-  '/TR',
-  TARGET_COMMAND,
-  '/SC',
-  'ONLOGON',
-  '/F',
-])
-
-if (creation.error != null || creation.status !== 0) {
-  const detail =
-    creation.error != null
-      ? creation.error.message
-      : (creation.stderr || creation.stdout || '').trim()
-  console.error(`✖ Échec de la création de la tâche ${TASK_NAME}.`)
-  if (detail.length > 0) console.error(`  ${detail}`)
-  console.error('\nExécute cette commande manuellement dans une invite d’administration :')
-  console.error(`  ${manualCommand()}`)
-  printTaskState()
-  process.exitCode = 1
-} else {
-  console.log(`✔ Tâche ${TASK_NAME} créée : le Companion démarrera au login Windows.`)
-  console.log(`  Cible : ${TARGET_COMMAND}`)
-  printTaskState()
-}
+console.log('✔ Démarrage automatique activé (aucun droit admin requis).')
+console.log(`  Lanceur : ${cible}`)
+console.log(`  Cible   : ${startScript}`)
+console.log('\nVérification du contenu :')
+console.log(readFileSync(cible, 'utf8').trim())
+console.log('\nÀ la prochaine connexion Windows, l’icône du Companion apparaîtra.')
+console.log('Pour annuler : node scripts/companion-autostart.mjs --remove')
